@@ -2,6 +2,9 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import WebDevVisual from "./WebDevVisual";
+import DesignVisual from "./DesignVisual";
+import BackendVisual from "./BackendVisual";
+import CommunityVisual from "./CommunityVisual";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -118,76 +121,19 @@ export default function ServiceCard({ service, index }: Props) {
     };
   }, []);
 
-  // Render bespoke, meaningful visual illustrations for each service folder
+  // Render full-bleed animated workspace stages for each service folder.
+  // Each stage fills the visual area edge to edge with a left-to-right story
+  // relevant to its service: deploy pipeline, design flow, api console, stats.
   const renderVisualContent = () => {
     switch (index) {
-      case 0: // Web Development — a living micro-interaction demo
+      case 0: // Web Development — deploy pipeline
         return <WebDevVisual />;
-
-      case 1: // UI / UX Design
-        return (
-          <div className="service-visual-inner visual-design">
-            <div className="sv-figma-artboard">
-              <div className="sv-artboard-header">
-                <span className="artboard-label">Frame — 1440px</span>
-                <span className="artboard-grid-badge">Design Tokens</span>
-              </div>
-              <div className="sv-wireframe-grid">
-                <div className="wf-box box-hero"></div>
-                <div className="wf-box box-sidebar"></div>
-                <div className="wf-box box-card"></div>
-              </div>
-              <div className="sv-figma-cursor">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M5.636 4.223a.75.75 0 0 1 .843-.14l13.5 7.5a.75.75 0 0 1-.365 1.411l-5.642.593 3.652 5.643a.75.75 0 1 1-1.256.814l-3.65-5.642-3.83 4.148a.75.75 0 0 1-1.29-.607V4.223z" fill="#f59e0b"/>
-                </svg>
-                <span className="cursor-name">Juan (UI/UX)</span>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 2: // Backend Architecture
-        return (
-          <div className="service-visual-inner visual-backend">
-            <div className="sv-api-window">
-              <div className="sv-api-row">
-                <span className="http-badge get">GET</span>
-                <span className="endpoint-url">/api/v1/projects</span>
-                <span className="status-pill ok">200 OK</span>
-              </div>
-              <div className="sv-api-row">
-                <span className="http-badge post">POST</span>
-                <span className="endpoint-url">/api/v1/auth/session</span>
-                <span className="status-pill ok">201 Created</span>
-              </div>
-              <div className="sv-db-tag">
-                <span>🐘 PostgreSQL DB · Latency 12ms</span>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 3: // Mentorship & Community
-        return (
-          <div className="service-visual-inner visual-community">
-            <div className="sv-community-card">
-              <div className="comm-badge">Palu Dev Leader</div>
-              <h4 className="comm-title">Mentorship &amp; Workshops</h4>
-              <div className="comm-stats">
-                <div className="stat">
-                  <span className="stat-val">100+</span>
-                  <span className="stat-lbl">Mentees</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-val">3+</span>
-                  <span className="stat-lbl">Communities</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
+      case 1: // UI / UX Design — token drag & drop
+        return <DesignVisual />;
+      case 2: // Backend Architecture — api console
+        return <BackendVisual />;
+      case 3: // Mentorship & Community — impact stats
+        return <CommunityVisual />;
       default:
         return null;
     }
