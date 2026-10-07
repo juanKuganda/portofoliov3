@@ -1955,9 +1955,14 @@ footer.site {
 }
 .bento-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(12, 1fr);
   gap: 24px;
 }
+.bento-card.span-7 { grid-column: span 7; }
+.bento-card.span-5 { grid-column: span 5; }
+.bento-card.span-4 { grid-column: span 4; }
+.bento-card.span-3 { grid-column: span 3; }
+.bento-card.tall { grid-row: span 2; }
 .bento-card {
   position: relative;
   background: var(--paper);
@@ -1969,9 +1974,6 @@ footer.site {
   min-height: 340px;
   transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
   transform-style: preserve-3d;
-}
-.bento-card.span-2 {
-  grid-column: span 2;
 }
 .bento-card:hover {
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.08);
@@ -2038,84 +2040,8 @@ footer.site {
 }
 
 /* Card 1: Design Systems Interactive Mockup */
-.ds-mockup {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  padding: 20px 24px;
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  transition: all 0.4s var(--ease);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
-}
-.ds-tokens {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-.ds-color-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  position: relative;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.ds-color-btn:hover {
-  transform: scale(1.25) rotate(-8deg);
-}
-.ds-color-btn.active {
-  transform: scale(1.2);
-}
-.active-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #fff;
-}
-.ds-preview-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  opacity: 0.9;
-}
-.ds-tag-label {
-  font-weight: 600;
-}
-.ds-tag-hex {
-  opacity: 0.7;
-}
 
 /* Card 2: Interactive Ripple & Physics Canvas */
-.interactive-canvas {
-  position: relative;
-  width: 100%;
-  height: 120px;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 16px;
-  border: 1px dashed var(--line);
-  overflow: hidden;
-  cursor: crosshair;
-}
-.interactive-ball {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 28px;
-  height: 28px;
-  background: var(--signal);
-  border-radius: 50%;
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.5);
-  pointer-events: none;
-}
 .click-ripple {
   position: absolute;
   width: 10px;
@@ -2138,15 +2064,6 @@ footer.site {
     height: 80px;
     opacity: 0;
   }
-}
-.interactive-hint {
-  position: absolute;
-  bottom: 12px;
-  right: 14px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-  pointer-events: none;
 }
 
 /* Card 3: Mentorship Network Graph */
@@ -2294,7 +2211,320 @@ footer.site {
   .bento-grid {
     grid-template-columns: 1fr;
   }
-  .bento-card.span-2 {
+  .bento-card.span-7,
+  .bento-card.span-5,
+  .bento-card.span-4,
+  .bento-card.span-3 {
     grid-column: span 1;
+  }
+  .bento-card.tall {
+    grid-row: auto;
+    min-height: 480px;
+  }
+}
+
+/* ============ Bento: Theme Lab (card 1) ============ */
+.bento-card.theme-lab {
+  padding: 0;
+}
+.tl-theme {
+  position: absolute;
+  inset: 0;
+  background: var(--tl-bg);
+  color: var(--tl-fg);
+  transition: background-color 0.4s ease;
+}
+.tl-theme .bento-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+}
+.theme-lab .bento-badge {
+  background: transparent;
+  border: 1px solid var(--tl-fg);
+  color: var(--tl-fg);
+}
+.theme-lab .bc-desc {
+  color: var(--tl-muted);
+}
+.theme-wipe {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  opacity: 0;
+  transform: scaleX(0);
+  pointer-events: none;
+}
+.tl-visual {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 18px;
+}
+.tl-chips {
+  display: flex;
+  gap: 12px;
+}
+.tl-chip {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 2px solid rgba(128, 128, 128, 0.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.tl-chip:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+.tl-chip.active {
+  border-color: var(--tl-fg);
+}
+.tl-check {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--tl-fg);
+  mix-blend-mode: difference;
+}
+.tl-specimen {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+}
+.tl-aa {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 72px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.tl-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-mono);
+}
+.tl-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+.tl-hex {
+  font-size: 12px;
+  color: var(--tl-muted);
+}
+.tl-sample-btn {
+  margin-left: auto;
+  background: var(--tl-fg);
+  color: var(--tl-bg);
+  border: none;
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tl-sample-btn:hover {
+  transform: scale(1.06) rotate(-1.5deg);
+}
+
+/* ============ Bento: Press Playground (card 2) ============ */
+.bento-card.tall .bc-visual {
+  flex: 1;
+}
+.pg-visual {
+  align-items: stretch;
+  justify-content: stretch;
+}
+.playground-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+  background: rgba(0, 0, 0, 0.025);
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+.pg-ball {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  background: var(--signal);
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.55);
+  pointer-events: none;
+  z-index: 2;
+}
+.pg-counter {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 2;
+}
+.pg-count-pop {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 52px;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  animation: count-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.pg-count-lbl {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+@keyframes count-pop {
+  0% { transform: scale(1.55); }
+  100% { transform: scale(1); }
+}
+.burst {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.bp {
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--signal);
+}
+.bp:nth-child(3n) {
+  background: var(--ink);
+  border-radius: 50%;
+}
+.bp:nth-child(3n + 1) {
+  width: 6px;
+  height: 6px;
+}
+.pg-hint {
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* ============ Bento: Network (card 3) ============ */
+.net-visual {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+}
+.nodes-mockup .node {
+  border: none;
+  padding: 0;
+  font: inherit;
+}
+.nodes-mockup .node:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 4px;
+}
+.node.ping {
+  animation: node-thunk 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes node-thunk {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  40% { transform: translate(-50%, -50%) scale(1.8); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+.animated-path {
+  transition: stroke-width 0.3s ease;
+}
+.animated-path.flash {
+  stroke-width: 4;
+}
+.net-counter {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 14px;
+  text-align: center;
+}
+.net-pop {
+  display: inline-block;
+  font-weight: 700;
+  color: var(--ink);
+  animation: count-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============ Bento: Code runner (card 4) ============ */
+.code-line {
+  padding: 2px 10px;
+  margin: 0 -10px;
+  border-radius: 6px;
+  transition: background-color 0.25s ease;
+}
+.code-line.exec {
+  background: rgba(245, 158, 11, 0.16);
+}
+.code-output .cmd {
+  color: #8b949e;
+}
+.code-output .ok {
+  color: #4ac26b;
+}
+.out-line {
+  animation: out-in 0.35s var(--ease);
+}
+@keyframes out-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+.caret::after {
+  content: "▍";
+  color: var(--signal);
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+.run-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+}
+
+/* ============ Bento: focus + reduced motion ============ */
+.tl-chip:focus-visible,
+.tl-sample-btn:focus-visible,
+.run-btn:focus-visible,
+.playground-canvas:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .click-ripple,
+  .node-ping,
+  .animated-path,
+  .pg-count-pop,
+  .net-pop,
+  .out-line,
+  .caret::after {
+    animation: none !important;
   }
 }
