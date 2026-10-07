@@ -74,12 +74,6 @@ a {
     opacity: 0.35;
   }
 }
-@keyframes rise {
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -399,13 +393,9 @@ a {
   white-space: nowrap;
   overflow-wrap: anywhere;
   min-width: 0;
-  will-change: transform;
 }
 .fit .ch {
   display: inline-block;
-  opacity: 0;
-  transform: translateY(0.5em);
-  animation: rise 0.9s var(--ease) forwards;
 }
 .hero-name {
   margin: 0 0 0 calc(var(--pad) * -1);
@@ -1721,10 +1711,6 @@ footer.site {
   }
   html {
     scroll-behavior: auto;
-  }
-  .fit .ch {
-    opacity: 1;
-    transform: none;
   }
   .rv {
     opacity: 1;

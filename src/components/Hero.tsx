@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useFitText } from "../hooks/useFitText";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -7,31 +7,55 @@ import MagneticText from "./MagneticText";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Hero() {
+  const rootRef = useRef<HTMLElement>(null);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const portraitImgRef = useRef<HTMLImageElement>(null);
   useFitText(nameRef);
 
-  // Per-character split reveal animation
-  useEffect(() => {
+  // Choreographed hero entrance: kicker → name chars → statement/meta → portrait.
+  // One easing language (power3.out), transform/opacity only, respects reduced motion.
+  // Runs in useLayoutEffect so the initial states apply before first paint (no flash).
+  useLayoutEffect(() => {
+    const root = rootRef.current;
     const el = nameRef.current;
-    if (!el) return;
+    if (!root || !el) return;
+
+    // Split headline into per-char spans (layout only — no animation here)
+    const text = el.textContent || "";
+    el.textContent = "";
+    const chars: HTMLSpanElement[] = [];
+    text.split("").forEach((chr) => {
+      const s = document.createElement("span");
+      s.className = "ch";
+      s.textContent = chr === " " ? " " : chr;
+      el.appendChild(s);
+      chars.push(s);
+    });
 
     const reduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
+    if (reduced) return;
 
-    const text = el.textContent || "";
-    el.textContent = "";
+    const q = gsap.utils.selector(root);
+    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    tl.from(q(".hero-kicker"), { y: 14, opacity: 0, duration: 0.35 }, 0.05)
+      .from(
+        chars,
+        { yPercent: 70, opacity: 0, duration: 0.55, stagger: 0.016 },
+        0.12
+      )
+      .from(
+        q(".hero-side .statement"),
+        { y: 22, opacity: 0, duration: 0.5 },
+        0.5
+      )
+      .from(q(".hero-meta"), { y: 22, opacity: 0, duration: 0.5 }, 0.58)
+      .from(q(".hero-portrait"), { y: 48, opacity: 0, duration: 0.7 }, 0.55);
 
-    text.split("").forEach((chr, i) => {
-      const s = document.createElement("span");
-      s.className = "ch";
-      s.textContent = chr === " " ? "\u00A0" : chr;
-      if (!reduced) {
-        s.style.animationDelay = `${0.3 + i * 0.018}s`;
-      }
-      el.appendChild(s);
-    });
+    return () => {
+      tl.kill();
+    };
   }, []);
 
   // Scroll-linked hero parallax
@@ -82,7 +106,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <header className="hero" id="top">
+    <header className="hero" id="top" ref={rootRef}>
       <div className="hero-kicker">
         <span>
           <span className="dot"></span>&nbsp; Open to work
@@ -97,13 +121,13 @@ export default function Hero() {
           </h1>
         </MagneticText>
         <div className="hero-side">
-          <p className="statement rv">
+          <p className="statement">
             I build interfaces for the web —{" "}
             <span className="grey">
               dashboards, design systems, and interactive digital products.
             </span>
           </p>
-          <div className="hero-meta rv rv-d1">
+          <div className="hero-meta">
             <span>Informatics · UNTAD '27</span>
             <span>Mentor · Palu communities</span>
             <span className="hero-scroll-arrow">
@@ -114,7 +138,7 @@ export default function Hero() {
       </div>
 
       {/* TODO: ganti dengan foto Juan — cukup tukar src di bawah */}
-      <figure className="hero-portrait rv">
+      <figure className="hero-portrait">
         <img src="/hero-portrait.png" alt="Architectural brutalist portrait" />
         <figcaption className="tag">Portrait.jpg · abstract</figcaption>
       </figure>
