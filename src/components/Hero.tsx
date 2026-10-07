@@ -15,6 +15,8 @@ export default function Hero() {
   // Choreographed hero entrance: kicker → name chars → statement/meta → portrait.
   // One easing language (power3.out), transform/opacity only, respects reduced motion.
   // Runs in useLayoutEffect so the initial states apply before first paint (no flash).
+  // Cleanup uses ctx.revert() (not tl.kill()): it removes every inline style GSAP
+  // added, so an interrupted entrance can never leave content stuck invisible.
   useLayoutEffect(() => {
     const root = rootRef.current;
     const el = nameRef.current;
@@ -23,13 +25,11 @@ export default function Hero() {
     // Split headline into per-char spans (layout only — no animation here)
     const text = el.textContent || "";
     el.textContent = "";
-    const chars: HTMLSpanElement[] = [];
     text.split("").forEach((chr) => {
       const s = document.createElement("span");
       s.className = "ch";
       s.textContent = chr === " " ? " " : chr;
       el.appendChild(s);
-      chars.push(s);
     });
 
     const reduced = window.matchMedia(
@@ -37,24 +37,34 @@ export default function Hero() {
     ).matches;
     if (reduced) return;
 
-    const q = gsap.utils.selector(root);
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-    tl.from(q(".hero-kicker"), { y: 14, opacity: 0, duration: 0.35 }, 0.05)
-      .from(
-        chars,
-        { yPercent: 70, opacity: 0, duration: 0.55, stagger: 0.016 },
-        0.12
-      )
-      .from(
-        q(".hero-side .statement"),
-        { y: 22, opacity: 0, duration: 0.5 },
-        0.5
-      )
-      .from(q(".hero-meta"), { y: 22, opacity: 0, duration: 0.5 }, 0.58)
-      .from(q(".hero-portrait"), { y: 48, opacity: 0, duration: 0.7 }, 0.55);
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      tl.from(".hero-kicker", { y: 14, opacity: 0, duration: 0.35 }, 0.05)
+        .from(
+          ".hero-name .ch",
+          { yPercent: 70, opacity: 0, duration: 0.55, stagger: 0.016 },
+          0.12
+        )
+        .from(
+          ".hero-side .statement",
+          { y: 22, opacity: 0, duration: 0.5 },
+          0.5
+        )
+        .from(".hero-meta", { y: 22, opacity: 0, duration: 0.5 }, 0.58)
+        .from(".hero-portrait", { y: 48, opacity: 0, duration: 0.7 }, 0.55);
+      // Once done, wipe GSAP's inline styles — nothing lingers in the DOM.
+      tl.eventCallback("onComplete", () => {
+        tl.getChildren().forEach((child) => {
+          const targets = (child as gsap.core.Tween).targets?.() ?? [];
+          if (targets.length) gsap.set(targets, { clearProps: "all" });
+        });
+      });
+    }, root);
 
+    // Revert (don't just kill): removes every inline style GSAP added,
+    // so an interrupted entrance can never leave content stuck invisible.
     return () => {
-      tl.kill();
+      ctx.revert();
     };
   }, []);
 
