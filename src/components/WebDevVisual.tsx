@@ -5,7 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 // Deploy pipeline: a live preview assembles on the left while build logs
-// stream on the right — a full-width, left-to-right story of shipping.
+// stream on the right - a full-width, left-to-right story of shipping.
 // Loops gently; pauses off-screen; fully static under reduced motion.
 export default function WebDevVisual() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -15,7 +15,7 @@ export default function WebDevVisual() {
     if (!root) return;
 
     const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     ).matches;
     if (reduced) return;
 
@@ -37,20 +37,24 @@ export default function WebDevVisual() {
         .from(
           ".demo-cursor",
           { opacity: 0, x: 90, y: -60, duration: 0.5 },
-          "-=0.15"
+          "-=0.15",
         )
         .to(".demo-cta", { scale: 0.88, duration: 0.12 }, "+=0.2")
         .to(".demo-cta", { scale: 1, duration: 0.5, ease: "back.out(2.5)" })
         .from(
           ".sv-log-line",
           { opacity: 0, x: -8, duration: 0.3, stagger: 0.28 },
-          "-=0.2"
+          "-=0.2",
         )
-        .to(".demo-cursor", { opacity: 0, x: 50, y: -40, duration: 0.4 }, "+=1.4")
+        .to(
+          ".demo-cursor",
+          { opacity: 0, x: 50, y: -40, duration: 0.4 },
+          "+=1.4",
+        )
         .to(
           [".demo-build", ".sv-log-line"],
           { opacity: 0, y: -8, duration: 0.3, stagger: 0.03 },
-          "<+=0.1"
+          "<+=0.1",
         );
 
       ScrollTrigger.create({

@@ -22,7 +22,7 @@ export default function Hero() {
     const el = nameRef.current;
     if (!root || !el) return;
 
-    // Split headline into per-char spans (layout only — no animation here)
+    // Split headline into per-char spans (layout only - no animation here)
     const text = el.textContent || "";
     el.textContent = "";
     text.split("").forEach((chr) => {
@@ -33,7 +33,7 @@ export default function Hero() {
     });
 
     const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     ).matches;
     if (reduced) return;
 
@@ -43,16 +43,16 @@ export default function Hero() {
         .from(
           ".hero-name .ch",
           { yPercent: 70, opacity: 0, duration: 0.55, stagger: 0.016 },
-          0.12
+          0.12,
         )
         .from(
           ".hero-side .statement",
           { y: 22, opacity: 0, duration: 0.5 },
-          0.5
+          0.5,
         )
         .from(".hero-meta", { y: 22, opacity: 0, duration: 0.5 }, 0.58)
         .from(".hero-portrait", { y: 48, opacity: 0, duration: 0.7 }, 0.55);
-      // Once done, wipe GSAP's inline styles — nothing lingers in the DOM.
+      // Once done, wipe GSAP's inline styles - nothing lingers in the DOM.
       tl.eventCallback("onComplete", () => {
         tl.getChildren().forEach((child) => {
           const targets = (child as gsap.core.Tween).targets?.() ?? [];
@@ -71,7 +71,7 @@ export default function Hero() {
   // Scroll-linked hero parallax
   useEffect(() => {
     const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     ).matches;
     if (reduced) return;
 
@@ -106,7 +106,7 @@ export default function Hero() {
             end: "+=600",
             scrub: true,
           },
-        }
+        },
       );
     }
 
@@ -125,14 +125,17 @@ export default function Hero() {
         <span>Palu, ID</span>
       </div>
       <div className="hero-grid">
-        <MagneticText intensity={0.1} style={{ display: "block", width: "100%" }}>
+        <MagneticText
+          intensity={0.1}
+          style={{ display: "block", width: "100%" }}
+        >
           <h1 className="fit hero-name" ref={nameRef}>
             JUAN KUGANDA©
           </h1>
         </MagneticText>
         <div className="hero-side">
           <p className="statement">
-            I build interfaces for the web —{" "}
+            I build interfaces for the web -{" "}
             <span className="grey">
               dashboards, design systems, and interactive digital products.
             </span>
@@ -147,7 +150,7 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* TODO: ganti dengan foto Juan — cukup tukar src di bawah */}
+      {/* TODO: ganti dengan foto Juan - cukup tukar src di bawah */}
       <figure className="hero-portrait">
         <img src="/hero-portrait.png" alt="Architectural brutalist portrait" />
         <figcaption className="tag">Portrait.jpg · abstract</figcaption>

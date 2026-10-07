@@ -70,7 +70,7 @@ export default function ServiceCard({ service, index }: Props) {
   // Scroll-triggered stagger entrance
   useEffect(() => {
     const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     ).matches;
     if (reduced) return;
 
@@ -112,7 +112,7 @@ export default function ServiceCard({ service, index }: Props) {
           duration: 1,
           ease: "power2.out",
         },
-        "-=0.4"
+        "-=0.4",
       );
     }
 
@@ -126,13 +126,13 @@ export default function ServiceCard({ service, index }: Props) {
   // relevant to its service: deploy pipeline, design flow, api console, stats.
   const renderVisualContent = () => {
     switch (index) {
-      case 0: // Web Development — deploy pipeline
+      case 0: // Web Development - deploy pipeline
         return <WebDevVisual />;
-      case 1: // UI / UX Design — token drag & drop
+      case 1: // UI / UX Design - token drag & drop
         return <DesignVisual />;
-      case 2: // Backend Architecture — api console
+      case 2: // Backend Architecture - api console
         return <BackendVisual />;
-      case 3: // Mentorship & Community — impact stats
+      case 3: // Mentorship & Community - impact stats
         return <CommunityVisual />;
       default:
         return null;
@@ -180,9 +180,15 @@ export default function ServiceCard({ service, index }: Props) {
         </div>
 
         <div className="svc-card-body">
-          <h3 className="svc-name" ref={nameRef}>{service.name}</h3>
-          <p className="svc-desc" ref={descRef}>{service.description}</p>
-          <p className="svc-tags" ref={tagsRef}>{service.tags}</p>
+          <h3 className="svc-name" ref={nameRef}>
+            {service.name}
+          </h3>
+          <p className="svc-desc" ref={descRef}>
+            {service.description}
+          </p>
+          <p className="svc-tags" ref={tagsRef}>
+            {service.tags}
+          </p>
           <span className="svc-ghost" aria-hidden="true" ref={ghostRef}>
             {service.ghost}
           </span>

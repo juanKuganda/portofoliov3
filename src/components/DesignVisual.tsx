@@ -5,7 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 // Design happens here: a cursor grabs an amber token from the tokens column,
-// drags it onto a wireframe box, and the box fills — on a full-width canvas.
+// drags it onto a wireframe box, and the box fills - on a full-width canvas.
 // Loops gently; pauses off-screen; fully static under reduced motion.
 export default function DesignVisual() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -15,7 +15,7 @@ export default function DesignVisual() {
     if (!root) return;
 
     const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     ).matches;
     if (reduced) return;
 

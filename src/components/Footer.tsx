@@ -43,7 +43,7 @@ export default function Footer() {
       </div>
       <div className="colophon">
         <span>&copy; 2026 Juan Kuganda &middot; Palu, ID</span>
-        <span>{time ? `${time} WITA — Palu` : "--:-- WITA"}</span>
+        <span>{time ? `${time} WITA - Palu` : "--:-- WITA"}</span>
         <span>v6.3 &middot; built with intent</span>
         <a
           href="#top"

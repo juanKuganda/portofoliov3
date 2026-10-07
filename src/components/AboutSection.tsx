@@ -7,12 +7,22 @@ export default function AboutSection() {
   useFitText(fitRef);
 
   const stackItems = [
-    "TypeScript", "React", "Next.js", "Tailwind CSS", "Figma", "Node.js", "Laravel", "Framer"
+    "TypeScript",
+    "React",
+    "Next.js",
+    "Tailwind CSS",
+    "Figma",
+    "Node.js",
+    "Laravel",
+    "Framer",
   ];
 
   return (
     <section className="block theme-dark" id="about" aria-label="About">
-      <MagneticText intensity={0.08} style={{ display: "block", width: "100%" }}>
+      <MagneticText
+        intensity={0.08}
+        style={{ display: "block", width: "100%" }}
+      >
         <h2 className="fit sec-fit" ref={fitRef}>
           ABOUT
         </h2>
@@ -22,7 +32,7 @@ export default function AboutSection() {
         <span>Palu, ID · WITA</span>
       </div>
       <p className="about-statement rv">
-        Developer, designer, mentor —{" "}
+        Developer, designer, mentor -{" "}
         <span className="dim">in that order, most days.</span>
       </p>
       <div className="about-grid">
@@ -42,7 +52,7 @@ export default function AboutSection() {
         </div>
         <div className="rv rv-right rv-d1">
           <p>
-            Based in <strong>Palu, Indonesia</strong> (WITA) — happy on-site or
+            Based in <strong>Palu, Indonesia</strong> (WITA) - happy on-site or
             hybrid locally, remote anywhere.
           </p>
           <div className="about-stack-wrap">

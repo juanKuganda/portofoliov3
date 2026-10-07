@@ -5,12 +5,30 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 const endpoints = [
-  { method: "GET", cls: "get", url: "/api/v1/projects", lat: "12ms", status: "200 OK" },
-  { method: "POST", cls: "post", url: "/api/v1/auth/session", lat: "48ms", status: "201 Created" },
-  { method: "GET", cls: "get", url: "/api/v1/diplomas/verify", lat: "9ms", status: "200 OK" },
+  {
+    method: "GET",
+    cls: "get",
+    url: "/api/v1/projects",
+    lat: "12ms",
+    status: "200 OK",
+  },
+  {
+    method: "POST",
+    cls: "post",
+    url: "/api/v1/auth/session",
+    lat: "48ms",
+    status: "201 Created",
+  },
+  {
+    method: "GET",
+    cls: "get",
+    url: "/api/v1/diplomas/verify",
+    lat: "9ms",
+    status: "200 OK",
+  },
 ];
 
-// API console: requests sweep through the endpoint rows one after another —
+// API console: requests sweep through the endpoint rows one after another -
 // each row glows as its status pill pops. Loops gently; pauses off-screen;
 // fully static under reduced motion.
 export default function BackendVisual() {
@@ -21,7 +39,7 @@ export default function BackendVisual() {
     if (!root) return;
 
     const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     ).matches;
     if (reduced) return;
 
@@ -38,17 +56,12 @@ export default function BackendVisual() {
         const glow = row.querySelector(".row-glow");
         const pill = row.querySelector(".status-pill");
         const at = i * 0.75;
-        tl.fromTo(
-          glow,
-          { opacity: 0 },
-          { opacity: 1, duration: 0.3 },
-          at
-        )
+        tl.fromTo(glow, { opacity: 0 }, { opacity: 1, duration: 0.3 }, at)
           .fromTo(
             pill,
             { scale: 0.85 },
             { scale: 1, duration: 0.4, ease: "back.out(2.5)" },
-            at + 0.1
+            at + 0.1,
           )
           .to(glow, { opacity: 0, duration: 0.45 }, at + 0.45);
       });

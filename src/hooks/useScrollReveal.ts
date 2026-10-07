@@ -13,7 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 export function useScrollReveal() {
   useEffect(() => {
     const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     ).matches;
     if (reduced) return;
 
@@ -52,12 +52,13 @@ export function useScrollReveal() {
               start: "top 94%",
               once: true,
             },
-          }
+          },
         );
       });
 
-      // Section title parallax — all .fit.sec-fit elements
-      const sectionTitles = document.querySelectorAll<HTMLElement>(".fit.sec-fit");
+      // Section title parallax - all .fit.sec-fit elements
+      const sectionTitles =
+        document.querySelectorAll<HTMLElement>(".fit.sec-fit");
       sectionTitles.forEach((title) => {
         gsap.fromTo(
           title,
@@ -71,11 +72,11 @@ export function useScrollReveal() {
               end: "bottom top",
               scrub: 0.6,
             },
-          }
+          },
         );
       });
 
-      // Status strip — slide in from left
+      // Status strip - slide in from left
       const statusStrip = document.querySelector<HTMLElement>(".status-strip");
       if (statusStrip) {
         gsap.fromTo(
@@ -90,11 +91,11 @@ export function useScrollReveal() {
               start: "top 90%",
               once: true,
             },
-          }
+          },
         );
       }
 
-      // Resume rows — stagger in
+      // Resume rows - stagger in
       const resumeRows = document.querySelectorAll<HTMLElement>(".resume-row");
       if (resumeRows.length) {
         gsap.set(resumeRows, { opacity: 0, x: -20 });

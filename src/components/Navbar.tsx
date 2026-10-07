@@ -19,7 +19,7 @@ export default function Navbar() {
           }
         });
       },
-      { rootMargin: "-40% 0px -55% 0px" }
+      { rootMargin: "-40% 0px -55% 0px" },
     );
 
     sectionIds.forEach((id) => {
@@ -62,7 +62,7 @@ export default function Navbar() {
           </a>
         </MagneticText>
         <span className="nav-clock desktop-only">
-          {time ? `Palu — ${time} WITA` : "Palu — WITA"}
+          {time ? `Palu - ${time} WITA` : "Palu - WITA"}
         </span>
         <div className="nav-links desktop-only">
           {navItems.map(({ id, label }) => (
@@ -94,10 +94,13 @@ export default function Navbar() {
       {/* Mobile Drawer Menu Overlay */}
       {menuOpen && (
         <div className="mobile-menu-overlay" onClick={() => setMenuOpen(false)}>
-          <div className="mobile-menu-drawer" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="mobile-menu-drawer"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mobile-menu-header">
               <span className="nav-clock">
-                {time ? `Palu — ${time} WITA` : "Palu — WITA"}
+                {time ? `Palu - ${time} WITA` : "Palu - WITA"}
               </span>
               <button
                 type="button"

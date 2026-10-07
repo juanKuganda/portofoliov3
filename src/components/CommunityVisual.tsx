@@ -5,7 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 // Impact strip: the numbers count up once when the card scrolls into view.
-// Calm by design — no loop here. Fully static under reduced motion.
+// Calm by design - no loop here. Fully static under reduced motion.
 export default function CommunityVisual() {
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -14,7 +14,7 @@ export default function CommunityVisual() {
     if (!root) return;
 
     const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     ).matches;
     if (reduced) return;
 
@@ -40,7 +40,7 @@ export default function CommunityVisual() {
               el.textContent = `${Math.round(obj.v)}+`;
             },
           },
-          i * 0.15
+          i * 0.15,
         );
       });
     }, root);
@@ -59,11 +59,15 @@ export default function CommunityVisual() {
       <div className="sv-stage-body">
         <div className="sv-stats">
           <div className="sv-stat">
-            <span className="sv-stat-val" data-count="100">100+</span>
+            <span className="sv-stat-val" data-count="100">
+              100+
+            </span>
             <span className="sv-stat-lbl">Mentees</span>
           </div>
           <div className="sv-stat">
-            <span className="sv-stat-val" data-count="3">3+</span>
+            <span className="sv-stat-val" data-count="3">
+              3+
+            </span>
             <span className="sv-stat-lbl">Communities</span>
           </div>
           <div className="sv-stat">
