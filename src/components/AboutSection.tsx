@@ -11,7 +11,7 @@ export default function AboutSection() {
   ];
 
   return (
-    <section className="block invert" id="about" aria-label="About">
+    <section className="block theme-dark" id="about" aria-label="About">
       <MagneticText intensity={0.08} style={{ display: "block", width: "100%" }}>
         <h2 className="fit sec-fit" ref={fitRef}>
           ABOUT

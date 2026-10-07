@@ -1,12 +1,15 @@
 import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useFitText } from "../hooks/useFitText";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function BentoSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const fitRef = useRef<HTMLHeadingElement>(null);
+  useFitText(fitRef);
 
   // State for Card 1: Design System Token Preview
   const [activeToken, setActiveToken] = useState<number>(1);
@@ -128,7 +131,7 @@ export default function BentoSection() {
   return (
     <section className="bento-section block" id="bento" ref={sectionRef}>
       <div className="bento-header rv">
-        <h2 className="fit sec-fit">CAPABILITIES</h2>
+        <h2 className="fit sec-fit" ref={fitRef}>CAPABILITIES</h2>
         <p className="bento-desc">Building digital products that feel alive.</p>
       </div>
 

@@ -787,11 +787,11 @@ section.block {
 /* ============================================================
    ABOUT : INVERTED
    ============================================================ */
-.invert {
+.theme-dark {
   background: var(--ink);
   color: var(--paper);
 }
-.invert ::selection {
+.theme-dark ::selection {
   background: var(--paper);
   color: var(--ink);
 }
