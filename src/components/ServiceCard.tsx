@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import WebDevVisual from "./WebDevVisual";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -120,26 +121,8 @@ export default function ServiceCard({ service, index }: Props) {
   // Render bespoke, meaningful visual illustrations for each service folder
   const renderVisualContent = () => {
     switch (index) {
-      case 0: // Web Development
-        return (
-          <div className="service-visual-inner visual-webdev">
-            <div className="sv-ide-window">
-              <div className="sv-ide-header">
-                <span className="sv-dot red"></span>
-                <span className="sv-dot yellow"></span>
-                <span className="sv-dot green"></span>
-                <span className="sv-tab-name">App.tsx</span>
-              </div>
-              <div className="sv-ide-body">
-                <code>
-                  <span className="tag-kw">&lt;Navbar /&gt;</span><br/>
-                  <span className="tag-fn">&lt;Hero</span> <span className="tag-prop">name</span>=<span className="tag-str">"Juan Kuganda"</span> <span className="tag-fn">/&gt;</span><br/>
-                  <span className="tag-kw">&lt;InteractiveUI /&gt;</span>
-                </code>
-              </div>
-            </div>
-          </div>
-        );
+      case 0: // Web Development — a living micro-interaction demo
+        return <WebDevVisual />;
 
       case 1: // UI / UX Design
         return (
