@@ -120,30 +120,6 @@ export default function Statement() {
             {s.label}
           </span>
         ))}
-        <span className="st-pill st-pattern" aria-hidden="true">
-          <svg viewBox="0 0 40 40" width="40" height="40">
-            <defs>
-              <pattern
-                id="st-dots"
-                width="10"
-                height="10"
-                patternUnits="userSpaceOnUse"
-              >
-                <circle cx="2" cy="2" r="1.6" fill="currentColor" />
-              </pattern>
-            </defs>
-            <rect width="40" height="40" fill="url(#st-dots)" />
-          </svg>
-        </span>
-        <span className="st-pill st-pattern" aria-hidden="true">
-          <svg viewBox="0 0 40 40" width="40" height="40">
-            <path
-              d="M-8 8 L8 -8 M0 40 L40 0 M32 48 L48 32"
-              stroke="currentColor"
-              strokeWidth="3"
-            />
-          </svg>
-        </span>
       </div>
     </section>
   );
