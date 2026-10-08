@@ -808,9 +808,52 @@ a {
     opacity: 0.55;
   }
 }
+/* ---- Edge furniture: vertical labels + corner crop-marks fill the
+   far canvas (desktop only). translate/rotate are CSS properties so
+   the GSAP explode can own `transform` freely. ---- */
+.reel-edge {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  writing-mode: vertical-rl;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--muted);
+  z-index: 1;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.reel-edge-l {
+  left: 26px;
+  rotate: 180deg;
+}
+.reel-edge-r {
+  right: 26px;
+}
+.reel-corner {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted);
+  z-index: 1;
+  pointer-events: none;
+  line-height: 1;
+}
+.rc-tl { top: 78px; left: 22px; }
+.rc-tr { top: 78px; right: 22px; }
+.rc-bl { bottom: 44px; left: 22px; }
+.rc-br { bottom: 44px; right: 22px; }
+@media (max-width: 768px) {
+  .reel-edge,
+  .reel-corner {
+    display: none;
+  }
+}
 /* ---- Figma-like ruler pinned to the hero bottom. The track slides
-   (scrub) as you scroll — like the canvas moving under the ruler —
-   and fades out with the hero exit. ---- */
+   (scrub) as you scroll — like the canvas moving under the ruler — */
 .reel-ruler {
   position: absolute;
   left: 0;

@@ -499,6 +499,27 @@ export default function Hero() {
           },
           0.12
         );
+
+        // Edge furniture joins too: verticals drift further outward,
+        // corner marks shrink away.
+        tl.fromTo(
+          ".reel-edge-l",
+          { x: 0, autoAlpha: 1 },
+          { x: -110, autoAlpha: 0, duration: 1, immediateRender: false },
+          0.08
+        )
+          .fromTo(
+            ".reel-edge-r",
+            { x: 0, autoAlpha: 1 },
+            { x: 110, autoAlpha: 0, duration: 1, immediateRender: false },
+            0.1
+          )
+          .to(".reel-corner", {
+            autoAlpha: 0,
+            scale: 0.5,
+            duration: 0.8,
+            immediateRender: false,
+          }, 0.15);
       }
 
       // The ruler stays visible through the explode — it only leaves
@@ -639,6 +660,21 @@ export default function Hero() {
           ))}
         </div>
       </div>
+
+      {/* Edge furniture: fills the far left/right canvas like the
+          reference — coordinates (personal) left, roles right, plus
+          crop-marks at the corners. Desktop only, joins the explode. */}
+      <span className="reel-edge reel-edge-l" aria-hidden="true">
+        0.90°S — 119.41°E · PALU
+      </span>
+      <span className="reel-edge reel-edge-r" aria-hidden="true">
+        DESIGN · CODE · MENTOR
+      </span>
+      {["tl", "tr", "bl", "br"].map((c) => (
+        <span key={c} className={`reel-corner rc-${c}`} aria-hidden="true">
+          +
+        </span>
+      ))}
 
       {/* Figma-like ruler pinned to the hero bottom: the canvas slides
           under it as you scroll. Stays visible through the explode. */}
