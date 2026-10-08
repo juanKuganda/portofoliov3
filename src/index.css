@@ -2834,11 +2834,12 @@ footer.site {
   outline: 2px solid var(--paper);
   outline-offset: -2px;
 }
-/* Pink cursor arrow pointing at the Email pill */
+/* Pink cursor arrow pointing at the Email row — overlaps the row's
+   top edge so the tip clearly indicates EMAIL (not floating in the void) */
 .foot-cursor-arrow {
   position: absolute;
-  top: -34px;
-  left: clamp(20px, 4vw, 56px);
+  top: -6px;
+  left: clamp(110px, 11vw, 190px);
   transform: rotate(-18deg);
   pointer-events: none;
   z-index: 2;
@@ -3050,7 +3051,7 @@ footer.site {
     gap: 12px;
   }
   .foot-cursor-arrow {
-    top: -24px;
+    top: -10px;
     left: 8px;
   }
   .colophon {
