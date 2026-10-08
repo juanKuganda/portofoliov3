@@ -22,7 +22,7 @@ export default function ContactSection() {
         </span>
       </a>
       <p className="contact-sub rv">
-        Open for freelance, internships &amp; collaborations
+        Got a project in mind? Let&rsquo;s talk.
       </p>
       <span className="contact-stickers" aria-hidden="true">
         <span className="contact-sticker cs-1">freelance</span>

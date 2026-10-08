@@ -90,7 +90,7 @@ export default function GalleryDensity({ tiles }: Props) {
           <figure className="tile" key={tile.seed}>
             <img
               src={`https://picsum.photos/seed/${tile.seed}/800/600?grayscale`}
-              alt={`Placeholder image - ${tile.cap}`}
+              alt={tile.cap}
               loading="lazy"
               decoding="async"
               onError={(e) => {

@@ -25,7 +25,7 @@ export const projects: Project[] = [
     id: "proj-sijaga",
     idx: "/ 01",
     title: "SIJAGA",
-    year: "Thesis · 2025 – 26",
+    year: "Thesis · 2025 – 2026",
     ariaLabel: "SIJAGA details",
     description:
       "<strong>Decentralized diploma verification.</strong> Most systems prove a diploma is <em>authentic</em> by matching university archives. SIJAGA proves <em>who owns it</em> - a non-transferable certificate held in the graduate\u2019s own wallet, designed with Indonesian data-protection law in mind.",
@@ -132,9 +132,9 @@ export const projects: Project[] = [
   {
     id: "proj-mentor",
     idx: "/ 04",
-    title: "Web Mentoring",
+    title: "Web Mentorship",
     year: "Ongoing · 2025 – Present",
-    ariaLabel: "Mentoring details",
+    ariaLabel: "Mentorship details",
     description:
       "<strong>Weekly web development mentoring</strong> for two Palu communities: Programming Tadulako and HammerCode. Sessions run from HTML/CSS/JS fundamentals up to building and shipping real projects.",
     meta: [

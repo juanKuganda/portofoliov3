@@ -8,7 +8,7 @@ const SKILLS = [
   { label: "Web Development", tone: "pink" },
   { label: "UI/UX Design", tone: "blue" },
   { label: "Design Systems", tone: "green" },
-  { label: "Mentoring", tone: "purple" },
+  { label: "Mentorship", tone: "purple" },
 ] as const;
 
 /**
