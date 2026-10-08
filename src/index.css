@@ -1671,34 +1671,80 @@ section.block {
   gap: clamp(32px, 5vw, 88px);
   align-items: start;
 }
+/* ---- Services TIMELINE: vertical rail + node dots, generous
+   spacing between points. The amber progress fill grows (scrub) as
+   you travel. ---- */
 .svc-index-list {
+  position: relative;
   display: flex;
   flex-direction: column;
 }
+.svc-index-list::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 30px;
+  bottom: 30px;
+  width: 1px;
+  background: var(--line);
+}
+.svc-rail-progress {
+  position: absolute;
+  left: 14px;
+  top: 30px;
+  bottom: 30px;
+  width: 1px;
+  background: var(--signal);
+  transform: scaleY(0);
+  transform-origin: top;
+  will-change: transform;
+}
 .svc-index-row {
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) 12px;
+  grid-template-columns: 28px minmax(0, 1fr);
   gap: 18px;
   align-items: start;
   width: 100%;
-  padding: 26px 6px 26px 0;
+  /* timeline breathing room between points */
+  padding: clamp(38px, 7vh, 66px) 0;
   background: none;
   border: none;
-  border-bottom: 1px solid var(--line);
   text-align: left;
   cursor: pointer;
   color: var(--ink);
   font: inherit;
 }
-.svc-index-row:first-child {
-  border-top: 1px solid var(--line);
+.svc-node {
+  position: relative;
+  align-self: stretch;
+}
+.svc-node::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 13px;
+  height: 13px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 1.5px solid var(--muted);
+  background: var(--paper);
+  transition: background-color 0.3s var(--ease), border-color 0.3s var(--ease),
+    box-shadow 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.svc-index-row.active .svc-node::after {
+  background: var(--signal);
+  border-color: var(--signal);
+  transform: translateX(-50%) scale(1.15);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--signal) 18%, transparent);
 }
 .svc-index-num {
+  display: block;
   font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--muted);
-  padding-top: 8px;
+  margin-bottom: 10px;
   transition: color 0.3s var(--ease);
 }
 .svc-index-name {
@@ -1731,14 +1777,6 @@ section.block {
   transition: max-height 0.45s var(--ease), opacity 0.35s var(--ease),
     margin-top 0.45s var(--ease);
 }
-.svc-index-dot {
-  width: 10px;
-  height: 10px;
-  margin-top: 12px;
-  border-radius: 2px;
-  background: var(--line);
-  transition: background-color 0.3s var(--ease), transform 0.3s var(--ease);
-}
 .svc-index-row:hover .svc-index-name {
   transform: translateX(6px);
 }
@@ -1753,10 +1791,6 @@ section.block {
   max-height: 120px;
   opacity: 1;
   margin-top: 12px;
-}
-.svc-index-row.active .svc-index-dot {
-  background: var(--signal);
-  transform: rotate(45deg);
 }
 .svc-index-row:focus-visible {
   outline: 2px solid var(--signal);
@@ -1776,17 +1810,18 @@ section.block {
   background: #0f0f0f;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
 }
+/* Panels are stacked; visibility is instant via the .active class
+   (correct end-state + reduced-motion fallback). The Figma-style
+   zoom-through motion is owned by GSAP, never CSS transitions. */
 .svc-stage-panel {
   position: absolute;
   inset: 0;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.5s var(--ease), visibility 0s linear 0.5s;
 }
 .svc-stage-panel.active {
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.5s var(--ease);
 }
 .svc-stage-caption {
   display: flex;
@@ -1804,7 +1839,7 @@ section.block {
   .svc-stage-panel.active,
   .svc-index-desc,
   .svc-index-name,
-  .svc-index-dot {
+  .svc-node::after {
     transition: none;
   }
 }
@@ -2525,7 +2560,7 @@ footer.site {
     aspect-ratio: 16 / 10;
   }
   .svc-index-row {
-    padding: 20px 6px 20px 0;
+    padding: 30px 0;
   }
   .fm-letter {
     font-size: clamp(56px, 20vw, 96px);

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useFitText } from "../hooks/useFitText";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -47,10 +47,23 @@ const services: ServiceData[] = [
   },
 ];
 
+/**
+ * SERVICES — "04 disciplines" as a TIMELINE.
+ * Left: a vertical rail with node dots; generous spacing between points.
+ * Scrolling a point through the viewport center activates it (hover /
+ * tap still work as overrides). Right: one sticky stage whose panels
+ * morph Figma-Smart-Animate-style on every change — incoming panel
+ * zooms through (scale 0.95→1, y 28→0, expo.out), transform/opacity
+ * only. An amber progress fill grows down the rail as you travel.
+ * Mobile: rail kept, stage stacks below (relative). Reduced motion:
+ * instant swaps, no scrub, no morph.
+ */
 export default function ServicesSection() {
   const fitRef = useRef<HTMLHeadingElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const railProgressRef = useRef<HTMLSpanElement>(null);
+  const rowRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [active, setActive] = useState(0);
   const [sectionVisible, setSectionVisible] = useState(true);
   useFitText(fitRef);
@@ -74,6 +87,85 @@ export default function ServicesSection() {
       st.kill();
     };
   }, []);
+
+  // Scroll-driven active: each timeline point takes over the stage as
+  // it crosses the viewport center.
+  useEffect(() => {
+    if (reduced) return;
+    const triggers = services.map((_, i) => {
+      const row = rowRefs.current[i];
+      if (!row) return null;
+      return ScrollTrigger.create({
+        trigger: row,
+        start: "top 58%",
+        end: "bottom 42%",
+        onToggle: (self) => {
+          if (self.isActive) setActive(i);
+        },
+      });
+    });
+    return () => {
+      triggers.forEach((t) => t?.kill());
+    };
+  }, [reduced]);
+
+  // Rail progress: amber fill grows as you travel the timeline.
+  useEffect(() => {
+    if (reduced) return;
+    const bar = railProgressRef.current;
+    const list = listRef.current;
+    if (!bar || !list) return;
+    const tween = gsap.to(bar, {
+      scaleY: 1,
+      ease: "none",
+      scrollTrigger: {
+        trigger: list,
+        start: "top 62%",
+        end: "bottom 48%",
+        scrub: 0.6,
+      },
+    });
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+    };
+  }, [reduced]);
+
+  // Figma-style stage morph — Smart-Animate-like zoom-through on the
+  // incoming panel. useLayoutEffect: runs before paint, so the fromTo
+  // never flashes. transform/opacity only, expo easing.
+  const firstMorph = useRef(true);
+  useLayoutEffect(() => {
+    if (reduced) return;
+    const section = sectionRef.current;
+    if (!section) return;
+    const panels = section.querySelectorAll<HTMLElement>(".svc-stage-panel");
+    if (!panels.length) return;
+    if (firstMorph.current) {
+      firstMorph.current = false;
+      return;
+    }
+    gsap.fromTo(
+      panels[active],
+      { autoAlpha: 0, scale: 0.95, y: 28 },
+      {
+        autoAlpha: 1,
+        scale: 1,
+        y: 0,
+        duration: 0.7,
+        ease: "expo.out",
+        overwrite: "auto",
+      }
+    );
+    const caption = section.querySelector<HTMLElement>(".svc-stage-caption");
+    if (caption) {
+      gsap.fromTo(
+        caption,
+        { autoAlpha: 0.2, y: 8 },
+        { autoAlpha: 1, y: 0, duration: 0.5, ease: "expo.out", overwrite: "auto" }
+      );
+    }
+  }, [active, reduced]);
 
   // Entrance: rows stagger in, stage fades up.
   useEffect(() => {
@@ -129,7 +221,7 @@ export default function ServicesSection() {
       </h2>
       <div className="sec-sub rv">
         <span>04 disciplines</span>
-        <span>Hover a row — the stage follows</span>
+        <span>Scroll the timeline — the stage follows</span>
       </div>
 
       <div className="svc-index-grid">
@@ -139,26 +231,32 @@ export default function ServicesSection() {
           role="tablist"
           aria-label="Services"
         >
+          <span
+            className="svc-rail-progress"
+            ref={railProgressRef}
+            aria-hidden="true"
+          />
           {services.map((s, i) => (
             <button
               key={s.num}
               type="button"
               role="tab"
               aria-selected={i === active}
+              ref={(el) => {
+                rowRefs.current[i] = el;
+              }}
               className={`svc-index-row${i === active ? " active" : ""}`}
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
               onClick={() => setActive(i)}
             >
-              <span className="svc-index-num" aria-hidden="true">
-                {s.num}
-              </span>
+              <span className="svc-node" aria-hidden="true" />
               <span className="svc-index-main">
+                <span className="svc-index-num">{s.num}</span>
                 <span className="svc-index-name">{s.name}</span>
                 <span className="svc-index-tags">{s.tags}</span>
                 <span className="svc-index-desc">{s.description}</span>
               </span>
-              <span className="svc-index-dot" aria-hidden="true" />
             </button>
           ))}
         </div>
