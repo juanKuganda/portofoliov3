@@ -1765,6 +1765,78 @@ section.block {
    right. Only the active visual is alive — this is what kills the
    old sticky-stack jank structurally.
    ============================================================ */
+/* ============================================================
+   SERVICES : STACKING DECK
+   Each service is a full card in its signature pop color with the
+   dark animated visual embedded. Cards are sticky with a stepped
+   top offset — scrolling stacks them like a deck.
+   ============================================================ */
+.svc-deck {
+  margin-top: clamp(28px, 5vh, 54px);
+  padding-bottom: 14vh;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 3vw, 36px);
+}
+.svc-card {
+  position: sticky;
+  top: calc(84px + var(--i) * 30px);
+  background: var(--card-bg);
+  color: var(--card-fg);
+  border: 2px solid var(--ink);
+  border-radius: 24px;
+  padding: clamp(20px, 3.4vw, 40px) clamp(20px, 3.4vw, 40px)
+    clamp(16px, 2.6vw, 28px);
+  box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+.svc-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(14px, 2.4vw, 28px);
+}
+.svc-card-num {
+  font-family: var(--font-mono);
+  font-size: clamp(13px, 1.5vw, 16px);
+  letter-spacing: 0.1em;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  padding: 8px 16px;
+  flex: none;
+  opacity: 0.9;
+}
+.svc-card-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 0.98;
+  font-size: clamp(38px, 6.4vw, 96px);
+  text-transform: uppercase;
+  margin: 0;
+}
+.svc-card-tags {
+  margin: 10px 0 0;
+  font-family: var(--font-mono);
+  font-size: clamp(11px, 1.4vw, 14px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.svc-card-desc {
+  margin: clamp(14px, 2.4vh, 24px) 0 0;
+  font-size: clamp(15px, 1.9vw, 20px);
+  line-height: 1.5;
+  max-width: 60ch;
+  opacity: 0.92;
+}
+.svc-card-visual {
+  margin-top: clamp(16px, 3vh, 28px);
+  height: clamp(300px, 44vw, 430px);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid rgba(0, 0, 0, 0.35);
+  background: #0f0f0f;
+}
 .svc-index-grid {
   margin-top: clamp(28px, 5vh, 54px);
   display: grid;
@@ -2021,9 +2093,61 @@ section.block {
   dominant-baseline: central;
   user-select: none;
 }
-.cm-node.cm-center circle {
+.cm-node.cm-center .cm-core {
   fill: var(--signal);
   stroke: var(--signal);
+}
+/* Rotating dashed orbit ring around the mentor node. */
+.cm-node.cm-center .cm-orbit {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 7;
+  opacity: 0.65;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cm-spin 14s linear infinite;
+}
+@keyframes cm-spin {
+  to { transform: rotate(360deg); }
+}
+/* Shockwave ring fired by the center on each volley (GSAP-driven). */
+.cm-shock {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 2.5;
+  opacity: 0;
+}
+/* Ambient floating dots drifting behind the network. */
+.cm-ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.cm-dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  opacity: 0.5;
+  animation: cm-drift 7s ease-in-out infinite;
+}
+.cm-dot.d0 { left: 12%; top: 22%; background: var(--pop-pink); }
+.cm-dot.d1 { left: 88%; top: 18%; background: var(--pop-blue); animation-delay: -2s; }
+.cm-dot.d2 { left: 8%; top: 68%; background: var(--pop-green); animation-delay: -4s; }
+.cm-dot.d3 { left: 92%; top: 72%; background: var(--pop-purple); animation-delay: -1s; }
+.cm-dot.d4 { left: 50%; top: 8%; background: var(--pop-yellow); animation-delay: -5s; }
+.cm-dot.d5 { left: 50%; top: 90%; background: var(--pop-pink); animation-delay: -3s; }
+@keyframes cm-drift {
+  0%, 100% { transform: translateY(0); opacity: 0.35; }
+  50% { transform: translateY(-16px); opacity: 0.7; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-node.cm-center .cm-orbit,
+  .cm-dot {
+    animation: none;
+  }
 }
 .cm-node.cm-center text {
   fill: #0a0a0a;
@@ -2930,6 +3054,22 @@ footer.site {
     grid-template-columns: minmax(0, 1fr);
     gap: 28px;
   }
+  .svc-card {
+    top: calc(70px + var(--i) * 16px);
+    border-radius: 18px;
+  }
+  .svc-card-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .svc-card-name {
+    font-size: clamp(30px, 10.5vw, 54px);
+    overflow-wrap: break-word;
+  }
+  .svc-card-visual {
+    height: 300px;
+  }
   .svc-stage-frame {
     position: relative;
     top: 0;
@@ -3413,6 +3553,7 @@ footer.site {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 14px;
+  white-space: nowrap;
   cursor: pointer;
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -3440,6 +3581,70 @@ footer.site {
 .pg-visual {
   align-items: stretch;
   justify-content: stretch;
+}
+/* Whack-a-cockroach arena */
+.roach-visual {
+  align-items: stretch;
+  justify-content: stretch;
+}
+.roach-arena {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+  background: rgba(0, 0, 0, 0.025);
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.roach {
+  position: absolute;
+  width: 54px;
+  height: 52px;
+  transform: translate(-50%, -50%) rotate(var(--rr, 0deg));
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  animation: roach-wiggle 0.45s ease-in-out infinite;
+  will-change: transform;
+}
+.roach svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.22));
+  overflow: visible;
+}
+.roach:hover svg {
+  filter: drop-shadow(0 4px 8px rgba(255, 77, 109, 0.55));
+}
+.roach:focus-visible {
+  outline: 2px solid var(--pop-pink);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+@keyframes roach-wiggle {
+  0%, 100% { transform: translate(-50%, -50%) rotate(calc(var(--rr, 0deg) - 9deg)); }
+  50% { transform: translate(-50%, -50%) rotate(calc(var(--rr, 0deg) + 9deg)); }
+}
+.squish-pop {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--pop-pink);
+  pointer-events: none;
+  animation: squish-float 0.85s ease-out forwards;
+}
+@keyframes squish-float {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+  100% { opacity: 0; transform: translate(-50%, -160%) scale(1.25); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .roach { animation: none; }
+  .squish-pop { animation: none; opacity: 0; }
 }
 .playground-canvas {
   position: relative;
@@ -3627,8 +3832,15 @@ footer.site {
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: var(--signal);
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--pop-pink),
+    var(--pop-yellow),
+    var(--pop-green),
+    var(--pop-blue),
+    var(--pop-purple)
+  );
   transform: scaleX(0);
   transform-origin: left center;
   z-index: 100;

@@ -50,6 +50,11 @@ export default function CommunityVisual({
       svg.setAttribute("viewBox", `0 0 ${coords.w} ${coords.h}`);
       const c = P(CENTER.x, CENTER.y);
       gsap.set(root.querySelector('.cm-node[data-i="c"]'), { x: c.x, y: c.y });
+      const shock = root.querySelector(".cm-shock") as SVGCircleElement;
+      if (shock) {
+        shock.setAttribute("cx", String(c.x));
+        shock.setAttribute("cy", String(c.y));
+      }
       SATS.forEach((s, i) => {
         const p = P(s.x, s.y);
         gsap.set(root.querySelector(`.cm-node[data-i="${i}"]`), {
@@ -78,6 +83,7 @@ export default function CommunityVisual({
         gsap.set(".cm-link", { opacity: 0 });
         gsap.set(".cm-pulse", { opacity: 0 });
         gsap.set(".cm-bubble", { scale: 0, opacity: 0 });
+        gsap.set(".cm-shock", { opacity: 0 });
       };
 
       tl.call(reset)
@@ -90,6 +96,26 @@ export default function CommunityVisual({
           stagger: 0.1,
         })
         .to(".cm-link", { opacity: 1, duration: 0.4, stagger: 0.08 }, "-=0.35");
+
+      // Center fires: shockwave ring + happy jump, then the volley.
+      tl.fromTo(
+        ".cm-shock",
+        { attr: { r: 24 }, opacity: 0.85 },
+        { attr: { r: 84 }, opacity: 0, duration: 0.7, ease: "power2.out" },
+        1.05,
+      )
+        .fromTo(
+          '.cm-node[data-i="c"]',
+          { scale: 1 },
+          {
+            scale: 1.22,
+            duration: 0.15,
+            yoyo: true,
+            repeat: 1,
+            ease: "power2.out",
+          },
+          1.05,
+        );
 
       // Pulses fly center → satellite; each arrival ticks the counter.
       SATS.forEach((s, i) => {
@@ -116,6 +142,23 @@ export default function CommunityVisual({
               totalRef.current += 1;
               if (countEl)
                 countEl.textContent = String(totalRef.current).padStart(3, "0");
+              // WOW: satellite happy-bounce + counter pop on arrival.
+              gsap.fromTo(
+                `.cm-node[data-i="${i}"]`,
+                { scale: 1 },
+                {
+                  scale: 1.45,
+                  duration: 0.16,
+                  yoyo: true,
+                  repeat: 1,
+                  ease: "power2.out",
+                },
+              );
+              gsap.fromTo(
+                ".cm-counter",
+                { scale: 1.18 },
+                { scale: 1, duration: 0.32, ease: "back.out(3)" },
+              );
             },
             undefined,
             at + 0.65,
@@ -178,7 +221,13 @@ export default function CommunityVisual({
         <span className="bar-right">signal relay · live</span>
       </div>
       <div className="sv-stage-body cm-body">
+        <div className="cm-ambient" aria-hidden="true">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <span key={i} className={`cm-dot d${i}`} />
+          ))}
+        </div>
         <svg className="cm-svg" aria-hidden="true">
+          <circle className="cm-shock" r={24} cx={-50} cy={-50} />
           {SATS.map((_, i) => (
             <line
               key={`l${i}`}
@@ -201,7 +250,8 @@ export default function CommunityVisual({
             />
           ))}
           <g className="cm-node cm-center" data-i="c">
-            <circle r={22} />
+            <circle className="cm-orbit" r={31} />
+            <circle className="cm-core" r={22} />
             <text>J</text>
           </g>
           {SATS.map((s, i) => (
