@@ -41,7 +41,6 @@ function RoleTicker() {
 export default function Hero() {
   const rootRef = useRef<HTMLElement>(null);
   const nameRef = useRef<HTMLHeadingElement>(null);
-  const portraitImgRef = useRef<HTMLImageElement>(null);
   useFitText(nameRef);
 
   // Choreographed hero entrance: kicker → name chars → statement/meta → portrait,
@@ -194,57 +193,71 @@ export default function Hero() {
     };
   }, []);
 
-  // Scroll-linked hero parallax
+  // Pinned hero exit (desktop): the hero holds while its content lifts and
+  // fades, then the Work section wipes up over it — the scroll payoff.
+  // Mobile: simple drift, no pin (a pinned hero is exhausting on small screens).
   useEffect(() => {
     const reduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
     if (reduced) return;
 
-    // Scoped context: cleanup reverts ONLY this effect's triggers,
-    // never ScrollTriggers owned by other components.
     const root = rootRef.current;
     if (!root) return;
-    const ctx = gsap.context(() => {
-      const heroName = nameRef.current;
-      const heroImg = portraitImgRef.current;
+    const mm = gsap.matchMedia();
 
-    if (heroName) {
-      gsap.to(heroName, {
-        y: 60,
-        scale: 0.96,
-        opacity: 0.75,
-        ease: "none",
+    mm.add("(min-width: 768px)", () => {
+      const tl = gsap.timeline({
+        defaults: { ease: "none" },
         scrollTrigger: {
-          trigger: heroName,
+          trigger: root,
           start: "top top",
-          end: "+=650",
-          scrub: true,
+          end: "+=70%",
+          scrub: 0.6,
+          pin: true,
+          anticipatePin: 1,
         },
       });
-    }
+      tl.to(".hero-kicker, .role-ticker", { y: -50, opacity: 0, duration: 0.35 }, 0)
+        .to(".hero-grid", { y: -90, opacity: 0, scale: 0.985, duration: 0.6 }, 0)
+        .to(".hero-scroll-strip", { opacity: 0, duration: 0.3 }, 0)
+        .to(
+          ".hero-portrait",
+          { y: -70, scale: 1.03, opacity: 0.12, duration: 0.7 },
+          0.1
+        );
+    });
 
-    if (heroImg) {
+    mm.add("(max-width: 767px)", () => {
+      gsap.to(".hero-grid", {
+        y: -40,
+        opacity: 0.3,
+        ease: "none",
+        scrollTrigger: {
+          trigger: root,
+          start: "top top",
+          end: "bottom top",
+          scrub: 0.6,
+        },
+      });
       gsap.fromTo(
-        heroImg,
+        ".hero-portrait img",
         { scale: 1.07 },
         {
           scale: 1,
           ease: "none",
           scrollTrigger: {
-            trigger: heroImg,
+            trigger: ".hero-portrait",
             start: "top bottom",
             end: "+=600",
             scrub: true,
           },
         }
       );
-    }
-
-    }, root);
+    });
 
     return () => {
-      ctx.revert();
+      mm.revert();
     };
   }, []);
 

@@ -2600,6 +2600,129 @@ footer.site {
   transform: none;
 }
 
+
+/* Depth dimmer: fades in via scrub as the next folder slides over */
+.svc-depth {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  background: #000;
+  opacity: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Scroll progress hairline */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--signal);
+  transform: scaleX(0);
+  transform-origin: left center;
+  z-index: 100;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-progress {
+    display: none;
+  }
+}
+
+
+/* ============ Bento: Playground charge + trail + combo ============ */
+.charge-ring {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border: 2px solid var(--signal);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0.25);
+  opacity: 0.9;
+  animation: charge-grow 0.9s ease-out forwards;
+  pointer-events: none;
+  z-index: 3;
+}
+@keyframes charge-grow {
+  to {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 0.35;
+  }
+}
+.trail-wrap {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.trail-dot {
+  position: absolute;
+  left: -8px;
+  top: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--signal);
+  opacity: 0.5;
+  animation: trail-fade 0.55s ease-out forwards;
+}
+.trail-dot.d2 { animation-delay: 0.08s; width: 12px; height: 12px; left: -6px; top: -6px; }
+.trail-dot.d3 { animation-delay: 0.16s; width: 8px; height: 8px; left: -4px; top: -4px; }
+@keyframes trail-fade {
+  to {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+}
+.pg-combo {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--signal);
+  margin-left: 4px;
+  animation: count-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============ Bento: Network chain reaction ============ */
+.signal-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+/* 44px touch targets + press feedback */
+.nodes-mockup .node::before {
+  content: "";
+  position: absolute;
+  inset: -15px;
+}
+.nodes-mockup .node:active {
+  transform: translate(-50%, -50%) scale(0.88);
+}
+/* pause idle animations off-screen */
+.nodes-mockup.anims-paused .node-ping,
+.nodes-mockup.anims-paused .animated-path {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .charge-ring,
+  .trail-dot,
+  .pg-combo {
+    animation: none !important;
+  }
+}
+
 /* ============ Bento: focus + reduced motion ============ */
 .tl-chip:focus-visible,
 .tl-sample-btn:focus-visible,

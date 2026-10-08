@@ -17,7 +17,17 @@ const themes = [
 /* ------------------------------------------------------------------ */
 /* Card 2 — particle burst rendered at the tap point                   */
 /* ------------------------------------------------------------------ */
-function Burst({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
+function Burst({
+  x,
+  y,
+  count = 12,
+  onDone,
+}: {
+  x: number;
+  y: number;
+  count?: number;
+  onDone: () => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,7 +54,7 @@ function Burst({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
 
   return (
     <div ref={ref} className="burst" style={{ left: x, top: y }} aria-hidden="true">
-      {Array.from({ length: 12 }).map((_, i) => (
+      {Array.from({ length: count }).map((_, i) => (
         <span key={i} className="bp" />
       ))}
     </div>
@@ -80,13 +90,29 @@ export default function BentoSection() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const ballRef = useRef<HTMLDivElement>(null);
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
-  const [bursts, setBursts] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [bursts, setBursts] = useState<{ id: number; x: number; y: number; count: number }[]>([]);
+  const [trails, setTrails] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [charge, setCharge] = useState<{ id: number; x: number; y: number } | null>(null);
   const [taps, setTaps] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [hint, setHint] = useState("Tap anywhere ✦");
+  const pressStart = useRef<{ t: number; x: number; y: number } | null>(null);
+  const lastTapAt = useRef(0);
+  const comboTimer = useRef(0);
 
   /* ---- Card 3 state ---- */
   const [signals, setSignals] = useState(0);
   const [lineFlash, setLineFlash] = useState(false);
   const nodeRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const mockupRef = useRef<HTMLDivElement>(null);
+  const signalDotRef = useRef<HTMLDivElement>(null);
+  const relaying = useRef(false);
+  // Node centers as % of the mockup: n1 Mentee, n2 Mentor, n3 Community
+  const NODE_POS: [number, number][] = [
+    [25, 65],
+    [50, 35],
+    [75, 65],
+  ];
 
   /* ---- Card 4 state ---- */
   const [runState, setRunState] = useState<"idle" | "running" | "done">("idle");
@@ -186,34 +212,232 @@ export default function BentoSection() {
       overwrite: "auto",
     });
   };
-  const handleCanvasTap = (e: React.MouseEvent<HTMLDivElement>) => {
+  const removeBurst = (id: number) =>
+    setBursts((prev) => prev.filter((b) => b.id !== id));
+
+  const spawnBurst = (x: number, y: number, count: number) => {
+    const id = Date.now() + Math.random();
+    setBursts((prev) => [...prev.slice(-2), { id, x, y, count }]);
+  };
+
+  /** Combo + tap counting (shared by tap and charge-burst). */
+  const registerTap = () => {
+    const now = performance.now();
+    setCombo((c) => (now - lastTapAt.current < 500 ? c + 1 : 1));
+    lastTapAt.current = now;
+    window.clearTimeout(comboTimer.current);
+    comboTimer.current = window.setTimeout(() => setCombo(0), 900);
+    setTaps((c) => {
+      const n = c + 1;
+      if (n % 10 === 0) {
+        setHint("Deca-tap! ✦");
+        window.setTimeout(() => setHint("Tap anywhere ✦"), 2200);
+      }
+      return n;
+    });
+  };
+
+  /** Directional squash & stretch of the ball toward the tap point. */
+  const squashBall = (x: number, y: number) => {
+    const ball = ballRef.current;
+    const box = canvasRef.current;
+    if (!ball || !box) return;
+    const br = ball.getBoundingClientRect();
+    const r = box.getBoundingClientRect();
+    const ang =
+      (Math.atan2(
+        r.top + y - (br.top + br.height / 2),
+        r.left + x - (br.left + br.width / 2)
+      ) *
+        180) /
+      Math.PI;
+    gsap
+      .timeline()
+      .set(ball, { rotation: ang })
+      .to(ball, {
+        scaleX: 1.45,
+        scaleY: 0.6,
+        duration: 0.12,
+        ease: "power2.out",
+        overwrite: "auto",
+      })
+      .to(ball, { scaleX: 1, scaleY: 1, duration: 0.55, ease: "back.out(3)" });
+  };
+
+  /** Fading motion-trail dots at the ball's position. */
+  const spawnTrail = () => {
+    const ball = ballRef.current;
+    const box = canvasRef.current;
+    if (!ball || !box) return;
+    const br = ball.getBoundingClientRect();
+    const r = box.getBoundingClientRect();
+    const id = Date.now() + Math.random();
+    const x = br.left + br.width / 2 - r.left;
+    const y = br.top + br.height / 2 - r.top;
+    setTrails((prev) => [...prev.slice(-5), { id, x, y }]);
+    window.setTimeout(() => {
+      setTrails((prev) => prev.filter((t) => t.id !== id));
+    }, 650);
+  };
+
+  /** A standard tap: ripple + burst + squash + trail. */
+  const fireTap = (x: number, y: number, big = false) => {
+    const id = Date.now() + Math.random();
+    if (!reduced) {
+      setRipples((prev) => [...prev.slice(-4), { id, x, y }]);
+      spawnBurst(x, y, big ? 24 : 12);
+      squashBall(x, y);
+      spawnTrail();
+    }
+    registerTap();
+  };
+
+  /* Press-and-hold: charge ring grows, ball magnetizes; release fires a
+     burst sized by hold time (cap ~1s). Quick taps fall through to fireTap. */
+  const onCanvasPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const box = canvasRef.current;
     if (!box) return;
     const rect = box.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const id = Date.now() + Math.random();
-    if (!reduced) {
-      setRipples((prev) => [...prev.slice(-4), { id, x, y }]);
-      setBursts((prev) => [...prev.slice(-2), { id, x, y }]);
+    pressStart.current = { t: performance.now(), x, y };
+    if (reduced) return;
+    setCharge({ id: Date.now() + Math.random(), x, y });
+    const ball = ballRef.current;
+    if (ball) {
+      gsap.to(ball, {
+        x: x - 14,
+        y: y - 14,
+        duration: 0.3,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
     }
-    setTaps((c) => c + 1);
   };
-  const removeBurst = (id: number) =>
-    setBursts((prev) => prev.filter((b) => b.id !== id));
+  const onCanvasPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const press = pressStart.current;
+    pressStart.current = null;
+    setCharge(null);
+    if (!press) return;
+    const box = canvasRef.current;
+    if (!box) return;
+    const rect = box.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const held = performance.now() - press.t;
+    if (held >= 180 && !reduced) {
+      const power = Math.min(held / 1000, 1);
+      const id = Date.now() + Math.random();
+      setRipples((prev) => [...prev.slice(-4), { id, x, y }]);
+      spawnBurst(x, y, Math.round(12 + power * 12));
+      squashBall(x, y);
+      gsap.fromTo(
+        box,
+        { scale: 0.985 },
+        { scale: 1, duration: 0.5, ease: "back.out(3)", overwrite: "auto" }
+      );
+      registerTap();
+    } else {
+      fireTap(x, y);
+    }
+  };
+  const cancelCharge = () => {
+    pressStart.current = null;
+    setCharge(null);
+  };
 
-  /* ---- Card 3: network pings ---- */
-  const pingNode = (i: number) => {
+  /* ---- Card 3: chain-reaction network ---- */
+  const doPing = (i: number) => {
     const node = nodeRefs.current[i];
     if (node && !reduced) {
       node.classList.remove("ping");
       void node.offsetWidth;
       node.classList.add("ping");
     }
-    setLineFlash(true);
-    window.setTimeout(() => setLineFlash(false), 450);
-    setSignals((s) => s + 1);
   };
+
+  const nodeCenter = (i: number) => {
+    const mockup = mockupRef.current;
+    if (!mockup) return { x: 0, y: 0 };
+    const r = mockup.getBoundingClientRect();
+    return {
+      x: (NODE_POS[i][0] / 100) * r.width,
+      y: (NODE_POS[i][1] / 100) * r.height,
+    };
+  };
+
+  /** Tap a node → a signal dot hops along the lines to the mentor, who
+      re-broadcasts to the other nodes. The card finally behaves like a network. */
+  const relaySignal = (from: number) => {
+    if (relaying.current) return;
+    if (reduced) {
+      setLineFlash(true);
+      window.setTimeout(() => setLineFlash(false), 450);
+      setSignals((s) => s + 1);
+      return;
+    }
+    const dot = signalDotRef.current;
+    if (!dot) return;
+    relaying.current = true;
+    setLineFlash(true);
+
+    const hop = (a: number, b: number, dur = 0.3) => {
+      const pa = nodeCenter(a);
+      const pb = nodeCenter(b);
+      const tl = gsap.timeline();
+      tl.set(dot, {
+        x: pa.x,
+        y: pa.y,
+        xPercent: -50,
+        yPercent: -50,
+        opacity: 1,
+        scale: 1,
+      })
+        .to(dot, { x: pb.x, y: pb.y, duration: dur, ease: "power2.in" })
+        .add(() => doPing(b))
+        .to(dot, { opacity: 0, scale: 0.4, duration: 0.15 }, "-=0.05");
+      return tl;
+    };
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        relaying.current = false;
+      },
+    });
+    if (from === 1) {
+      // Mentor broadcasts to both nodes, slightly staggered.
+      tl.add(hop(1, 0, 0.35));
+      tl.add(hop(1, 2, 0.35), "+=0.08");
+    } else {
+      // Node → mentor → rebroadcast to the other nodes.
+      tl.add(hop(from, 1, 0.3));
+      [0, 2]
+        .filter((i) => i !== from)
+        .forEach((o) => tl.add(hop(1, o, 0.32), "+=0.1"));
+    }
+    tl.add(() => {
+      setLineFlash(false);
+      setSignals((s) => s + 1);
+    });
+  };
+
+  // Pause the network's idle CSS animations while off-screen.
+  useEffect(() => {
+    const mockup = mockupRef.current;
+    if (!mockup || reduced) return;
+    const st = ScrollTrigger.create({
+      trigger: mockup,
+      start: "top 95%",
+      end: "bottom 5%",
+      onEnter: () => mockup.classList.remove("anims-paused"),
+      onLeave: () => mockup.classList.add("anims-paused"),
+      onEnterBack: () => mockup.classList.remove("anims-paused"),
+      onLeaveBack: () => mockup.classList.add("anims-paused"),
+    });
+    return () => {
+      st.kill();
+    };
+  }, [reduced]);
 
   /* ---- Card 4: run the code ---- */
   const runCode = () => {
@@ -338,41 +562,52 @@ export default function BentoSection() {
               <span className="bento-badge">Spring & Physics</span>
               <h3 className="bc-title">Micro-Interactions</h3>
               <p className="bc-desc">
-                Every hover, scroll, and click is an opportunity. Tap the canvas.
+                Every hover, scroll, and click is an opportunity. Tap — or press and hold.
               </p>
             </div>
             <div className="bc-visual pg-visual">
               <div
                 className="playground-canvas"
                 ref={canvasRef}
-                onClick={handleCanvasTap}
+                onPointerDown={onCanvasPointerDown}
+                onPointerUp={onCanvasPointerUp}
+                onPointerLeave={cancelCharge}
                 role="button"
                 tabIndex={0}
-                aria-label="Interactive canvas. Press Enter to tap."
+                aria-label="Interactive canvas. Press Enter to tap, or press and hold for a charge burst."
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     const r = canvasRef.current?.getBoundingClientRect();
-                    if (r)
-                      handleCanvasTap({
-                        clientX: r.left + r.width / 2,
-                        clientY: r.top + r.height / 2,
-                      } as React.MouseEvent<HTMLDivElement>);
+                    if (r) fireTap(r.width / 2, r.height / 2);
                   }
                 }}
               >
                 <div className="pg-counter" aria-live="polite">
                   <span key={taps} className="pg-count-pop">{taps}</span>
                   <span className="pg-count-lbl">taps</span>
+                  {combo >= 2 && (
+                    <span key={combo} className="pg-combo">×{combo}</span>
+                  )}
                 </div>
                 <div className="pg-ball" ref={ballRef} aria-hidden="true" />
+                {trails.map((tr) => (
+                  <span key={tr.id} className="trail-wrap" style={{ left: tr.x, top: tr.y }} aria-hidden="true">
+                    <span className="trail-dot" />
+                    <span className="trail-dot d2" />
+                    <span className="trail-dot d3" />
+                  </span>
+                ))}
                 {ripples.map((r) => (
                   <span key={r.id} className="click-ripple" style={{ left: r.x, top: r.y }} />
                 ))}
+                {charge && (
+                  <span key={charge.id} className="charge-ring" style={{ left: charge.x, top: charge.y }} aria-hidden="true" />
+                )}
                 {bursts.map((b) => (
-                  <Burst key={b.id} x={b.x} y={b.y} onDone={() => removeBurst(b.id)} />
+                  <Burst key={b.id} x={b.x} y={b.y} count={b.count} onDone={() => removeBurst(b.id)} />
                 ))}
-                <div className="pg-hint">Tap anywhere ✦</div>
+                <div className="pg-hint">{hint}</div>
               </div>
             </div>
           </div>
@@ -389,10 +624,10 @@ export default function BentoSection() {
             <div className="bc-top">
               <span className="bento-badge">Community & Growth</span>
               <h3 className="bc-title">Mentorship</h3>
-              <p className="bc-desc">Growing Palu's developer ecosystem. Ping a node.</p>
+              <p className="bc-desc">Growing Palu's developer ecosystem. Tap a node, watch the signal relay.</p>
             </div>
             <div className="bc-visual net-visual">
-              <div className="nodes-mockup">
+              <div className="nodes-mockup" ref={mockupRef}>
                 {[
                   { label: "Mentee", cls: "n1" },
                   { label: "Juan (Mentor)", cls: "n2 main-mentor" },
@@ -404,19 +639,20 @@ export default function BentoSection() {
                     ref={(el) => { nodeRefs.current[i] = el; }}
                     className={`node ${n.cls}`}
                     data-label={n.label}
-                    aria-label={`Ping ${n.label}`}
-                    onClick={() => pingNode(i)}
+                    aria-label={`Relay a signal from ${n.label}`}
+                    onClick={() => relaySignal(i)}
                   >
                     <span className="node-ping" aria-hidden="true" />
                   </button>
                 ))}
+                <div className="signal-dot" ref={signalDotRef} aria-hidden="true" />
                 <svg className="node-lines" width="100%" height="100%" aria-hidden="true">
                   <line x1="25%" y1="65%" x2="50%" y2="35%" className={`animated-path ${lineFlash ? "flash" : ""}`} />
                   <line x1="50%" y1="35%" x2="75%" y2="65%" className={`animated-path delay ${lineFlash ? "flash" : ""}`} />
                 </svg>
               </div>
               <div className="net-counter">
-                <span key={signals} className="net-pop">{signals}</span> signals sent
+                <span key={signals} className="net-pop">{signals}</span> signals relayed
               </div>
             </div>
           </div>

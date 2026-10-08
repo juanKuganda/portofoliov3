@@ -23,6 +23,7 @@ interface Props {
 }
 
 export default function ServiceCard({ service, index }: Props) {
+  const itemRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const visualRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLHeadingElement>(null);
@@ -123,6 +124,43 @@ export default function ServiceCard({ service, index }: Props) {
     };
   }, []);
 
+  // Depth scrub: as the next folder slides over this one, this folder
+  // sinks back — slight scale-down + black overlay fade. transform/opacity
+  // only, scrubbed. Skipped for the last card (nothing covers it).
+  useEffect(() => {
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    if (reduced) return;
+
+    const item = itemRef.current;
+    const next = item?.nextElementSibling as HTMLElement | null;
+    if (!item || !next) return;
+
+    const ctx = gsap.context(() => {
+      const st = {
+        trigger: next,
+        start: "top 88%",
+        end: "top 38%",
+        scrub: 0.5,
+      };
+      gsap.to(item, {
+        scale: 0.965,
+        transformOrigin: "center top",
+        ease: "none",
+        scrollTrigger: st,
+      });
+      gsap.to(item.querySelector(".svc-depth"), {
+        opacity: 0.32,
+        ease: "none",
+        scrollTrigger: { ...st },
+      });
+    });
+    return () => {
+      ctx.revert();
+    };
+  }, []);
+
   // Render full-bleed animated workspace stages for each service folder.
   // Each stage fills the visual area edge to edge with a left-to-right story
   // relevant to its service: deploy pipeline, design flow, api console, stats.
@@ -144,6 +182,7 @@ export default function ServiceCard({ service, index }: Props) {
   return (
     <div
       className="svc-folder-item"
+      ref={itemRef}
       style={{ "--i": index } as React.CSSProperties}
     >
       <div className="svc-folder-tab-bar">
@@ -189,6 +228,8 @@ export default function ServiceCard({ service, index }: Props) {
             {service.ghost}
           </span>
         </div>
+        {/* Depth dimmer: fades in as the next folder slides over this one */}
+        <div className="svc-depth" aria-hidden="true" />
       </article>
     </div>
   );

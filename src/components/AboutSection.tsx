@@ -1,10 +1,65 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useFitText } from "../hooks/useFitText";
 import MagneticText from "./MagneticText";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function AboutSection() {
   const fitRef = useRef<HTMLHeadingElement>(null);
+  const statementRef = useRef<HTMLParagraphElement>(null);
   useFitText(fitRef);
+
+  // Text-fill-on-scroll: the statement fills word by word as you scroll —
+  // the editorial signature. Opacity only, scrubbed. Static if reduced motion.
+  useEffect(() => {
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    if (reduced) return;
+    const el = statementRef.current;
+    if (!el) return;
+
+    // Split into word spans, preserving the .dim styling.
+    const frags: { text: string; dim: boolean }[] = [];
+    el.childNodes.forEach((node) => {
+      const words = (node.textContent || "").split(/\s+/).filter(Boolean);
+      const dim =
+        node.nodeType === Node.ELEMENT_NODE &&
+        (node as HTMLElement).classList.contains("dim");
+      words.forEach((w) => frags.push({ text: w, dim }));
+    });
+    el.innerHTML = "";
+    frags.forEach((f) => {
+      const s = document.createElement("span");
+      s.className = "w" + (f.dim ? " dim" : "");
+      s.textContent = f.text;
+      el.appendChild(s);
+      el.appendChild(document.createTextNode(" "));
+    });
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        el.querySelectorAll(".w"),
+        { opacity: 0.13 },
+        {
+          opacity: 1,
+          stagger: 0.08,
+          ease: "none",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 82%",
+            end: "top 32%",
+            scrub: 0.5,
+          },
+        }
+      );
+    });
+    return () => {
+      ctx.revert();
+    };
+  }, []);
 
   const stackItems = [
     "TypeScript",
@@ -31,7 +86,7 @@ export default function AboutSection() {
         <span>The short version</span>
         <span>Palu, ID · WITA</span>
       </div>
-      <p className="about-statement rv">
+      <p className="about-statement" ref={statementRef}>
         Developer, designer, mentor -{" "}
         <span className="dim">in that order, most days.</span>
       </p>
