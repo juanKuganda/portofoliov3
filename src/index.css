@@ -1029,7 +1029,8 @@ a {
     gap: 8px;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 4px var(--pad) 0;
+    /* Bottom padding clears the absolute-positioned ruler. */
+    padding: 4px var(--pad) 48px;
     z-index: 2;
   }
   .sticker {
