@@ -87,7 +87,7 @@ export default function AboutSection() {
         <span>Palu, ID · WITA</span>
       </div>
       <p className="about-statement" ref={statementRef}>
-        Developer, designer, mentor -{" "}
+        Engineer, design, people -{" "}
         <span className="dim">in that order, most days.</span>
       </p>
       <div className="about-grid">

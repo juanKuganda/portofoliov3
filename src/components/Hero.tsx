@@ -4,9 +4,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const ROLES = ["Developer", "Designer", "Mentor"];
+const ROLES = ["Engineer", "Design", "People"];
 
-/** Kicker role ticker: [ Developer ] → [ Designer ] → [ Mentor ], every 2.5s. */
+/** Kicker role ticker: [ Engineer ] → [ Design ] → [ People ], every 2.5s. */
 function RoleTicker() {
   const [idx, setIdx] = useState(0);
   const reduced = useMemo(
@@ -668,7 +668,7 @@ export default function Hero() {
         0.90°S — 119.41°E · PALU
       </span>
       <span className="reel-edge reel-edge-r" aria-hidden="true">
-        DESIGN · CODE · MENTOR
+        ENGINEER · DESIGN · PEOPLE
       </span>
       {["tl", "tr", "bl", "br"].map((c) => (
         <span key={c} className={`reel-corner rc-${c}`} aria-hidden="true">
