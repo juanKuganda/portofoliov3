@@ -351,37 +351,99 @@ a {
 }
 
 /* ============================================================
-   HERO
+   HERO — THE REEL (full-bleed cinematic)
    ============================================================ */
-.hero {
-  padding: clamp(56px, 9vh, 110px) var(--pad) clamp(40px, 6vh, 72px);
+.hero-reel {
   position: relative;
+  /* --reel-h is set from JS: 100svh minus the sticky nav height, so the
+     bottom title card never clips below the fold. */
+  height: var(--reel-h, calc(100svh - 60px));
+  min-height: 560px;
+  overflow: hidden;
+  background: #0b0b0c;
+  isolation: isolate;
+}
+/* Full-bleed portrait, edge to edge */
+.reel-media {
+  position: absolute;
+  inset: 0;
+}
+.reel-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 3:4 portrait in a 16:10 frame: bias upward so the face (26-58% of
+     the image) sits above the bottom title card, not behind it. */
+  object-position: 50% 20%;
+  display: block;
+}
+.reel-photo.photo-gray {
+  filter: grayscale(1) contrast(1.03);
+}
+.reel-shade {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Top row: kicker left, role ticker right. Solid white — it sits over the
+   photo's dark top area. The amber dot stays unblended on purpose. */
+.reel-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 22px var(--pad);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.reel-kicker {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.reel-kicker .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--signal);
+  flex: none;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+.reel-kicker .sep {
+  opacity: 0.5;
 }
 /* Role ticker: [ Developer ] → [ Designer ] → [ Mentor ] */
 .role-ticker {
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 14px 0 0;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.06em;
-  color: var(--muted);
-}
-.tick-sq {
-  width: 8px;
-  height: 8px;
-  background: var(--signal);
-  border-radius: 2px;
-  flex: none;
+  color: #fff;
 }
 .tick-bracket {
-  color: var(--ink);
   font-weight: 700;
+  opacity: 0.7;
 }
 .tick-word {
   display: inline-block;
-  color: var(--ink);
   font-weight: 600;
   min-width: 92px;
   animation: tick-in 0.45s cubic-bezier(0.2, 0.8, 0.3, 1);
@@ -392,59 +454,57 @@ a {
     transform: translateY(10px);
   }
 }
-/* Amber © glyph + its one-shot expanding ring */
-.hero-name .ch-copy {
-  color: var(--signal);
-  position: relative;
-}
-.copy-ring {
+
+/* Bottom title card: the giant name in blend-difference — it inverts
+   live against the photo as the scroll push-in moves the image beneath it. */
+.reel-bottom {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 150%;
-  aspect-ratio: 1;
-  border: 1px solid var(--signal);
-  border-radius: 50%;
-  opacity: 0;
-  pointer-events: none;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 0 var(--pad) 26px;
+}
+.reel-name-mask {
+  overflow: hidden;
+  /* extend the clip box upward so pressure-lifted chars never clip */
+  padding-top: 18px;
+  margin-top: -18px;
+}
+.reel-name {
+  margin: 0;
+  color: #fff;
+  mix-blend-mode: difference;
 }
 /* Per-char magnetic headline: CSS transition smooths the direct writes */
-.hero-name.magnetic-on .ch {
+.reel-name.magnetic-on .ch {
   transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
-/* Full-width scroll cue strip */
-.hero-scroll-strip {
+.reel-bottom-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 18px;
-  margin: clamp(28px, 4vh, 48px) calc(var(--pad) * -1) 0;
-  padding: 14px var(--pad);
-  text-decoration: none;
-  color: var(--muted);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  transition: color 0.3s var(--ease), background-color 0.3s var(--ease);
-}
-.hero-scroll-strip:hover {
-  color: var(--ink);
-  background: rgba(0, 0, 0, 0.025);
-}
-.hero-scroll-strip .rule {
-  flex: 1;
-  height: 1px;
-  background: var(--line);
-}
-.scroll-cue {
+  gap: 16px;
+  margin-top: 16px;
+  color: #fff;
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  white-space: nowrap;
+}
+.reel-cap {
+  margin: 0;
+  opacity: 0.75;
+}
+.reel-scroll {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
 }
-.scroll-cue .arrow {
+.reel-scroll .arrow {
   display: inline-block;
   color: var(--signal);
   animation: cue-bob 1.8s ease-in-out infinite;
@@ -458,205 +518,93 @@ a {
     transform: translateY(5px);
   }
 }
-.hero-kicker {
+
+/* Scene 2: statement over the darkening photo, GSAP autoAlpha-driven */
+.reel-scene2 {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 24px;
+  flex-direction: column;
   align-items: center;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: clamp(24px, 4vh, 44px);
+  justify-content: center;
+  gap: 22px;
+  padding: 0 var(--pad);
+  text-align: center;
+  color: #fff;
+  opacity: 0;
+  visibility: hidden;
 }
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--signal);
-  display: inline-block;
-  animation: pulse 2.4s ease-in-out infinite;
-}
-.fit {
-  font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -0.045em;
-  line-height: 0.92;
-  white-space: nowrap;
-  overflow-wrap: anywhere;
-  min-width: 0;
-}
-.fit .ch {
-  display: inline-block;
-}
-/* Line-mask for the hero name reveal: the h1 slides up from behind it.
-   The top padding (negated by margin) extends the clip box upward so the
-   pressure-lifted chars are never clipped. */
-.name-mask {
-  overflow: hidden;
-  min-width: 0;
-  padding-top: 18px;
-  margin-top: -18px;
-  /* The breakout alignment lives on the mask now (it is the grid item);
-     the h1 inside must not carry its own negative margin, or it would
-     slide out of the mask's clip box. */
-  margin-left: calc(var(--pad) * -1);
-  padding-left: var(--pad);
-  /* Overlap choreography: the mask spans both stage columns but the name
-     only fills 80% — its last 1-2 glyphs land on the photo's dark left
-     edge while the face (photo center) stays clear. */
-  grid-column: 1 / -1;
-  grid-row: 1;
-  position: relative;
-  z-index: 2;
-  width: 80%;
-}
-.hero-name {
+.reel-roles {
   margin: 0;
-  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--signal);
 }
-.hero-stage {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(280px, 30%, 400px);
-  column-gap: clamp(24px, 4vw, 64px);
-  align-items: start;
-  margin-top: clamp(24px, 4vh, 44px);
-  padding-bottom: 46px; /* room for the absolute photo caption */
-}
-.hero-side {
-  grid-column: 1;
-  grid-row: 2;
-  margin-top: clamp(20px, 3vh, 36px);
-  max-width: 36rem;
-}
-.hero-side {
-  display: grid;
-  gap: clamp(18px, 3vh, 30px);
-  padding-bottom: 0.35em;
-  position: relative;
-}
-.hero-side .statement {
+.reel-statement {
+  margin: 0;
   font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: -0.03em;
-  line-height: 1.18;
-  font-size: clamp(20px, 1.9vw, 30px);
+  line-height: 1.12;
+  font-size: clamp(30px, 4.2vw, 58px);
+  max-width: 22ch;
+  text-wrap: balance;
+}
+.reel-statement span {
+  opacity: 0.62;
+}
+.reel-meta {
   margin: 0;
-  max-width: 30ch;
-}
-.hero-side .statement .grey {
-  color: var(--faint);
-}
-.hero-meta {
-  display: grid;
-  gap: 10px;
-  justify-items: start;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted);
+  opacity: 0.75;
 }
-/* Looping bounce on the scroll arrow */
-.hero-scroll-arrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.hero-scroll-arrow .arrow {
-  display: inline-block;
-  animation: bounce-arrow 2s ease-in-out infinite;
-}
-/* Hero photo: vertical portrait in the right column, spanning the name +
-   statement rows; the name overlaps its left edge (z-index: photo 1,
-   name-mask 2). */
-.hero-photo {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  position: relative;
-  width: 100%;
-  aspect-ratio: 3 / 4;
-  margin: 6px 0 0 0;
-  z-index: 1;
-}
-.hero-photo-frame {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: #101010;
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.16);
-}
-.hero-photo-frame img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 12%;
-  display: block;
-}
-.photo-gray {
-  filter: grayscale(1) contrast(1.03);
-}
-.photo-shade {
-  position: absolute;
-  inset: 0;
-  background: #0a0a0a;
-  opacity: 0;
-  pointer-events: none;
-}
-.hero-photo-cap {
-  position: absolute;
-  left: 2px;
-  bottom: -30px;
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  white-space: nowrap;
-}
-.hero-photo-cap.cap-b {
-  opacity: 0;
+.reel-meta .sep {
+  opacity: 0.5;
 }
 
-/* Reduced motion: the photo is simply there, in color — no wipe, no bloom,
-   no drift. (The entrance timeline returns early under reduced motion.) */
+/* Reduced motion: one static frame — color photo, title card, no scenes. */
 @media (prefers-reduced-motion: reduce) {
-  .hero-photo-frame img.photo-gray {
+  .reel-photo.photo-gray {
+    display: none;
+  }
+  .reel-scene2 {
     display: none;
   }
 }
 
-
 @media (max-width: 768px) {
-  /* Mobile hero: single column — name, photo, statement, in flow. */
-  .hero-stage {
-    display: flex;
-    flex-direction: column;
-    padding-bottom: 40px;
+  .hero-reel {
+    min-height: 560px;
   }
-  .hero-stage .name-mask {
-    width: 100%;
-    order: 1;
+  /* Portrait viewport ≈ portrait photo: keep the face centered. */
+  .reel-photo {
+    object-position: 50% 20%;
   }
-  .hero-stage .hero-photo {
-    order: 2;
-    width: min(76%, 330px);
-    margin: 26px auto 36px;
+  .reel-top {
+    padding: 18px var(--pad);
   }
-  .hero-stage .hero-side {
-    order: 3;
-    max-width: 100%;
+  .reel-kicker .sep,
+  .reel-kicker span:nth-child(n + 4) {
+    display: none;
+  }
+  .reel-statement {
+    font-size: clamp(26px, 7.4vw, 36px);
+  }
+  .reel-meta {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
+
 
 
 /* ============================================================
@@ -1987,16 +1935,6 @@ footer.site {
     border-radius: 999px;
     padding: 9px 18px;
     font-size: 12px;
-  }
-  .hero-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 28px;
-  }
-  .hero-side {
-    padding-bottom: 0;
-  }
-  .hero-kicker {
-    gap: 8px 16px;
   }
   .sec-sub {
     flex-wrap: wrap;
