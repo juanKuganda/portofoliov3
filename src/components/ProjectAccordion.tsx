@@ -41,8 +41,7 @@ export default function ProjectAccordion({ project, isOpen, onToggle }: Props) {
           />
           <div className="proj-meta">
             {project.meta.map((m, i) => (
-              <span key={m.label}>
-                {i > 0 && <span className="sep">\</span>}
+              <span key={m.label} className={`proj-meta-pill mp-${i % 4}`}>
                 {m.label} <b>{m.value}</b>
               </span>
             ))}

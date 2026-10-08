@@ -1410,16 +1410,40 @@ section.block {
 .proj-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 14px;
+  gap: 8px;
   padding: 18px 0 18px 72px;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
-  color: var(--muted);
 }
-.proj-meta b {
+.proj-meta-pill {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ink);
+  white-space: nowrap;
+}
+.proj-meta-pill b {
+  font-weight: 700;
+}
+.proj-meta-pill.mp-0 {
+  background: var(--pop-pink);
+  border-color: var(--pop-pink);
+  color: #fff;
+}
+.proj-meta-pill.mp-1 {
+  background: var(--pop-blue);
+  border-color: var(--pop-blue);
+  color: #fff;
+}
+.proj-meta-pill.mp-2 {
+  background: var(--pop-green);
+  border-color: var(--pop-green);
   color: var(--ink);
-  font-weight: 400;
+}
+.proj-meta-pill.mp-3 {
+  background: var(--pop-purple);
+  border-color: var(--pop-purple);
+  color: #fff;
 }
 .proj-meta .sep {
   color: var(--faint);
@@ -2676,88 +2700,90 @@ footer.site {
 .foot-else .mono {
   color: #8a8a8a;
 }
-/* Giant fit-text headline */
-.foot-talk {
-  margin: clamp(18px, 4vh, 36px) 0 0;
-  padding: 0 var(--pad);
+/* Giant social rows — full-width display type, hover floods color */
+.foot-nav {
+  margin-top: clamp(28px, 5vh, 56px);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+.foot-row-wrap {
+  position: relative;
+}
+.foot-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: clamp(18px, 3.4vh, 34px) var(--pad);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--paper);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.foot-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.38s var(--ease);
+}
+.foot-row.pink::before { background: var(--pop-pink); }
+.foot-row.yellow::before { background: var(--pop-yellow); }
+.foot-row.blue::before { background: var(--pop-blue); }
+.foot-row.purple::before { background: var(--pop-purple); }
+.foot-row:hover::before,
+.foot-row:focus-visible::before {
+  transform: scaleY(1);
+}
+.foot-row:hover,
+.foot-row:focus-visible {
+  color: var(--ink);
+}
+.foot-row.pink:hover,
+.foot-row.pink:focus-visible { color: #fff; }
+.foot-row.blue:hover,
+.foot-row.blue:focus-visible { color: #fff; }
+.foot-row.purple:hover,
+.foot-row.purple:focus-visible { color: #fff; }
+.foot-row-idx {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+}
+.foot-row-label {
   font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 0.95;
-  color: var(--paper);
-  white-space: nowrap;
+  letter-spacing: -0.02em;
+  font-size: clamp(40px, 7.5vw, 110px);
+  line-height: 1;
+  text-transform: uppercase;
+  transition: transform 0.38s var(--ease);
 }
-.foot-sub {
-  margin: 14px 0 0;
-  padding: 0 var(--pad);
-  font-family: var(--font-mono);
-  font-size: clamp(13px, 1.6vw, 16px);
-  letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.65);
+.foot-row:hover .foot-row-label {
+  transform: translateX(14px);
 }
-.foot-sub strong {
-  color: var(--pop-yellow);
-  font-weight: 700;
+.foot-row-arrow {
+  font-size: clamp(28px, 4vw, 54px);
+  line-height: 1;
+  transition: transform 0.38s var(--ease);
 }
-.foot-sub-by {
-  color: rgba(255, 255, 255, 0.4);
+.foot-row:hover .foot-row-arrow {
+  transform: translate(8px, -8px) rotate(8deg);
 }
-/* Social pills — each its own pop color, playful tilt */
-.foot-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px 18px;
-  align-items: center;
-  padding: clamp(28px, 5vh, 48px) var(--pad) 0;
-}
-.foot-pill-wrap {
-  position: relative;
-  display: inline-block;
-}
-.foot-pill {
-  display: inline-block;
-  padding: 14px 30px;
-  border-radius: 999px;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: 0.05em;
-  text-decoration: none;
-  /* --tilt inherits from .foot-pill-wrap */
-  transform: rotate(var(--tilt, 0deg));
-  transition: transform 0.32s var(--ease), box-shadow 0.32s var(--ease);
-  will-change: transform;
-}
-.foot-pill:hover {
-  transform: rotate(0deg) translateY(-5px) scale(1.07);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
-}
-.foot-pill:focus-visible {
+.foot-row:focus-visible {
   outline: 2px solid var(--paper);
-  outline-offset: 4px;
-}
-.foot-pill.pink {
-  background: var(--pop-pink);
-  color: var(--ink);
-}
-.foot-pill.paper {
-  background: var(--paper);
-  color: var(--ink);
-}
-.foot-pill.blue {
-  background: var(--pop-blue);
-  color: var(--ink);
-}
-.foot-pill.purple {
-  background: var(--pop-purple);
-  color: var(--ink);
+  outline-offset: -2px;
 }
 /* Pink cursor arrow pointing at the Email pill */
 .foot-cursor-arrow {
   position: absolute;
-  top: -30px;
-  left: -14px;
-  transform: rotate(-24deg);
+  top: -34px;
+  left: clamp(20px, 4vw, 56px);
+  transform: rotate(-18deg);
   pointer-events: none;
   z-index: 2;
 }
@@ -2803,7 +2829,9 @@ footer.site {
   outline-offset: 4px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .foot-pill,
+  .foot-row::before,
+  .foot-row-label,
+  .foot-row-arrow,
   .foot-top {
     transition: none;
   }
@@ -2947,16 +2975,13 @@ footer.site {
   .about-statement {
     font-size: clamp(30px, 8.5vw, 46px);
   }
-  .foot-pills {
-    gap: 14px;
-  }
-  .foot-pill {
-    padding: 12px 24px;
-    font-size: 14px;
+  .foot-row {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 12px;
   }
   .foot-cursor-arrow {
-    top: -26px;
-    left: -10px;
+    top: -24px;
+    left: 8px;
   }
   .colophon {
     justify-content: flex-start;
@@ -3156,9 +3181,11 @@ footer.site {
   opacity: 0.7;
   transition: opacity 0.3s;
 }
-.node.n1 { left: 25%; top: 65%; transform: translate(-50%, -50%); }
-.node.n2 { left: 50%; top: 35%; transform: translate(-50%, -50%); background: var(--signal); }
-.node.n3 { left: 75%; top: 65%; transform: translate(-50%, -50%); }
+.node.n1 { left: 15%; top: 62%; transform: translate(-50%, -50%); background: var(--pop-pink); }
+.node.n2 { left: 50%; top: 24%; transform: translate(-50%, -50%); background: var(--signal); width: 18px; height: 18px; }
+.node.n3 { left: 85%; top: 62%; transform: translate(-50%, -50%); background: var(--pop-blue); }
+.node.n4 { left: 36%; top: 86%; transform: translate(-50%, -50%); background: var(--pop-green); }
+.node.n5 { left: 64%; top: 86%; transform: translate(-50%, -50%); background: var(--pop-purple); }
 .node:hover {
   transform: translate(-50%, -50%) scale(1.5) !important;
   background: var(--signal) !important;
@@ -3380,8 +3407,6 @@ footer.site {
 }
 .tl-sample-btn {
   margin-left: auto;
-  background: var(--tl-fg);
-  color: var(--tl-bg);
   border: none;
   border-radius: 999px;
   padding: 12px 24px;
@@ -3393,6 +3418,19 @@ footer.site {
 }
 .tl-sample-btn:hover {
   transform: scale(1.06) rotate(-1.5deg);
+}
+/* Confetti dots spawned by the party button (JS-positioned). */
+.tl-visual {
+  position: relative;
+}
+.tl-confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
 }
 
 /* ============ Bento: Press Playground (card 2) ============ */

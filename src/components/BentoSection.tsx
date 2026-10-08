@@ -85,6 +85,42 @@ export default function BentoSection() {
   const themeCardRef = useRef<HTMLDivElement>(null);
   const wipeRef = useRef<HTMLDivElement>(null);
   const switching = useRef(false);
+  // Party button: cycles pop colors + confetti burst on every press.
+  const [partyIdx, setPartyIdx] = useState(0);
+  const PARTY_COLORS = ["#ff4d6d", "#4dabf7", "#51cf66", "#9775fa"];
+  const partyPop = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const b = e.currentTarget;
+    setPartyIdx((i) => (i + 1) % PARTY_COLORS.length);
+    if (reduced) return;
+    gsap.fromTo(
+      b,
+      { scale: 0.85, rotate: -4 },
+      { scale: 1, rotate: 0, duration: 0.5, ease: "back.out(3)" }
+    );
+    const card = b.closest(".tl-visual") as HTMLElement | null;
+    if (!card) return;
+    const r = b.getBoundingClientRect();
+    const cr = card.getBoundingClientRect();
+    const cx = r.left - cr.left + r.width / 2;
+    const cy = r.top - cr.top + r.height / 2;
+    for (let i = 0; i < 16; i++) {
+      const d = document.createElement("span");
+      d.className = "tl-confetti";
+      d.style.background = PARTY_COLORS[(partyIdx + i) % PARTY_COLORS.length];
+      d.style.left = `${cx}px`;
+      d.style.top = `${cy}px`;
+      card.appendChild(d);
+      gsap.to(d, {
+        x: gsap.utils.random(-120, 120),
+        y: gsap.utils.random(-100, 70),
+        opacity: 0,
+        scale: gsap.utils.random(0.4, 1.1),
+        duration: gsap.utils.random(0.6, 1.1),
+        ease: "power2.out",
+        onComplete: () => d.remove(),
+      });
+    }
+  };
 
   /* ---- Card 2 state ---- */
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -107,11 +143,13 @@ export default function BentoSection() {
   const mockupRef = useRef<HTMLDivElement>(null);
   const signalDotRef = useRef<HTMLDivElement>(null);
   const relaying = useRef(false);
-  // Node centers as % of the mockup: n1 Mentee, n2 Mentor, n3 Community
+  // Node centers as % of the mockup: mentor center-top, 4 satellites.
   const NODE_POS: [number, number][] = [
-    [25, 65],
-    [50, 35],
-    [75, 65],
+    [15, 62], // n1 mentee
+    [50, 24], // n2 Juan (Mentor)
+    [85, 62], // n3 mentee
+    [36, 86], // n4 mentee
+    [64, 86], // n5 community
   ];
 
   /* ---- Card 4 state ---- */
@@ -413,13 +451,12 @@ export default function BentoSection() {
       },
     });
     if (from === 1) {
-      // Mentor broadcasts to both nodes, slightly staggered.
-      tl.add(hop(1, 0, 0.35));
-      tl.add(hop(1, 2, 0.35), "+=0.08");
+      // Mentor broadcasts to all satellites, slightly staggered.
+      [0, 2, 3, 4].forEach((o, k) => tl.add(hop(1, o, 0.35), k * 0.08));
     } else {
       // Node → mentor → rebroadcast to the other nodes.
       tl.add(hop(from, 1, 0.3));
-      [0, 2]
+      [0, 2, 3, 4]
         .filter((i) => i !== from)
         .forEach((o) => tl.add(hop(1, o, 0.32), "+=0.1"));
     }
@@ -445,6 +482,20 @@ export default function BentoSection() {
     return () => {
       st.kill();
     };
+  }, [reduced]);
+
+  // Ambient life: the network relays a signal on its own every few
+  // seconds (paused off-screen / reduced-motion via the guards).
+  useEffect(() => {
+    if (reduced) return;
+    const id = window.setInterval(() => {
+      const mockup = mockupRef.current;
+      if (!mockup || mockup.classList.contains("anims-paused")) return;
+      if (relaying.current) return;
+      relaySignal(Math.floor(Math.random() * 5));
+    }, 3400);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduced]);
 
   /* ---- Card 4: run the code ---- */
@@ -545,11 +596,9 @@ export default function BentoSection() {
                   <button
                     type="button"
                     className="tl-sample-btn"
-                    onClick={(e) => {
-                      const b = e.currentTarget;
-                      if (!reduced)
-                        gsap.fromTo(b, { scale: 0.9 }, { scale: 1, duration: 0.45, ease: "back.out(3)" });
-                    }}
+                    style={{ background: PARTY_COLORS[partyIdx], color: "#fff" }}
+                    onClick={partyPop}
+                    aria-label="Party! Confetti burst"
                   >
                     Press me
                   </button>
@@ -641,7 +690,9 @@ export default function BentoSection() {
                 {[
                   { label: "Mentee", cls: "n1" },
                   { label: "Juan (Mentor)", cls: "n2 main-mentor" },
-                  { label: "Community", cls: "n3" },
+                  { label: "Mentee", cls: "n3" },
+                  { label: "Mentee", cls: "n4" },
+                  { label: "Community", cls: "n5" },
                 ].map((n, i) => (
                   <button
                     key={n.label}
@@ -657,8 +708,10 @@ export default function BentoSection() {
                 ))}
                 <div className="signal-dot" ref={signalDotRef} aria-hidden="true" />
                 <svg className="node-lines" width="100%" height="100%" aria-hidden="true">
-                  <line x1="25%" y1="65%" x2="50%" y2="35%" className={`animated-path ${lineFlash ? "flash" : ""}`} />
-                  <line x1="50%" y1="35%" x2="75%" y2="65%" className={`animated-path delay ${lineFlash ? "flash" : ""}`} />
+                  <line x1="50%" y1="24%" x2="15%" y2="62%" className={`animated-path ${lineFlash ? "flash" : ""}`} />
+                  <line x1="50%" y1="24%" x2="85%" y2="62%" className={`animated-path ${lineFlash ? "flash" : ""}`} />
+                  <line x1="50%" y1="24%" x2="36%" y2="86%" className={`animated-path delay ${lineFlash ? "flash" : ""}`} />
+                  <line x1="50%" y1="24%" x2="64%" y2="86%" className={`animated-path delay ${lineFlash ? "flash" : ""}`} />
                 </svg>
               </div>
               <div className="net-counter">
