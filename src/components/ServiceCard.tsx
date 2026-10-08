@@ -31,18 +31,27 @@ export default function ServiceCard({ service, index }: Props) {
   const tagsRef = useRef<HTMLParagraphElement>(null);
   const ghostRef = useRef<HTMLSpanElement>(null);
 
-  // Mouse-follow spotlight and 3D tilt on the folder card
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+  // Mouse-follow spotlight and 3D tilt on the folder card.
+  // The card rect is cached on mouseenter — reading it per mousemove would
+  // force a synchronous layout on every event (layout thrash).
+  const tiltRect = useRef<{ left: number; top: number; width: number; height: number } | null>(null);
+  const cacheTiltRect = () => {
     const card = cardRef.current;
     if (!card) return;
     const { left, top, width, height } = card.getBoundingClientRect();
-    const x = e.clientX - left;
-    const y = e.clientY - top;
+    tiltRect.current = { left, top, width, height };
+  };
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const card = cardRef.current;
+    const r = tiltRect.current;
+    if (!card || !r) return;
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
     card.style.setProperty("--mx", `${x}px`);
     card.style.setProperty("--my", `${y}px`);
 
-    const centerX = width / 2;
-    const centerY = height / 2;
+    const centerX = r.width / 2;
+    const centerY = r.height / 2;
     const rotateX = ((y - centerY) / centerY) * -4;
     const rotateY = ((x - centerX) / centerX) * 4;
 
@@ -59,6 +68,7 @@ export default function ServiceCard({ service, index }: Props) {
   const handleMouseLeave = () => {
     const card = cardRef.current;
     if (!card) return;
+    tiltRect.current = null;
     card.style.removeProperty("--mx");
     card.style.removeProperty("--my");
     gsap.to(card, {
@@ -198,6 +208,7 @@ export default function ServiceCard({ service, index }: Props) {
       <article
         ref={cardRef}
         className="svc-folder-card"
+        onMouseEnter={cacheTiltRect}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >

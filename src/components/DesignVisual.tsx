@@ -24,6 +24,12 @@ export default function DesignVisual() {
       const chip = ".ds-chip";
 
       // Measure swatch → target-box centers relative to the stage body.
+      // Cached + throttled: measure() does 3 getBoundingClientRect reads,
+      // and the tween below evaluates its x/y on EVERY tick — uncached
+      // that is a forced synchronous layout per frame.
+      let cachedPos: { sx: number; sy: number; ex: number; ey: number } | null =
+        null;
+      let lastMeasure = 0;
       const measure = () => {
         const body = root.querySelector(".sv-stage-body") as HTMLElement;
         const swatch = root.querySelector(".ds-swatch.amber") as HTMLElement;
@@ -39,9 +45,17 @@ export default function DesignVisual() {
           ey: tr.top + tr.height / 2 - br.top,
         };
       };
+      const measureThrottled = () => {
+        const now = performance.now();
+        if (!cachedPos || now - lastMeasure > 500) {
+          cachedPos = measure();
+          lastMeasure = now;
+        }
+        return cachedPos;
+      };
 
       const placeAtStart = () => {
-        const p = measure();
+        const p = measureThrottled();
         if (!p) return;
         gsap.set(cursor, { x: p.sx, y: p.sy, opacity: 0 });
         gsap.set(chip, { opacity: 0, scale: 0.6 });
@@ -59,8 +73,8 @@ export default function DesignVisual() {
         .to(cursor, { opacity: 1, duration: 0.25 })
         .to(chip, { opacity: 1, scale: 1, duration: 0.25 }, "<")
         .to(cursor, {
-          x: () => measure()?.ex ?? 0,
-          y: () => measure()?.ey ?? 0,
+          x: () => measureThrottled()?.ex ?? 0,
+          y: () => measureThrottled()?.ey ?? 0,
           duration: 0.85,
           ease: "power2.inOut",
         })

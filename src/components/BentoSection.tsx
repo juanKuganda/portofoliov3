@@ -147,10 +147,17 @@ export default function BentoSection() {
   }, [reduced]);
 
   /* ---- 3D tilt + spotlight ---- */
+  // Rects cached on mouseenter: getBoundingClientRect per mousemove forces
+  // a synchronous layout on every event (layout thrash at 60-120Hz).
+  const tiltRects = useRef<(DOMRect | null)[]>([]);
+  const cacheTiltRect = (idx: number) => {
+    const card = cardsRef.current[idx];
+    if (card) tiltRects.current[idx] = card.getBoundingClientRect();
+  };
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>, idx: number) => {
     const card = cardsRef.current[idx];
-    if (!card || reduced) return;
-    const rect = card.getBoundingClientRect();
+    const rect = tiltRects.current[idx];
+    if (!card || !rect || reduced) return;
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     card.style.setProperty("--mx", `${x}px`);
@@ -169,6 +176,7 @@ export default function BentoSection() {
   const handleMouseLeave = (idx: number) => {
     const card = cardsRef.current[idx];
     if (!card || reduced) return;
+    tiltRects.current[idx] = null;
     gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.6, ease: "power3.out", overwrite: "auto" });
   };
 
@@ -487,6 +495,7 @@ export default function BentoSection() {
         <div
           className="bento-card span-7 theme-lab"
           ref={(el) => { cardsRef.current[0] = el; }}
+          onMouseEnter={() => cacheTiltRect(0)}
           onMouseMove={(e) => handleMouseMove(e, 0)}
           onMouseLeave={() => handleMouseLeave(0)}
         >
@@ -617,6 +626,7 @@ export default function BentoSection() {
         <div
           className="bento-card span-3"
           ref={(el) => { cardsRef.current[2] = el; }}
+          onMouseEnter={() => cacheTiltRect(2)}
           onMouseMove={(e) => handleMouseMove(e, 2)}
           onMouseLeave={() => handleMouseLeave(2)}
         >
@@ -662,6 +672,7 @@ export default function BentoSection() {
         <div
           className="bento-card span-4"
           ref={(el) => { cardsRef.current[3] = el; }}
+          onMouseEnter={() => cacheTiltRect(3)}
           onMouseMove={(e) => handleMouseMove(e, 3)}
           onMouseLeave={() => handleMouseLeave(3)}
         >

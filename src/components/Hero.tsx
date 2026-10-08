@@ -300,7 +300,13 @@ export default function Hero() {
 
       {/* TODO: ganti dengan foto Juan — cukup tukar src di bawah */}
       <figure className="hero-portrait">
-        <img src="/hero-portrait.png" alt="Architectural brutalist portrait" />
+        <img
+          src="/hero-portrait.png"
+          alt="Architectural brutalist portrait"
+          width={1024}
+          height={1024}
+          fetchPriority="high"
+        />
         <figcaption className="tag">Portrait.jpg · abstract</figcaption>
       </figure>
     </header>

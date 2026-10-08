@@ -1046,7 +1046,9 @@ section.block {
   position: sticky;
   top: calc(110px + var(--i) * 40px);
   isolation: isolate;
-  transform-style: preserve-3d;
+  /* NOTE (Fase 1 perf): no transform-style: preserve-3d — it forced the
+     whole subtree into a 3D rendering context and defeated flattening.
+     The GSAP tilt uses transformPerspective on the card itself. */
 }
 .svc-folder-tab-bar {
   position: relative;
@@ -1098,31 +1100,18 @@ section.block {
   display: flex;
   flex-direction: column;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.08), 0 16px 36px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.4s var(--ease), transform 0.4s var(--ease);
+  /* NOTE: no `transform` here — the 3D tilt writes transform via GSAP on every
+     mousemove, and a CSS transition would intercept each write, making the
+     tilt lag ~0.4s behind the cursor and thrashing style recalc. */
+  transition: box-shadow 0.4s var(--ease);
 }
 .svc-folder-card:hover {
   box-shadow: 0 -16px 50px rgba(0, 0, 0, 0.12), 0 20px 48px rgba(0, 0, 0, 0.1);
 }
 
-/* Spotlight effect */
-.svc-folder-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
-  border-radius: inherit;
-  opacity: 0;
-  background: radial-gradient(
-    700px circle at var(--mx, 50%) var(--my, 50%),
-    rgba(245, 158, 11, 0.12),
-    transparent 40%
-  );
-  transition: opacity 0.4s var(--ease);
-}
-.svc-folder-card:hover::before {
-  opacity: 1;
-}
+/* NOTE (Fase 1 perf): the 700px radial spotlight ::before was removed from
+   service cards — it repainted the whole 56vh card on every mousemove.
+   The subtler bento-card spotlight stays. */
 
 /* Paper sheets sticking out top */
 .folder-paper-sheets {
@@ -2064,7 +2053,9 @@ footer.site {
   display: flex;
   flex-direction: column;
   min-height: 340px;
-  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
+  /* NOTE: no `transform` here — the 3D tilt is GSAP-driven per mousemove;
+     a CSS transition would fight every write (lag + style thrash). */
+  transition: box-shadow 0.4s var(--ease);
   transform-style: preserve-3d;
 }
 .bento-card:hover {
