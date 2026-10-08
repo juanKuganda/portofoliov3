@@ -1,14 +1,13 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useEffect, useRef } from "react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
 
 // Design happens here: a cursor grabs an amber token from the tokens column,
 // drags it onto a wireframe box, and the box fills - on a full-width canvas.
 // Loops gently; pauses off-screen; fully static under reduced motion.
-export default function DesignVisual() {
+export default function DesignVisual({ active = true }: { active?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const tlRef = useRef<gsap.core.Timeline | null>(null);
+  const reducedRef = useRef(false);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -17,6 +16,7 @@ export default function DesignVisual() {
     const reduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+    reducedRef.current = reduced;
     if (reduced) return;
 
     const ctx = gsap.context(() => {
@@ -85,21 +85,24 @@ export default function DesignVisual() {
         .to(".ds-target-fill", { opacity: 0, duration: 0.4 })
         .to(cursor, { opacity: 0, y: "-=30", duration: 0.35 }, "<");
 
-      ScrollTrigger.create({
-        trigger: root,
-        start: "top 88%",
-        end: "bottom 12%",
-        onEnter: () => tl.play(),
-        onLeave: () => tl.pause(),
-        onEnterBack: () => tl.play(),
-        onLeaveBack: () => tl.pause(),
-      });
+      tlRef.current = tl;
     }, root);
 
     return () => {
       ctx.revert();
+      tlRef.current = null;
     };
   }, []);
+  // Play/pause is driven by the parent's `active` prop — NOT by a geometric
+  // ScrollTrigger gate. The old gate broke under sticky stacking: a covered
+  // card never left the viewport band, so its infinite loop kept running.
+  useEffect(() => {
+    if (reducedRef.current) return;
+    const tl = tlRef.current;
+    if (!tl) return;
+    if (active) tl.play();
+    else tl.pause();
+  }, [active]);
 
   return (
     <div className="sv-stage" ref={rootRef} aria-hidden="true">

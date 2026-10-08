@@ -1,14 +1,13 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useEffect, useRef } from "react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
 
 // Deploy pipeline: a live preview assembles on the left while build logs
 // stream on the right - a full-width, left-to-right story of shipping.
 // Loops gently; pauses off-screen; fully static under reduced motion.
-export default function WebDevVisual() {
+export default function WebDevVisual({ active = true }: { active?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const tlRef = useRef<gsap.core.Timeline | null>(null);
+  const reducedRef = useRef(false);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -17,6 +16,7 @@ export default function WebDevVisual() {
     const reduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+    reducedRef.current = reduced;
     if (reduced) return;
 
     const ctx = gsap.context(() => {
@@ -57,21 +57,24 @@ export default function WebDevVisual() {
           "<+=0.1",
         );
 
-      ScrollTrigger.create({
-        trigger: root,
-        start: "top 88%",
-        end: "bottom 12%",
-        onEnter: () => tl.play(),
-        onLeave: () => tl.pause(),
-        onEnterBack: () => tl.play(),
-        onLeaveBack: () => tl.pause(),
-      });
+      tlRef.current = tl;
     }, root);
 
     return () => {
       ctx.revert();
+      tlRef.current = null;
     };
   }, []);
+  // Play/pause is driven by the parent's `active` prop — NOT by a geometric
+  // ScrollTrigger gate. The old gate broke under sticky stacking: a covered
+  // card never left the viewport band, so its infinite loop kept running.
+  useEffect(() => {
+    if (reducedRef.current) return;
+    const tl = tlRef.current;
+    if (!tl) return;
+    if (active) tl.play();
+    else tl.pause();
+  }, [active]);
 
   return (
     <div className="sv-stage" ref={rootRef} aria-hidden="true">

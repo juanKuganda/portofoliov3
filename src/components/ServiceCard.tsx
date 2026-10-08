@@ -1,3 +1,10 @@
+/**
+ * RETIRED — replaced by the Index + Stage concept in ServicesSection.tsx
+ * (Fase 2 revamp). The sticky folder-stack caused structural jank: covered
+ * cards never left the viewport band, so their infinite loops kept running,
+ * and 4 giant composited layers re-composited on every scroll frame.
+ * Kept in the repo for reference; safe to delete. Not imported anywhere.
+ */
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";

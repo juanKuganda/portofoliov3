@@ -1,13 +1,12 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useEffect, useRef } from "react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(ScrollTrigger);
-
-// Impact strip: the numbers count up once when the card scrolls into view.
-// Calm by design - no loop here. Fully static under reduced motion.
-export default function CommunityVisual() {
+// Impact strip: the numbers count up every time this visual becomes the
+// active one. Calm by design - no loop here. Fully static under reduced motion.
+export default function CommunityVisual({ active = true }: { active?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const tlRef = useRef<gsap.core.Timeline | null>(null);
+  const reducedRef = useRef(false);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -16,17 +15,12 @@ export default function CommunityVisual() {
     const reduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+    reducedRef.current = reduced;
     if (reduced) return;
 
     const ctx = gsap.context(() => {
       const counters = gsap.utils.toArray<HTMLElement>("[data-count]");
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: root,
-          start: "top 88%",
-          once: true,
-        },
-      });
+      const tl = gsap.timeline({ paused: true });
       counters.forEach((el, i) => {
         const target = Number(el.dataset.count || 0);
         const obj = { v: 0 };
@@ -43,12 +37,20 @@ export default function CommunityVisual() {
           i * 0.15,
         );
       });
+      tlRef.current = tl;
     }, root);
 
     return () => {
       ctx.revert();
+      tlRef.current = null;
     };
   }, []);
+
+  // Replays the count-up every time this visual becomes active.
+  useEffect(() => {
+    if (reducedRef.current) return;
+    if (active) tlRef.current?.play(0);
+  }, [active]);
 
   return (
     <div className="sv-stage" ref={rootRef} aria-hidden="true">
