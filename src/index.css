@@ -373,13 +373,19 @@ a {
   inset: 0;
   width: 100%;
   height: 100%;
+  display: block;
+  margin: 0;
+}
+.reel-photo img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  /* 3:4 portrait in a 16:10 frame: bias upward so the face (26-58% of
-     the image) sits above the bottom title card, not behind it. */
-  object-position: 50% 20%;
+  /* The desktop source is a pre-composed 16:10 crop; the mobile 3:4
+     source biases upward so the face clears the bottom title card. */
+  object-position: 50% 50%;
   display: block;
 }
-.reel-photo.photo-gray {
+.reel-photo .photo-gray {
   filter: grayscale(1) contrast(1.03);
 }
 .reel-shade {
@@ -573,7 +579,7 @@ a {
 
 /* Reduced motion: one static frame — color photo, title card, no scenes. */
 @media (prefers-reduced-motion: reduce) {
-  .reel-photo.photo-gray {
+  .reel-photo .photo-gray {
     display: none;
   }
   .reel-scene2 {
@@ -586,7 +592,7 @@ a {
     min-height: 560px;
   }
   /* Portrait viewport ≈ portrait photo: keep the face centered. */
-  .reel-photo {
+  .reel-photo img {
     object-position: 50% 20%;
   }
   .reel-top {

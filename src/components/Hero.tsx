@@ -127,7 +127,7 @@ export default function Hero() {
         }, 0.55)
         // THE BLOOM: the grayscale layer fades once — the blazer turns
         // blue as the single color moment. opacity-only, compositor-cheap.
-        .to(".reel-photo.photo-gray", {
+        .to(".reel-photo .photo-gray", {
           opacity: 0,
           duration: 1.2,
           ease: "power2.inOut",
@@ -297,7 +297,7 @@ export default function Hero() {
         .to(".reel-scene2", { autoAlpha: 0, y: -44, duration: 0.4 }, 1.8)
         // Scene 3 — handoff: shade deepens, push continues, release to Work.
         .to(".reel-shade", { opacity: 0.62, duration: 0.6 }, 2.2)
-        .to(".reel-photo", { scale: 1.22, duration: 0.8 }, 2.2);
+        .to(".reel-photo", { scale: 1.18, duration: 0.8 }, 2.2);
     });
 
     mm.add("(max-width: 768px)", () => {
@@ -329,22 +329,37 @@ export default function Hero() {
   return (
     <header className="hero-reel" id="top" ref={rootRef}>
       <div className="reel-media">
-        <img
-          className="reel-photo photo-color"
-          src="/hero-portrait.webp"
-          alt="Portrait of Juan Pablo Putra Kuganda"
-          width={925}
-          height={1233}
-          fetchPriority="high"
-        />
-        <img
-          className="reel-photo photo-gray"
-          src="/hero-portrait.webp"
-          alt=""
-          aria-hidden="true"
-          width={925}
-          height={1233}
-        />
+        <picture className="reel-photo">
+          <source
+            media="(min-width: 769px)"
+            srcSet="/hero-portrait-wide.webp"
+            width={925}
+            height={578}
+          />
+          <img
+            className="photo-color"
+            src="/hero-portrait.webp"
+            alt="Portrait of Juan Pablo Putra Kuganda"
+            width={925}
+            height={1233}
+            fetchPriority="high"
+          />
+        </picture>
+        <picture className="reel-photo" aria-hidden="true">
+          <source
+            media="(min-width: 769px)"
+            srcSet="/hero-portrait-wide.webp"
+            width={925}
+            height={578}
+          />
+          <img
+            className="photo-gray"
+            src="/hero-portrait.webp"
+            alt=""
+            width={925}
+            height={1233}
+          />
+        </picture>
         <div className="reel-shade" aria-hidden="true" />
       </div>
 
