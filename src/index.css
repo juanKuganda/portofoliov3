@@ -801,6 +801,66 @@ a {
   flex: none;
   animation: dot-pulse 2.2s ease-in-out infinite;
 }
+/* ---- Floating cursors with chat bubbles: scattered like the
+   reference. Outer .cursor-float = entrance + explode; .cursor-par =
+   magnetic; .cursor-inner = idle bob (transform-only). Desktop only. */
+.reel-floaters {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.cursor-float {
+  position: absolute;
+  display: block;
+}
+.cursor-par {
+  display: block;
+}
+.cursor-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  transform: translate(-50%, -50%);
+  animation: cursor-bob 3.4s ease-in-out infinite;
+}
+.cursor-arrow {
+  flex: none;
+  filter: drop-shadow(0 3px 6px rgba(10, 10, 10, 0.22));
+}
+.chat-bubble {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: 12px;
+  border-top-left-radius: 3px;
+  padding: 7px 12px;
+  box-shadow: 0 6px 18px rgba(10, 10, 10, 0.1);
+}
+@keyframes cursor-bob {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translateY(-6px);
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(6px);
+  }
+}
+@media (max-width: 768px) {
+  .reel-floaters {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor-inner {
+    animation: none;
+  }
+}
 @keyframes dot-pulse {
   0%,
   100% {

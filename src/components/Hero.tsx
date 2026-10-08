@@ -121,8 +121,8 @@ function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "ca
 
 /**
  * Doodle stickers: five Apple-precision vector icons + one status
- * pill. `at` — desktop absolute position, anchored to `.reel-center`
- * (the card's own stage), ~80–140px from the card edge; `rot` —
+ * pill. `at` — desktop absolute position, percent of the full hero
+ * canvas, art-directed scatter (not flanking the card); `rot` —
  * resting tilt in degrees; `side` — scroll-explode direction.
  * Transform layers: outer `.sticker` = entrance pop + scroll explode;
  * inner `.sticker-par` = magnetic parallax. They never fight.
@@ -136,12 +136,21 @@ type StickerSpec = {
 };
 
 const STICKERS: StickerSpec[] = [
-  { kind: "folder", label: "projects", at: { top: "calc(50% - 165px)", left: "calc(50% - 300px)" }, rot: -8, side: "l" },
-  { kind: "pencil", label: "design", at: { top: "calc(50% + 25px)", left: "calc(50% - 305px)" }, rot: 7, side: "l" },
-  { kind: "cap", label: "untad ’27", at: { top: "calc(50% + 215px)", left: "calc(50% - 290px)" }, rot: -5, side: "l" },
-  { kind: "pin", label: "palu, id", at: { top: "calc(50% - 165px)", left: "calc(50% + 300px)" }, rot: 8, side: "r" },
-  { kind: "code", label: "code", at: { top: "calc(50% + 25px)", left: "calc(50% + 305px)" }, rot: -7, side: "r" },
-  { kind: "pill", label: "open to work", at: { top: "calc(50% + 215px)", left: "calc(50% + 290px)" }, rot: 5, side: "r" },
+  { kind: "folder", label: "projects", at: { top: "30%", left: "7%" }, rot: -8, side: "l" },
+  { kind: "pencil", label: "design", at: { top: "63%", left: "13%" }, rot: 7, side: "l" },
+  { kind: "cap", label: "untad ’27", at: { top: "79%", left: "30%" }, rot: -5, side: "l" },
+  { kind: "pin", label: "palu, id", at: { top: "22%", left: "86%" }, rot: 8, side: "r" },
+  { kind: "code", label: "code", at: { top: "57%", left: "80%" }, rot: -7, side: "r" },
+  { kind: "pill", label: "open to work", at: { top: "81%", left: "67%" }, rot: 5, side: "r" },
+];
+
+/* Floating cursors with chat bubbles — playful, scattered like the
+   reference. Decorative (aria-hidden); the link-free bubbles keep it
+   that way. Outer .cursor-float = entrance + explode; .cursor-par =
+   magnetic parallax; .cursor-inner = idle bob. */
+const CURSORS = [
+  { at: { top: "38%", left: "17%" }, rot: -6, side: "l", chat: "psst — keep scrolling ↓" },
+  { at: { top: "34%", left: "71%" }, rot: 8, side: "r", chat: "got a project? say hi →" },
 ];
 
 /* Ruler numbers: 0–1400 in steps of 100, tripled for a seamless loop. */
@@ -200,7 +209,9 @@ export default function Hero() {
     const parHi = root.querySelector<HTMLElement>(".par-hi");
     const parCard = root.querySelector<HTMLElement>(".par-card");
     const stickerEls = Array.from(
-      root.querySelectorAll<HTMLElement>(".reel-stickers .sticker-par")
+      root.querySelectorAll<HTMLElement>(
+        ".reel-stickers .sticker-par, .reel-floaters .cursor-par"
+      )
     );
     if (!parHi || !parCard || stickerEls.length === 0) return;
 
@@ -214,7 +225,7 @@ export default function Hero() {
     const setCardRY = gsap.quickSetter(parCard, "rotationY", "deg");
     const stickers = stickerEls.map((el, i) => ({
       baseRot: parseFloat(
-        el.closest(".sticker")?.getAttribute("data-rot") || "0"
+        el.closest(".sticker, .cursor-float")?.getAttribute("data-rot") || "0"
       ),
       dir: i % 2 === 0 ? 1 : -1,
       setX: gsap.quickSetter(el, "x", "px"),
@@ -324,8 +335,14 @@ export default function Hero() {
       const stickers = gsap.utils.toArray<HTMLElement>(
         ".reel-stickers .sticker"
       );
+      const floaters = gsap.utils.toArray<HTMLElement>(
+        ".reel-floaters .cursor-float"
+      );
       // Resting tilt per sticker (data-rot), so scale pops keep it.
       stickers.forEach((el) =>
+        gsap.set(el, { rotation: parseFloat(el.dataset.rot || "0") })
+      );
+      floaters.forEach((el) =>
         gsap.set(el, { rotation: parseFloat(el.dataset.rot || "0") })
       );
 
@@ -333,6 +350,7 @@ export default function Hero() {
       gsap.set(".reel-hi", { yPercent: 112 });
       gsap.set(".reel-top > *", { y: 12, opacity: 0 });
       gsap.set(stickers, { scale: 0, opacity: 0 });
+      gsap.set(floaters, { scale: 0, opacity: 0 });
 
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       tl.to(
@@ -345,6 +363,11 @@ export default function Hero() {
           stickers,
           { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.8)", stagger: 0.055 },
           0.5
+        )
+        .to(
+          floaters,
+          { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.8)", stagger: 0.09 },
+          0.85
         )
         .to(".reel-top > *", { y: 0, opacity: 1, duration: 0.45, stagger: 0.07 }, 0.6)
         // THE BLOOM: the grayscale layer fades once — the blazer turns
@@ -396,6 +419,7 @@ export default function Hero() {
         gsap.set(".reel-hi", { clearProps: "transform" });
         gsap.set(".reel-card", { clearProps: "transform,opacity" });
         gsap.set(stickers, { clearProps: "transform,opacity" });
+        gsap.set(floaters, { clearProps: "transform,opacity" });
       });
     }, root);
     return () => {
@@ -534,6 +558,28 @@ export default function Hero() {
           0.12
         );
 
+        // Floating cursors burst too — wider vectors, they live at
+        // the canvas edges.
+        const floaters = gsap.utils.toArray<HTMLElement>(
+          ".reel-floaters .cursor-float"
+        );
+        floaters.forEach((el, i) => {
+          const dir = el.dataset.side === "l" ? -1 : 1;
+          tl.fromTo(
+            el,
+            { x: 0, y: 0, rotation: 0, autoAlpha: 1 },
+            {
+              x: dir * (110 + i * 24),
+              y: -(90 + i * 30),
+              rotation: dir * 18,
+              autoAlpha: 0,
+              duration: 1,
+              immediateRender: false,
+            },
+            0.12 + i * 0.05
+          );
+        });
+
         // Edge furniture joins too: verticals drift further outward,
         // corner marks shrink away.
         tl.fromTo(
@@ -662,13 +708,15 @@ export default function Hero() {
           </a>
         </div>
 
-        {/* Sticker field: five Apple-precision vector doodles + one
-            status pill, floating around the card at a medium distance
-            (~80–140px). Anchored to .reel-center so the gap holds at
-            any viewport height. Outer .sticker = entrance pop + scroll
-            explode; inner .sticker-par = magnetic parallax. Desktop
-            absolute, mobile wrapped row. */}
-        <div className="reel-stickers" aria-hidden="true">
+      </div>
+
+      {/* Sticker field: five Apple-precision vector doodles + one
+          status pill, scattered across the full hero canvas (percent
+          positions, art-directed — not flanking the card). Anchored to
+          the hero so they can roam the edges. Outer .sticker = entrance
+          pop + scroll explode; inner .sticker-par = magnetic parallax.
+          Desktop absolute, mobile wrapped row. */}
+      <div className="reel-stickers" aria-hidden="true">
           {STICKERS.map((s) => (
             <span
               key={s.label}
@@ -693,7 +741,43 @@ export default function Hero() {
             </span>
           ))}
         </div>
-      </div>
+
+        {/* Floating cursors with chat bubbles — scattered like the
+            reference. Layers: outer .cursor-float = entrance pop +
+            scroll explode; .cursor-par = magnetic parallax;
+            .cursor-inner = idle bob. Decorative. */}
+        <div className="reel-floaters" aria-hidden="true">
+          {CURSORS.map((c) => (
+            <span
+              key={c.chat}
+              className="cursor-float"
+              style={c.at}
+              data-rot={c.rot}
+              data-side={c.side}
+            >
+              <span className="cursor-par">
+                <span className="cursor-inner">
+                  <svg
+                    className="cursor-arrow"
+                    viewBox="0 0 24 24"
+                    width="26"
+                    height="26"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M6.5 3.5 L19.5 12.5 L12.3 13.8 L9.2 21.5 Z"
+                      fill="var(--ink)"
+                      stroke="#ffffff"
+                      strokeWidth="1.6"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span className="chat-bubble">{c.chat}</span>
+                </span>
+              </span>
+            </span>
+          ))}
+        </div>
 
       {/* Edge furniture: fills the far left/right canvas like the
           reference — coordinates (personal) left, roles right, plus
