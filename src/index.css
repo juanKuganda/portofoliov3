@@ -177,10 +177,10 @@ a {
 }
 
 /* ============================================================
-   NAV — flat & transparent, LIGHT MODE.
-   Ink text on transparent background (no white fill, no blur) —
-   always legible over the paper sections. A 1px hairline fades in
-   past 40px of scroll. Mobile gets a full-screen paper overlay menu.
+   NAV — flat & transparent, difference-blend.
+   White text + mix-blend-mode: difference = automatic contrast over
+   light AND dark sections. No background fill, no blur, no border,
+   no JS. Mobile gets a full-screen paper overlay menu (not blended).
    ============================================================ */
 .nav {
   position: sticky;
@@ -191,31 +191,13 @@ a {
   justify-content: space-between;
   gap: 16px;
   padding: 18px var(--pad);
-  color: var(--ink);
+  color: #fff;
   background: transparent;
-  transition: color 0.3s var(--ease);
+  mix-blend-mode: difference;
 }
-/* Adaptive theme: paper text when the section under the nav is dark. */
-.nav.on-dark {
-  color: var(--paper);
-}
-.nav.on-dark::after {
-  background: color-mix(in srgb, var(--paper) 22%, transparent);
-}
-.nav::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: var(--line);
-  opacity: 0;
-  transition: opacity 0.3s var(--ease);
-  pointer-events: none;
-}
-.nav.is-scrolled::after {
-  opacity: 1;
+/* Keyboard focus stays visible under difference (white inverts too). */
+.nav :focus-visible {
+  outline-color: #fff;
 }
 .nav-name {
   font-family: var(--font-display);
@@ -441,7 +423,6 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nav::after,
   .mnav,
   .mnav-link,
   .mnav-close,
@@ -697,7 +678,8 @@ a {
   }
 }
 
-/* ---- Sticker field: six meaningful pills + one static squiggle ---- */
+/* ---- Sticker field: five doodles + one status pill + one squiggle,
+   hugging the card (anchored to .reel-center, the card's own stage) ---- */
 .reel-stickers {
   position: absolute;
   inset: 0;
@@ -706,50 +688,94 @@ a {
 }
 .sticker {
   position: absolute;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 999px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
+  display: block;
 }
 /* Hover: no shadow animation (would repaint); the transform is
    owned by the parallax loop, so hover only lifts stacking order. */
 .sticker:hover {
   z-index: 10;
 }
-.sticker-ink {
+/* Doodle: centered on the `at` point. The magnetic loop writes its
+   transforms to the outer .sticker, so this inner centering never
+   conflicts with it. */
+.doodle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transform: translate(-50%, -50%);
+}
+.doodle-svg {
+  width: 54px;
+  height: 54px;
+  display: block;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.doodle-svg .f-amber {
+  fill: var(--signal);
+  stroke: var(--ink);
+}
+.doodle-svg .f-paper {
+  fill: var(--paper);
+  stroke: var(--ink);
+}
+.doodle-svg .f-ink {
+  fill: var(--ink);
+  stroke: none;
+}
+.doodle-svg .s-amber {
+  stroke: var(--signal);
+}
+.doodle-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+}
+/* The one kept pill: status, with a pulsing amber dot. */
+.doodle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
   background: var(--ink);
   color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
 }
-.sticker-paper {
-  background: var(--paper);
-  color: var(--ink);
-  border: 1.5px solid var(--ink);
-}
-.sticker-paper:hover {
-  border-color: var(--signal);
-}
-.sticker-amber {
-  background: var(--signal);
-  color: var(--ink);
-}
-.sticker .sdot {
+.doodle-pill .sdot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--signal);
   flex: none;
+  animation: dot-pulse 2.2s ease-in-out infinite;
+}
+@keyframes dot-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.55;
+  }
 }
 .sticker-squiggle {
-  padding: 0;
-  background: none;
-  border: 0;
   color: var(--ink);
 }
 .squiggle-svg {
@@ -757,6 +783,7 @@ a {
   height: auto;
   display: block;
   opacity: 0.85;
+  transform: translate(-50%, -50%);
 }
 
 /* Reduced motion: one static frame — color card, greeting, stickers. */
@@ -766,6 +793,7 @@ a {
   }
   .tick-word,
   .reel-kicker .dot,
+  .doodle-pill .sdot,
   .reel-scroll .arrow {
     animation: none;
   }
@@ -793,16 +821,30 @@ a {
     position: static;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px 18px;
     justify-content: center;
-    align-items: center;
-    padding: 2px var(--pad) 0;
+    align-items: flex-end;
+    padding: 4px var(--pad) 0;
     z-index: 2;
   }
   .sticker {
     position: static !important;
-    font-size: 11px;
-    padding: 8px 12px;
+  }
+  .doodle,
+  .doodle-pill,
+  .squiggle-svg {
+    transform: none;
+  }
+  .doodle-svg {
+    width: 42px;
+    height: 42px;
+  }
+  .doodle-label {
+    font-size: 9px;
+  }
+  .doodle-pill {
+    font-size: 10px;
+    padding: 8px 14px;
   }
   .sticker-squiggle {
     display: none;

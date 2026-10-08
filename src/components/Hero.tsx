@@ -37,24 +37,81 @@ function RoleTicker() {
 }
 
 /**
- * Sticker pills: the six that mean something. `at` — desktop absolute
- * position; `rot` — resting tilt in degrees.
+ * Doodle stickers: five hand-drawn SVG doodles + one status pill.
+ * `at` — desktop absolute position, anchored to `.reel-center`
+ * (the card's own stage), so doodles sit 24–72px from the card edge
+ * at any viewport height; `rot` — resting tilt in degrees.
+ * The outer `.sticker` class + `data-rot` are the magnetic parallax
+ * hooks — the loop writes x/rotation to them, so the doodle itself
+ * lives one level deeper (`.doodle`) with its own centering.
  */
 type StickerSpec = {
+  kind: "folder" | "pen" | "code" | "pin" | "cap" | "pill";
   label: string;
-  variant: "ink" | "paper" | "amber";
   at: React.CSSProperties;
   rot: number;
 };
 
 const STICKERS: StickerSpec[] = [
-  { label: "Open to work", variant: "ink", at: { top: "23%", left: "5.5%" }, rot: -6 },
-  { label: "Designer", variant: "paper", at: { top: "46%", left: "3%" }, rot: 5 },
-  { label: "UNTAD ’27", variant: "amber", at: { top: "69%", left: "7.5%" }, rot: -4 },
-  { label: "Palu, ID", variant: "paper", at: { top: "21%", right: "5.5%" }, rot: 6 },
-  { label: "Developer", variant: "ink", at: { top: "44%", right: "3%" }, rot: -5 },
-  { label: "Mentor", variant: "paper", at: { top: "67%", right: "7.5%" }, rot: 4 },
+  { kind: "folder", label: "projects", at: { top: "calc(50% - 130px)", left: "calc(50% - 245px)" }, rot: -6 },
+  { kind: "pen", label: "design", at: { top: "calc(50% + 43px)", left: "calc(50% - 245px)" }, rot: 5 },
+  { kind: "cap", label: "untad ’27", at: { top: "calc(50% + 216px)", left: "calc(50% - 245px)" }, rot: -4 },
+  { kind: "pin", label: "palu, id", at: { top: "calc(50% - 130px)", left: "calc(50% + 245px)" }, rot: 6 },
+  { kind: "code", label: "code", at: { top: "calc(50% + 43px)", left: "calc(50% + 245px)" }, rot: -5 },
+  { kind: "pill", label: "Open to work", at: { top: "calc(50% + 216px)", left: "calc(50% + 292px)" }, rot: 4 },
 ];
+
+/* Hand-drawn doodles: ink 2.5px stroke, round caps/joins, amber
+   accents. Slight wobble in the paths keeps them sketchy. */
+function DoodleSvg({ kind }: { kind: StickerSpec["kind"] }) {
+  if (kind === "folder")
+    return (
+      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
+        <path className="f-amber" d="M15 25 V15 q0-4 4-4 h11 l6 6 h14 q4 0 4 4 V25" />
+        <path className="f-paper" d="M10 25 h44 q5 0 5 5 v15 q0 5-5 5 H10 q-5 0-5-5 V30 q0-5 5-5 Z" />
+        <path d="M5 34 h54" opacity="0.35" />
+      </svg>
+    );
+  if (kind === "pen")
+    return (
+      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
+        <path d="M21 43 L43 21" strokeWidth="13" />
+        <path className="s-amber" d="M21 43 L43 21" strokeWidth="8" fill="none" />
+        <path className="f-paper" d="M22 42 L13 46 L15 37 Z" />
+        <circle className="f-ink" cx="15.5" cy="41.5" r="1.8" />
+        <path d="M36 26 L41 31" />
+      </svg>
+    );
+  if (kind === "code")
+    return (
+      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
+        <rect className="f-paper" x="11" y="11" width="42" height="42" rx="11" />
+        <path d="M27 25 L20 32 L27 39" />
+        <path className="s-amber" d="M35 24 L29 40" fill="none" />
+        <path d="M37 25 L44 32 L37 39" />
+      </svg>
+    );
+  if (kind === "pin")
+    return (
+      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
+        <path
+          className="f-paper"
+          d="M32 7 C22 7 15 15 15 25 C15 39 30 55 30 55 C30 55 47 39 49 25 C49 15 42 7 32 7 Z"
+        />
+        <circle className="f-amber" cx="32" cy="24" r="7" />
+      </svg>
+    );
+  if (kind === "cap")
+    return (
+      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
+        <path className="f-paper" d="M32 12 L55 22 L32 32 L9 22 Z" />
+        <path d="M22 28 v9 c0 6 20 6 20 0 v-9" />
+        <path className="s-amber" d="M55 22 v14" fill="none" />
+        <circle className="f-amber" cx="55" cy="40" r="3.5" />
+      </svg>
+    );
+  return null;
+}
 
 /** Hand-drawn squiggle arrow pointing at the card (ink stroke, static). */
 function Squiggle() {
@@ -83,9 +140,9 @@ function Squiggle() {
  * THE REEL v5 — clean & personal.
  *
  * Scene 1: faint static grid on paper; "Hai, I'm Juan" mask reveal;
- * a 3:4 portrait card DROPPED FROM ABOVE; six meaningful sticker
- * pills + one static squiggle around the card (desktop absolute,
- * mobile wrapped row).
+ * a 3:4 portrait card DROPPED FROM ABOVE; five hand-drawn doodle
+ * stickers + one status pill + one static squiggle hugging the card
+ * (desktop absolute against the card's own stage, mobile wrapped row).
  * Interaction: magnetic parallax — one rAF loop, quickSetter per
  * element, lerped. Stickers ±14px alternating, card ±8px + tilt ≤4°,
  * headline ±4px. Paused on reduced-motion, mobile, or off-viewport.
@@ -371,30 +428,40 @@ export default function Hero() {
             <span className="arrow" aria-hidden="true">↓</span>
           </a>
         </div>
-      </div>
 
-      {/* Sticker field: six meaningful pills + one static squiggle.
-          Absolute around the card on desktop, a tidy wrapped row
-          under the card on mobile. */}
-      <div className="reel-stickers" aria-hidden="true">
-        {STICKERS.map((s) => (
+        {/* Sticker field: five doodles + one status pill + one static
+            squiggle, hugging the card. Anchored to .reel-center (the
+            card's own stage) so the gap stays 24–72px at any viewport
+            height. Desktop absolute, mobile wrapped row under the card. */}
+        <div className="reel-stickers" aria-hidden="true">
+          {STICKERS.map((s) => (
+            <span
+              key={s.label}
+              className="sticker"
+              style={s.at}
+              data-rot={s.rot}
+            >
+              {s.kind === "pill" ? (
+                <span className="doodle-pill">
+                  <span className="sdot" />
+                  {s.label}
+                </span>
+              ) : (
+                <span className="doodle">
+                  <DoodleSvg kind={s.kind} />
+                  <span className="doodle-label">{s.label}</span>
+                </span>
+              )}
+            </span>
+          ))}
           <span
-            key={s.label}
-            className={`sticker sticker-${s.variant}`}
-            style={s.at}
-            data-rot={s.rot}
+            className="sticker sticker-squiggle"
+            style={{ top: "calc(50% + 252px)", left: "calc(50% - 332px)" }}
+            data-rot={0}
           >
-            {s.variant === "ink" && <span className="sdot" />}
-            {s.label}
+            <Squiggle />
           </span>
-        ))}
-        <span
-          className="sticker sticker-squiggle"
-          style={{ top: "76%", left: "11%" }}
-          data-rot={0}
-        >
-          <Squiggle />
-        </span>
+        </div>
       </div>
     </header>
   );
