@@ -37,46 +37,26 @@ function RoleTicker() {
 }
 
 /**
- * Sticker pill config for the busy scene-1 composition.
- * `at`   — desktop absolute position (inline style).
- * `rot`  — resting rotation in degrees (-6..6, playful tilt).
- * `scatter` — where it flies when the pin starts (Luca-Mori beat):
- *             x/y pixels + extra rotation, fading out.
+ * Sticker pills: the six that mean something. `at` — desktop absolute
+ * position; `rot` — resting tilt in degrees.
  */
 type StickerSpec = {
   label: string;
   variant: "ink" | "paper" | "amber";
   at: React.CSSProperties;
   rot: number;
-  scatter: { x: number; y: number; r: number };
 };
 
 const STICKERS: StickerSpec[] = [
-  { label: "Open to work", variant: "ink", at: { top: "23%", left: "5.5%" }, rot: -6, scatter: { x: -340, y: -130, r: -26 } },
-  { label: "Designer", variant: "paper", at: { top: "46%", left: "3%" }, rot: 5, scatter: { x: -430, y: 30, r: 30 } },
-  { label: "UNTAD ’27", variant: "amber", at: { top: "69%", left: "7.5%" }, rot: -4, scatter: { x: -310, y: 190, r: -22 } },
-  { label: "Palu, ID", variant: "paper", at: { top: "21%", right: "5.5%" }, rot: 6, scatter: { x: 330, y: -150, r: 24 } },
-  { label: "Developer", variant: "ink", at: { top: "44%", right: "3%" }, rot: -5, scatter: { x: 430, y: 10, r: -30 } },
-  { label: "Mentor", variant: "paper", at: { top: "67%", right: "7.5%" }, rot: 4, scatter: { x: 310, y: 180, r: 26 } },
+  { label: "Open to work", variant: "ink", at: { top: "23%", left: "5.5%" }, rot: -6 },
+  { label: "Designer", variant: "paper", at: { top: "46%", left: "3%" }, rot: 5 },
+  { label: "UNTAD ’27", variant: "amber", at: { top: "69%", left: "7.5%" }, rot: -4 },
+  { label: "Palu, ID", variant: "paper", at: { top: "21%", right: "5.5%" }, rot: 6 },
+  { label: "Developer", variant: "ink", at: { top: "44%", right: "3%" }, rot: -5 },
+  { label: "Mentor", variant: "paper", at: { top: "67%", right: "7.5%" }, rot: 4 },
 ];
 
-/** Amber 12-point starburst (pure SVG, no emoji). */
-function Starburst() {
-  const pts: string[] = [];
-  const n = 12;
-  for (let i = 0; i < n * 2; i++) {
-    const r = i % 2 === 0 ? 46 : 31;
-    const a = (Math.PI * i) / n - Math.PI / 2;
-    pts.push(`${50 + r * Math.cos(a)},${50 + r * Math.sin(a)}`);
-  }
-  return (
-    <svg viewBox="0 0 100 100" className="burst-svg" aria-hidden="true">
-      <polygon points={pts.join(" ")} />
-    </svg>
-  );
-}
-
-/** Hand-drawn squiggle arrow pointing at the card (ink stroke). */
+/** Hand-drawn squiggle arrow pointing at the card (ink stroke, static). */
 function Squiggle() {
   return (
     <svg viewBox="0 0 120 84" className="squiggle-svg" aria-hidden="true">
@@ -100,17 +80,19 @@ function Squiggle() {
 }
 
 /**
- * THE REEL v4 — busy & playful, mono + amber only.
+ * THE REEL v5 — clean & personal.
  *
- * Scene 1: faint grid + amber glow on paper; "Hai, I'm Juan" mask
- * reveal; a 3:4 portrait card DROPPED FROM ABOVE; sticker pills,
- * a starburst, a squiggle arrow and a FIG.01 tag scattered around
- * the card (desktop absolute, mobile wrapped row).
- * Scroll (desktop pin +=260%): stickers + headline SCATTER outward
- * like Luca Mori's flying photos; the card PUNCHES IN to full-bleed
- * (portrait full-height, dark blurred sides — never over-zoomed);
- * the full-bleed holds with a small caption, then releases to Work.
- * Mobile: no pin, quiet exit. Reduced motion: one static frame.
+ * Scene 1: faint static grid on paper; "Hai, I'm Juan" mask reveal;
+ * a 3:4 portrait card DROPPED FROM ABOVE; six meaningful sticker
+ * pills + one static squiggle around the card (desktop absolute,
+ * mobile wrapped row).
+ * Interaction: magnetic parallax — one rAF loop, quickSetter per
+ * element, lerped. Stickers ±14px alternating, card ±8px + tilt ≤4°,
+ * headline ±4px. Paused on reduced-motion, mobile, or off-viewport.
+ * Scroll: NO PIN — a single scrub timeline eases everything out
+ * (card y:-40, headline y:-70, stickers y:-100 → opacity 0.2).
+ * Mobile: no parallax, no pin, quiet exit. Reduced motion: one
+ * static frame.
  */
 export default function Hero() {
   const rootRef = useRef<HTMLElement>(null);
@@ -130,79 +112,124 @@ export default function Hero() {
     return () => window.removeEventListener("resize", setH);
   }, []);
 
-  // Mouse-driven magnetic parallax: stickers, card, and headline
-  // respond at different intensities for a layered depth effect.
+  // Magnetic parallax: ONE rAF loop, gsap.quickSetter per element,
+  // lerped toward the pointer. Transform-only. The loop runs only
+  // while the pointer moves (stops when settled), only on desktop,
+  // never with reduced motion, and pauses when the hero leaves the
+  // viewport. Parallax writes to dedicated `.par-*` wrappers so it
+  // never fights the entrance or scroll timelines.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    const isMobile = window.innerWidth < 769;
-    if (reduced || isMobile) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const desktopMq = window.matchMedia("(min-width: 769px)");
+    if (!desktopMq.matches) return;
 
-    let rafId: number;
-    let mx = 0;
-    let my = 0;
+    const parHi = root.querySelector<HTMLElement>(".par-hi");
+    const parCard = root.querySelector<HTMLElement>(".par-card");
+    const stickerEls = Array.from(
+      root.querySelectorAll<HTMLElement>(".reel-stickers .sticker")
+    );
+    if (!parHi || !parCard || stickerEls.length === 0) return;
 
-    const onMove = (e: MouseEvent) => {
-      const rect = root.getBoundingClientRect();
-      // Normalized -1..1 from center
-      mx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-      my = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    gsap.set(parCard, { transformPerspective: 900 });
+
+    const setHiX = gsap.quickSetter(parHi, "x", "px");
+    const setHiY = gsap.quickSetter(parHi, "y", "px");
+    const setCardX = gsap.quickSetter(parCard, "x", "px");
+    const setCardY = gsap.quickSetter(parCard, "y", "px");
+    const setCardRX = gsap.quickSetter(parCard, "rotationX", "deg");
+    const setCardRY = gsap.quickSetter(parCard, "rotationY", "deg");
+    const stickers = stickerEls.map((el, i) => ({
+      baseRot: parseFloat(el.dataset.rot || "0"),
+      dir: i % 2 === 0 ? 1 : -1,
+      setX: gsap.quickSetter(el, "x", "px"),
+      setR: gsap.quickSetter(el, "rotation", "deg"),
+    }));
+
+    let tx = 0;
+    let ty = 0;
+    let cx = 0;
+    let cy = 0;
+    let raf = 0;
+    let inView = true;
+    let disposed = false;
+
+    const apply = () => {
+      setHiX(cx * 4);
+      setHiY(cy * 4);
+      setCardX(cx * 8);
+      setCardY(cy * 8);
+      setCardRY(cx * 4);
+      setCardRX(-cy * 4);
+      for (const s of stickers) {
+        s.setX(cx * 14 * s.dir);
+        s.setR(s.baseRot + cx * 2 * s.dir);
+      }
     };
 
-    const tick = () => {
-      // Stickers: strong parallax (depth layer = far)
-      const stickers = root.querySelectorAll<HTMLElement>(
-        ".reel-stickers .sticker"
-      );
-      stickers.forEach((el, i) => {
-        const sign = i % 2 === 0 ? 1 : -1;
-        const intensity = 16 + (i % 3) * 6;
-        const baseRot = parseFloat(el.dataset.rot || "0");
-        gsap.to(el, {
-          x: mx * intensity * sign,
-          y: my * intensity * 0.6,
-          rotation: baseRot + mx * 3 * sign,
-          duration: 0.9,
-          ease: "power2.out",
-          overwrite: "auto",
-        });
-      });
-
-      // Card: moderate parallax + 3D tilt
-      gsap.to(".reel-card", {
-        x: mx * -8,
-        y: my * -5,
-        rotateY: mx * 3,
-        rotateX: -my * 2,
-        duration: 1,
-        ease: "power2.out",
-        overwrite: "auto",
-      });
-
-      // Headline: subtle parallax (depth layer = near)
-      gsap.to(".reel-hi", {
-        x: mx * -4,
-        y: my * -3,
-        duration: 1.1,
-        ease: "power2.out",
-        overwrite: "auto",
-      });
-
-      rafId = requestAnimationFrame(tick);
+    const loop = () => {
+      raf = 0;
+      if (disposed || !inView || !desktopMq.matches) return;
+      cx += (tx - cx) * 0.08;
+      cy += (ty - cy) * 0.08;
+      if (Math.abs(tx - cx) < 0.005 && Math.abs(ty - cy) < 0.005) {
+        cx = tx;
+        cy = ty;
+        apply();
+        return; // settled — loop sleeps until the next pointermove
+      }
+      apply();
+      raf = requestAnimationFrame(loop);
+    };
+    const kick = () => {
+      if (!raf && !disposed && inView && desktopMq.matches) {
+        raf = requestAnimationFrame(loop);
+      }
     };
 
-    root.addEventListener("mousemove", onMove);
-    rafId = requestAnimationFrame(tick);
+    const onMove = (e: PointerEvent) => {
+      const r = root.getBoundingClientRect();
+      tx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+      ty = ((e.clientY - r.top) / r.height - 0.5) * 2;
+      kick();
+    };
+    // Ease back to center when the pointer leaves the hero.
+    const onLeave = () => {
+      tx = 0;
+      ty = 0;
+      kick();
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        inView = entries[0]?.isIntersecting ?? true;
+        if (!inView && raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
+      },
+      { threshold: 0 }
+    );
+    const onMq = () => {
+      if (!desktopMq.matches && raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+
+    io.observe(root);
+    desktopMq.addEventListener("change", onMq);
+    root.addEventListener("pointermove", onMove);
+    root.addEventListener("pointerleave", onLeave);
 
     return () => {
-      root.removeEventListener("mousemove", onMove);
-      cancelAnimationFrame(rafId);
-      // Reset transforms
-      gsap.set(".reel-card", { x: 0, y: 0, rotateY: 0, rotateX: 0 });
-      gsap.set(".reel-hi", { x: 0, y: 0 });
+      disposed = true;
+      io.disconnect();
+      desktopMq.removeEventListener("change", onMq);
+      root.removeEventListener("pointermove", onMove);
+      root.removeEventListener("pointerleave", onLeave);
+      if (raf) cancelAnimationFrame(raf);
+      gsap.set([parHi, parCard, ...stickerEls], { clearProps: "transform" });
     };
   }, []);
 
@@ -230,12 +257,6 @@ export default function Hero() {
       gsap.set(".reel-hi", { yPercent: 112 });
       gsap.set(".reel-top > *", { y: 12, opacity: 0 });
       gsap.set(stickers, { scale: 0, opacity: 0 });
-      gsap.set(".reel-full", { autoAlpha: 0 });
-      gsap.set(".reel-fullcap", { autoAlpha: 0 });
-      // will-change lives only for the entrance — cleared onComplete.
-      gsap.set([".reel-card", ".reel-hi", ".reel-top > *", ...stickers], {
-        willChange: "transform, opacity",
-      });
 
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       tl.to(
@@ -260,9 +281,9 @@ export default function Hero() {
 
       tl.eventCallback("onComplete", () => {
         gsap.set(".reel-top > *", { clearProps: "all" });
-        gsap.set(".reel-hi", { clearProps: "transform,willChange" });
-        gsap.set(".reel-card", { clearProps: "transform,opacity,willChange" });
-        gsap.set(stickers, { clearProps: "transform,opacity,willChange" });
+        gsap.set(".reel-hi", { clearProps: "transform" });
+        gsap.set(".reel-card", { clearProps: "transform,opacity" });
+        gsap.set(stickers, { clearProps: "transform,opacity" });
       });
     }, root);
     return () => {
@@ -270,102 +291,15 @@ export default function Hero() {
     };
   }, []);
 
-  // Scroll film. Desktop: pin +=260% — stickers scatter, headline
-  // leaves, card punches in to full-bleed, caption holds, release.
-  // Mobile: no pin — quiet compressed exit.
+  // Scroll exit: NO PIN. One scrub timeline eases the hero out as the
+  // page scrolls past — card, headline and stickers drift up and fade.
+  // This is the only scroll animation on the hero.
   useEffect(() => {
-    const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    if (reduced) return;
     const root = rootRef.current;
     if (!root) return;
-    const mm = gsap.matchMedia();
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    mm.add("(min-width: 769px)", () => {
-      // will-change lives only while the pin is active — never as a
-      // permanent CSS rule (that would pin a dozen composited layers,
-      // some full-viewport, for the whole page lifetime).
-      const wcTargets = () =>
-        root.querySelectorAll(
-          ".reel-card, .reel-full, .reel-fullcap, .reel-hi-mask, .reel-stickers .sticker"
-        );
-      const tl = gsap.timeline({
-        defaults: { ease: "none" },
-        scrollTrigger: {
-          trigger: root,
-          start: "top top",
-          end: "+=260%",
-          scrub: 1,
-          pin: true,
-          anticipatePin: 1,
-          onToggle: (self) =>
-            gsap.set(wcTargets(), {
-              willChange: self.isActive ? "transform, opacity" : "auto",
-            }),
-        },
-      });
-      // The scatter: every sticker flies outward with its own vector.
-      // NOTE: use opacity (not autoAlpha) here — in a scrubbed timeline
-      // created at load, autoAlpha's visibility:hidden would apply at
-      // init despite immediateRender:false, hiding the stickers.
-      gsap.utils
-        .toArray<HTMLElement>(".reel-stickers .sticker")
-        .forEach((el, i) => {
-          tl.to(
-            el,
-            {
-              x: parseFloat(el.dataset.sx || "0"),
-              y: parseFloat(el.dataset.sy || "0"),
-              rotation: `+=${el.dataset.sr || "0"}`,
-              opacity: 0,
-              duration: 0.5,
-              immediateRender: false,
-            },
-            0.03 * i
-          );
-        });
-      // Headline + chrome leave with the stickers.
-      // NOTE: plain opacity here, never autoAlpha — in a scrubbed
-      // timeline created at load, autoAlpha's visibility:hidden can
-      // apply at init despite immediateRender:false.
-      tl.to(".reel-hi-mask", { yPercent: -45, opacity: 0, duration: 0.4 }, 0.05)
-        .to(".reel-top > *, .reel-bottom-row > *", {
-          y: -24, opacity: 0, duration: 0.35,
-        }, 0.05)
-        // The punch-in: a fast whip-cut. The card accelerates away as
-        // the full-bleed punches in beneath it.
-        .to(".reel-card", {
-          scale: 1.3, opacity: 0, duration: 0.32, ease: "power2.in",
-          immediateRender: false,
-        }, 0)
-        .fromTo(".reel-full", { opacity: 0, visibility: "hidden", scale: 1.16 }, {
-          opacity: 1, visibility: "visible", scale: 1.06, duration: 0.4, immediateRender: false,
-        }, 0.14)
-        // Hold the full-bleed with its caption; the push continues.
-        .to(".reel-full", { scale: 1.12, duration: 1.6 }, 0.8)
-        .fromTo(".reel-fullcap", { opacity: 0, visibility: "hidden", y: 24 }, {
-          opacity: 1, visibility: "visible", y: 0, duration: 0.35, immediateRender: false,
-        }, 0.95)
-        // Release: caption leaves, full-bleed dissolves to white —
-        // cinematic bridge into the Statement section.
-        .to(".reel-fullcap", { opacity: 0, duration: 0.35 }, 2.0)
-        .to(".reel-full", {
-          scale: 1.22,
-          opacity: 0.3,
-          filter: "brightness(2.5) blur(6px)",
-          duration: 0.65,
-          ease: "power2.in",
-        }, 2.0);
-
-      // matchMedia cleanup: drop the will-change hints (onToggle won't
-      // fire again once the trigger is reverted).
-      return () => {
-        gsap.set(wcTargets(), { willChange: "auto" });
-      };
-    });
-
-    mm.add("(max-width: 768px)", () => {
+    const ctx = gsap.context(() => {
       const tl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
@@ -375,41 +309,21 @@ export default function Hero() {
           scrub: true,
         },
       });
-      tl.to(".reel-card", { scale: 1.05, y: -30, duration: 1, immediateRender: false }, 0)
-        .to(".reel-hi-mask", { yPercent: -30, opacity: 0, duration: 0.6 }, 0.1)
-        .to(".reel-top > *, .reel-bottom-row > *, .reel-stickers .sticker", {
-          opacity: 0, y: -12, duration: 0.4,
-        }, 0.1);
-    });
-
+      tl.to(".reel-card", { y: -40, duration: 1 }, 0)
+        .to(".reel-hi-mask", { y: -70, duration: 1 }, 0)
+        .to(
+          ".reel-stickers .sticker",
+          { y: -100, opacity: 0.2, duration: 1, stagger: 0.05 },
+          0
+        );
+    }, root);
     return () => {
-      mm.revert();
+      ctx.revert();
     };
   }, []);
 
   return (
     <header className="hero-reel" id="top" ref={rootRef}>
-      {/* Full-bleed layer for the punch-in (rises beneath the card).
-          Portrait photo shown full-height and centered; the sides are
-          filled with a dark blurred copy of the same photo so nothing
-          gets cropped or over-zoomed. */}
-      <div className="reel-full" aria-hidden="true">
-        <img
-          className="full-bg"
-          src="/hero-portrait.webp"
-          alt=""
-          width={925}
-          height={1233}
-        />
-        <img
-          className="full-main"
-          src="/hero-portrait.webp"
-          alt=""
-          width={925}
-          height={1233}
-        />
-      </div>
-
       <div className="reel-top">
         <p className="reel-kicker">
           <span className="dot" aria-hidden="true" />
@@ -424,27 +338,31 @@ export default function Hero() {
 
       <div className="reel-center">
         <div className="reel-hi-mask">
-          <h1 className="reel-hi">Hai, I&rsquo;m Juan</h1>
+          <div className="par-hi">
+            <h1 className="reel-hi">Hai, I&rsquo;m Juan</h1>
+          </div>
         </div>
 
-        <figure className="reel-card">
-          <img
-            className="card-photo photo-color"
-            src="/hero-portrait.webp"
-            alt="Portrait of Juan Pablo Putra Kuganda"
-            width={925}
-            height={1233}
-            fetchPriority="high"
-          />
-          <img
-            className="card-photo photo-gray"
-            src="/hero-portrait.webp"
-            alt=""
-            aria-hidden="true"
-            width={925}
-            height={1233}
-          />
-        </figure>
+        <div className="par-card">
+          <figure className="reel-card">
+            <img
+              className="card-photo photo-color"
+              src="/hero-portrait.webp"
+              alt="Portrait of Juan Pablo Putra Kuganda"
+              width={925}
+              height={1233}
+              fetchPriority="high"
+            />
+            <img
+              className="card-photo photo-gray"
+              src="/hero-portrait.webp"
+              alt=""
+              aria-hidden="true"
+              width={925}
+              height={1233}
+            />
+          </figure>
+        </div>
 
         <div className="reel-bottom-row">
           <p className="reel-cap">FIG.01 — JUAN, PALU · 2026</p>
@@ -455,8 +373,9 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Playful sticker field: absolute around the card on desktop,
-          a tidy wrapped row under the card on mobile. */}
+      {/* Sticker field: six meaningful pills + one static squiggle.
+          Absolute around the card on desktop, a tidy wrapped row
+          under the card on mobile. */}
       <div className="reel-stickers" aria-hidden="true">
         {STICKERS.map((s) => (
           <span
@@ -464,49 +383,18 @@ export default function Hero() {
             className={`sticker sticker-${s.variant}`}
             style={s.at}
             data-rot={s.rot}
-            data-sx={s.scatter.x}
-            data-sy={s.scatter.y}
-            data-sr={s.scatter.r}
           >
             {s.variant === "ink" && <span className="sdot" />}
             {s.label}
           </span>
         ))}
         <span
-          className="sticker sticker-tag"
-          style={{ top: "13%", left: "14%" }}
-          data-rot={-8}
-          data-sx={-260}
-          data-sy={-180}
-          data-sr={-18}
-        >
-          FIG.01
-        </span>
-        <span
-          className="sticker sticker-burst"
-          style={{ top: "11%", right: "15%" }}
-          data-rot={12}
-          data-sx={280}
-          data-sy={-170}
-          data-sr={40}
-        >
-          <Starburst />
-        </span>
-        <span
           className="sticker sticker-squiggle"
           style={{ top: "76%", left: "11%" }}
           data-rot={0}
-          data-sx={-240}
-          data-sy={200}
-          data-sr={-14}
         >
           <Squiggle />
         </span>
-      </div>
-
-      {/* Caption that holds over the full-bleed before release. */}
-      <div className="reel-fullcap" aria-hidden="true">
-        <p>FIG.01 — JUAN, PALU · 2026</p>
       </div>
     </header>
   );

@@ -12,10 +12,12 @@ const SKILLS = [
 ] as const;
 
 /**
- * STATEMENT — "what i do", Benjamin-style.
+ * STATEMENT — "what i do", Benjamin-style, kept clean & simple.
  * Giant statement typography with inline photo chips + skill blocks
- * in identity colors only (ink / amber / paper). transform/opacity
- * animation, static under reduced motion.
+ * in identity colors only (ink / amber / paper).
+ * Animation is minimal and meaningful: line-mask reveal + a soft
+ * pill stagger on scroll-enter, hover lift on pills/chips.
+ * transform/opacity only; static under reduced motion.
  */
 export default function Statement() {
   const rootRef = useRef<HTMLElement>(null);
@@ -29,14 +31,12 @@ export default function Statement() {
     if (reduced) return;
 
     const ctx = gsap.context(() => {
-      // Initial states
-      gsap.set(".st-label", { opacity: 0, x: -20, letterSpacing: "0.5em" });
-      gsap.set(".st-line-inner", { yPercent: 115, rotateX: 12, scale: 0.97 });
-      gsap.set(".st-pill", { y: 40, opacity: 0, scale: 0.85, rotation: -3 });
+      // Initial states — transform/opacity only, no layout properties.
+      gsap.set(".st-label", { opacity: 0, y: 12, willChange: "transform, opacity" });
+      gsap.set(".st-line-inner", { yPercent: 115, willChange: "transform" });
+      gsap.set(".st-pill", { y: 24, opacity: 0, willChange: "transform, opacity" });
 
-      // ---- Entrance timeline ----
       const tl = gsap.timeline({
-        defaults: { ease: "power4.out" },
         scrollTrigger: {
           trigger: root,
           start: "top 78%",
@@ -44,70 +44,29 @@ export default function Statement() {
         },
       });
 
-      // Label draws in with spacing animation
       tl.to(".st-label", {
         opacity: 1,
-        x: 0,
-        letterSpacing: "0.22em",
-        duration: 0.7,
-        ease: "expo.out",
+        y: 0,
+        duration: 0.5,
+        ease: "power3.out",
       })
-        // Lines reveal with cinematic unfolding
+        // Line-mask reveal — the one signature motion.
         .to(
           ".st-line-inner",
-          {
-            yPercent: 0,
-            rotateX: 0,
-            scale: 1,
-            duration: 1.0,
-            stagger: 0.1,
-            ease: "expo.out",
-          },
-          "-=0.4"
+          { yPercent: 0, duration: 0.9, stagger: 0.09, ease: "power4.out" },
+          "-=0.25"
         )
-        // Pills pop in with spring overshoot
+        // Soft pill stagger, no spring.
         .to(
           ".st-pill",
-          {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            rotation: 0,
-            duration: 0.7,
-            stagger: 0.07,
-            ease: "back.out(1.4)",
-          },
+          { y: 0, opacity: 1, duration: 0.55, stagger: 0.08, ease: "power3.out" },
           "-=0.5"
         );
 
       tl.eventCallback("onComplete", () => {
-        gsap.set(".st-line-inner, .st-pill, .st-label", {
+        gsap.set(".st-label, .st-line-inner, .st-pill", {
           clearProps: "all",
         });
-      });
-
-      // ---- Slow parallax scrub on headline as user scrolls ----
-      gsap.to(".st-headline", {
-        y: -30,
-        ease: "none",
-        scrollTrigger: {
-          trigger: root,
-          start: "top 60%",
-          end: "bottom 20%",
-          scrub: 1.5,
-        },
-      });
-
-      // ---- Parallax on pills (slower layer) ----
-      gsap.to(".st-pills", {
-        y: -16,
-        ease: "none",
-        scrollTrigger: {
-          trigger: root,
-          start: "top 60%",
-          end: "bottom 20%",
-          scrub: 2,
-        },
       });
     }, root);
     return () => {

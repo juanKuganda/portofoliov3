@@ -114,43 +114,12 @@ a {
     opacity: 1;
   }
 }
-/* Starburst slow rotate */
-@keyframes burst-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-/* Sticker magnetic hover pulse */
-@keyframes sticker-pulse {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.06); }
-}
-/* Grid parallax drift */
-@keyframes grid-drift {
-  0%   { background-position: 0 0, 0 0; }
-  100% { background-position: 76px 76px, 76px 76px; }
-}
-/* Title shimmer sweep */
-@keyframes title-shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
 /* Pill pop hover */
 @keyframes pill-pop {
   0%   { transform: scale(1) rotate(0deg); }
   25%  { transform: scale(1.07) rotate(-1.5deg); }
   75%  { transform: scale(1.03) rotate(0.5deg); }
   100% { transform: scale(1) rotate(0deg); }
-}
-/* Statement chips float */
-@keyframes chip-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  33%      { transform: translateY(-3px) rotate(2deg); }
-  66%      { transform: translateY(2px) rotate(-1deg); }
-}
-/* Scroll cue glow */
-@keyframes scroll-glow {
-  0%, 100% { text-shadow: 0 0 0 transparent; }
-  50%      { text-shadow: 0 0 12px rgba(245,158,11,0.5); }
 }
 /* Infinite horizontal marquee */
 @keyframes marquee {
@@ -208,11 +177,10 @@ a {
 }
 
 /* ============================================================
-   NAV — flat & transparent
-   White text + `mix-blend-mode: difference` on the container: the bar
-   reads over light paper (→ dark) and over the dark full-bleed photo
-   (→ light). No background, no blur. A hairline fades in past 40px
-   of scroll. Mobile gets a full-screen ink overlay menu.
+   NAV — flat & transparent, LIGHT MODE.
+   Ink text on transparent background (no white fill, no blur) —
+   always legible over the paper sections. A 1px hairline fades in
+   past 40px of scroll. Mobile gets a full-screen paper overlay menu.
    ============================================================ */
 .nav {
   position: sticky;
@@ -223,12 +191,31 @@ a {
   justify-content: space-between;
   gap: 16px;
   padding: 18px var(--pad);
-  color: #fff;
-  mix-blend-mode: difference;
+  color: var(--ink);
+  background: transparent;
+  transition: color 0.3s var(--ease);
+}
+/* Adaptive theme: paper text when the section under the nav is dark. */
+.nav.on-dark {
+  color: var(--paper);
+}
+.nav.on-dark::after {
+  background: color-mix(in srgb, var(--paper) 22%, transparent);
 }
 .nav::after {
-  /* border removed per request */
-  display: none;
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--line);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+  pointer-events: none;
+}
+.nav.is-scrolled::after {
+  opacity: 1;
 }
 .nav-name {
   font-family: var(--font-display);
@@ -295,7 +282,7 @@ a {
   transform: scaleX(1);
 }
 
-/* Mobile menu button (inside the blended nav) */
+/* Mobile menu button */
 .nav-menu-btn {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -325,14 +312,14 @@ a {
   }
 }
 
-/* Mobile full-screen menu — solid ink, paper text, true amber accents
-   (outside the difference blend, so the amber stays amber). */
+/* Mobile full-screen menu — paper background, ink text, true amber
+   accents. */
 .mnav {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: #111;
-  color: var(--paper);
+  background: var(--paper);
+  color: var(--ink);
   display: flex;
   flex-direction: column;
   padding: 18px var(--pad) 26px;
@@ -363,9 +350,9 @@ a {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border: 1px solid var(--line);
   background: transparent;
-  color: var(--paper);
+  color: var(--ink);
   font-size: 15px;
   cursor: pointer;
   display: flex;
@@ -389,7 +376,7 @@ a {
   align-items: baseline;
   gap: 18px;
   padding: 12px 0;
-  color: var(--paper);
+  color: var(--ink);
   text-decoration: none;
   /* stagger-in: transform + opacity only */
   opacity: 0;
@@ -428,7 +415,7 @@ a {
   justify-content: space-between;
   gap: 12px;
   padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  border-top: 1px solid var(--line);
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -474,19 +461,16 @@ a {
 }
 
 /* ============================================================
-   HERO — THE REEL v4 (busy & playful, mono + amber only)
-   Scene 1: faint grid + amber glow on paper; "Hai, I'm Juan" mask
-   reveal; 3:4 portrait card dropped from above; sticker pills,
-   starburst, squiggle arrow and FIG.01 tag around the card.
-   Scroll (desktop pin): stickers SCATTER outward (Luca-Mori beat),
-   card PUNCHES IN to full-bleed (portrait full-height, dark blurred
-   sides — never over-zoomed), caption holds, then release to Work.
+   HERO — THE REEL v5 (clean & personal)
+   Scene 1: faint static grid on paper; "Hai, I'm Juan" mask
+   reveal; 3:4 portrait card dropped from above; six meaningful
+   sticker pills + one static squiggle around the card.
+   Interaction: magnetic parallax (rAF + quickSetter, lerped) on
+   dedicated .par-* wrappers — never fights other timelines.
+   Scroll: NO PIN — one scrub timeline eases the hero out.
    ============================================================ */
 .hero-reel {
   position: relative;
-  /* Full viewport height: when ScrollTrigger pins the hero it becomes
-     fixed at top:0 — a (100svh − nav) height would leave a gap below.
-     Scene-1 content keeps clear of the sticky nav via padding. */
   height: 100svh;
   min-height: 560px;
   overflow: hidden;
@@ -495,11 +479,11 @@ a {
   display: flex;
   flex-direction: column;
 }
-/* Faint blueprint grid — animated parallax drift on desktop. */
+/* Faint blueprint grid — static. */
 .hero-reel::before {
   content: "";
   position: absolute;
-  inset: -76px;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
   background-image:
@@ -509,9 +493,8 @@ a {
   opacity: 0.55;
   -webkit-mask-image: radial-gradient(ellipse 95% 85% at 50% 45%, black 25%, transparent 78%);
   mask-image: radial-gradient(ellipse 95% 85% at 50% 45%, black 25%, transparent 78%);
-  animation: grid-drift 28s linear infinite;
 }
-/* Whisper of amber behind the card — breathing glow. */
+/* Whisper of amber behind the card — static. */
 .hero-reel::after {
   content: "";
   position: absolute;
@@ -523,64 +506,6 @@ a {
   top: 48%;
   transform: translate(-50%, -50%);
   background: radial-gradient(circle, rgba(245, 158, 11, 0.13), transparent 62%);
-  animation: pulse 5s ease-in-out infinite;
-}
-
-/* Full-bleed layer for the punch-in (desktop scroll only).
-   The portrait photo stands full-height and centered; the sides are
-   filled with a dark blurred copy of the same photo — full-bleed
-   drama without cropping or over-zooming the portrait. */
-.reel-full {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  overflow: hidden;
-  background: #0b0b0c;
-  opacity: 0;
-  visibility: hidden;
-}
-.reel-full .full-bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 50% 20%;
-  filter: blur(48px) brightness(0.42);
-  transform: scale(1.12);
-  display: block;
-}
-.reel-full .full-main {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  height: 100%;
-  width: auto;
-  display: block;
-}
-/* Caption holding over the full-bleed before release. */
-.reel-fullcap {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  padding: 30px var(--pad);
-  opacity: 0;
-  visibility: hidden;
-}
-.reel-fullcap p {
-  margin: 0;
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  opacity: 0.85;
 }
 
 /* Top row: kicker left, role ticker right — ink on paper. */
@@ -662,9 +587,9 @@ a {
 }
 .reel-hi-mask {
   overflow: hidden;
-  /* extend the clip box so the reveal never clips descenders */
-  padding-bottom: 0.12em;
-  margin-bottom: -0.12em;
+  /* breathing room so the magnetic parallax never clips the text */
+  padding: 0 10px 0.12em;
+  margin: 0 -10px -0.12em;
 }
 .reel-hi {
   margin: 0;
@@ -676,21 +601,30 @@ a {
   color: var(--ink);
   text-align: center;
   white-space: nowrap;
-  /* Subtle shimmer on the title text */
-  background: linear-gradient(
-    90deg,
-    var(--ink) 0%,
-    var(--ink) 40%,
-    var(--signal) 50%,
-    var(--ink) 60%,
-    var(--ink) 100%
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: title-shimmer 5s ease-in-out infinite;
-  animation-delay: 2s;
+}
+/* Parallax wrappers: the ONLY elements the magnetic loop touches
+   (via gsap.quickSetter), so it never fights the entrance or
+   scroll timelines. No permanent will-change — the loop writes
+   transforms directly only while the pointer moves. */
+.par-card {
+  position: relative;
+}
+/* Hover glow crossfades via opacity (compositor-only) instead of
+   animating box-shadow, which would repaint every frame. */
+.par-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  box-shadow:
+    0 38px 90px rgba(0, 0, 0, 0.28),
+    0 0 0 2px var(--signal);
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+  pointer-events: none;
+}
+.par-card:hover::after {
+  opacity: 1;
 }
 
 /* The card: 3:4 portrait, border + soft shadow. */
@@ -704,11 +638,6 @@ a {
   border-radius: 20px;
   background: #101010;
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.18);
-  transition: box-shadow 0.5s var(--ease);
-}
-.reel-card:hover {
-  box-shadow: 0 38px 90px rgba(0, 0, 0, 0.28),
-    0 0 0 2px var(--signal);
 }
 .reel-card .card-photo {
   position: absolute;
@@ -747,15 +676,11 @@ a {
   color: var(--ink);
   text-decoration: none;
   white-space: nowrap;
-  transition: transform 0.3s var(--ease), letter-spacing 0.3s var(--ease);
+  transition: transform 0.3s var(--ease);
   cursor: pointer;
 }
 .reel-scroll:hover {
   transform: translateY(2px);
-  letter-spacing: 0.18em;
-}
-.reel-scroll:hover span:first-child {
-  animation: scroll-glow 1.6s ease-in-out infinite;
 }
 .reel-scroll .arrow {
   display: inline-block;
@@ -772,7 +697,7 @@ a {
   }
 }
 
-/* ---- Sticker field: playful pills around the card ---- */
+/* ---- Sticker field: six meaningful pills + one static squiggle ---- */
 .reel-stickers {
   position: absolute;
   inset: 0;
@@ -792,22 +717,15 @@ a {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
-  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.3, 1),
-    box-shadow 0.4s var(--ease);
-  will-change: transform;
 }
-/* Magnetic hover: stickers react when the cursor approaches */
+/* Hover: no shadow animation (would repaint); the transform is
+   owned by the parallax loop, so hover only lifts stacking order. */
 .sticker:hover {
-  transform: scale(1.08) !important;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
   z-index: 10;
 }
 .sticker-ink {
   background: var(--ink);
   color: var(--paper);
-}
-.sticker-ink:hover {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
 }
 .sticker-paper {
   background: var(--paper);
@@ -815,16 +733,11 @@ a {
   border: 1.5px solid var(--ink);
 }
 .sticker-paper:hover {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1),
-    inset 0 0 0 1.5px var(--signal);
   border-color: var(--signal);
 }
 .sticker-amber {
   background: var(--signal);
   color: var(--ink);
-}
-.sticker-amber:hover {
-  box-shadow: 0 8px 28px rgba(245, 158, 11, 0.35);
 }
 .sticker .sdot {
   width: 8px;
@@ -832,28 +745,6 @@ a {
   border-radius: 50%;
   background: var(--signal);
   flex: none;
-}
-.sticker-tag {
-  padding: 8px 12px;
-  border: 1.5px dashed var(--ink);
-  border-radius: 6px;
-  background: var(--paper);
-  color: var(--ink);
-  font-size: 11px;
-}
-.sticker-burst {
-  padding: 0;
-  background: none;
-  border: 0;
-}
-.burst-svg {
-  width: 76px;
-  height: 76px;
-  display: block;
-  animation: burst-spin 22s linear infinite;
-}
-.burst-svg polygon {
-  fill: var(--signal);
 }
 .sticker-squiggle {
   padding: 0;
@@ -868,14 +759,9 @@ a {
   opacity: 0.85;
 }
 
-/* Reduced motion: one static frame — color card, greeting, stickers,
-   no pin, no full-bleed, no CSS keyframe loops. */
+/* Reduced motion: one static frame — color card, greeting, stickers. */
 @media (prefers-reduced-motion: reduce) {
   .reel-card .photo-gray {
-    display: none;
-  }
-  .reel-full,
-  .reel-fullcap {
     display: none;
   }
   .tick-word,
@@ -918,13 +804,8 @@ a {
     font-size: 11px;
     padding: 8px 12px;
   }
-  .sticker-tag,
   .sticker-squiggle {
     display: none;
-  }
-  .burst-svg {
-    width: 54px;
-    height: 54px;
   }
 }
 
@@ -984,9 +865,11 @@ a {
 }
 .st-line-inner {
   display: block;
-  will-change: transform;
+  /* no permanent will-change — GSAP sets it during the reveal tween
+     and clears it onComplete */
 }
-/* inline photo chips inside the headline — floating + hover */
+/* inline photo chips inside the headline — hover grows them.
+   transform-only; no infinite float (kept calm & meaningful). */
 .st-chip {
   display: inline-block;
   height: 0.68em;
@@ -995,21 +878,17 @@ a {
   border-radius: 999px;
   vertical-align: -0.06em;
   margin: 0 0.08em;
-  animation: chip-float 4s ease-in-out infinite;
-  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
+  transition: transform 0.4s var(--ease);
   cursor: pointer;
 }
 .st-chip:hover {
-  transform: scale(1.2) rotate(3deg) !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  transform: scale(1.2) rotate(3deg);
 }
 .st-line:nth-child(1) .st-chip {
   object-position: 50% 16%;
-  animation-delay: 0s;
 }
 .st-line:nth-child(3) .st-chip {
   object-position: 50% 88%;
-  animation-delay: 1.3s;
 }
 .st-pills {
   margin-top: clamp(28px, 5vh, 56px);
@@ -1030,13 +909,13 @@ a {
   padding: 0.55em 1em;
   border-radius: 4px;
   line-height: 1.1;
-  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease),
-    background-color 0.35s var(--ease);
+  /* transform-only hover lift — no shadow/color animation */
+  transition: transform 0.35s var(--ease);
   cursor: pointer;
   position: relative;
   overflow: hidden;
 }
-/* Pill hover effects */
+/* Pill hover: lift only (transform, compositor-cheap) */
 .st-pill:hover {
   transform: translateY(-3px) scale(1.03);
 }
@@ -1044,17 +923,9 @@ a {
   background: var(--ink);
   color: var(--paper);
 }
-.st-pill.tone-ink:hover {
-  background: #1a1a1a;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-}
 .st-pill.tone-amber {
   background: var(--signal);
   color: var(--ink);
-}
-.st-pill.tone-amber:hover {
-  background: #ffb020;
-  box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4);
 }
 .st-pill.tone-paper {
   background: transparent;
@@ -1064,7 +935,6 @@ a {
 .st-pill.tone-paper:hover {
   border-color: var(--signal);
   color: var(--signal);
-  box-shadow: 0 8px 30px rgba(245, 158, 11, 0.15);
 }
 .st-pattern {
   padding: 0.45em 0.6em;
@@ -1080,27 +950,6 @@ a {
 .st-pattern svg {
   display: block;
 }
-@media (prefers-reduced-motion: reduce) {
-  .st-line-inner {
-    will-change: auto;
-  }
-  .st-chip {
-    animation: none;
-  }
-  .hero-reel::before {
-    animation: none;
-  }
-  .hero-reel::after {
-    animation: none;
-  }
-  .burst-svg {
-    animation: none;
-  }
-  .reel-hi {
-    animation: none;
-    -webkit-text-fill-color: var(--ink);
-  }
-}
 @media (max-width: 768px) {
   .st-headline {
     font-size: clamp(34px, 10.5vw, 56px);
@@ -1113,7 +962,6 @@ a {
   }
 }
 /* =============== END STATEMENT =============== */
-
 /* ============================================================
    SECTION HEADERS
    ============================================================ */

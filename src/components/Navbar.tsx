@@ -9,11 +9,10 @@ const NAV_ITEMS = [
 ];
 
 /**
- * NAV — flat & transparent.
- * White text + `mix-blend-mode: difference` on the nav container, so the
- * bar reads on light paper (→ dark) and on the dark full-bleed photo
- * (→ light) with no background, no blur. A hairline fades in past 40px
- * of scroll. Mobile gets a full-screen ink overlay menu.
+ * NAV — flat & transparent, LIGHT MODE.
+ * Ink text, no background fill, no blur — always legible over the
+ * paper sections. A 1px hairline fades in past 40px of scroll.
+ * Mobile gets a full-screen paper overlay menu.
  */
 export default function Navbar() {
   const time = useClock();
@@ -22,6 +21,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLElement>(null);
 
   const clockLabel = time ? `Palu · ${time} WITA` : "Palu · WITA";
 
@@ -42,7 +42,9 @@ export default function Navbar() {
     return () => observer.disconnect();
   }, []);
 
-  // Hairline past 40px of scroll (rAF-throttled).
+  // Hairline past 40px of scroll + adaptive theme: when the section
+  // directly under the nav is dark (.theme-dark / .contact), flip the
+  // nav to paper text so it stays legible. rAF-throttled, passive.
   useEffect(() => {
     let ticking = false;
     const onScroll = () => {
@@ -50,6 +52,24 @@ export default function Navbar() {
       ticking = true;
       requestAnimationFrame(() => {
         setScrolled(window.scrollY > 40);
+        const navEl = navRef.current;
+        if (navEl) {
+          const h = navEl.getBoundingClientRect().height;
+          // elementsFromPoint: skip fixed/sticky floaters (e.g. the
+          // services demo CTA) so we read the section actually behind.
+          const els = document.elementsFromPoint(
+            window.innerWidth / 2,
+            h + 2
+          );
+          let dark = false;
+          for (const cand of els) {
+            const pos = getComputedStyle(cand).position;
+            if (pos === "fixed" || pos === "sticky") continue;
+            dark = !!cand.closest(".theme-dark, .contact");
+            break;
+          }
+          navEl.classList.toggle("on-dark", dark);
+        }
         ticking = false;
       });
     };
@@ -88,6 +108,7 @@ export default function Navbar() {
   return (
     <>
       <nav
+        ref={navRef}
         className={`nav${scrolled ? " is-scrolled" : ""}`}
         aria-label="Primary"
       >
