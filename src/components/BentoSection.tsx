@@ -6,34 +6,16 @@ import { useFitText } from "../hooks/useFitText";
 gsap.registerPlugin(ScrollTrigger);
 
 /* ------------------------------------------------------------------ */
-/* Card 1 - Theme Lab: press a token, the whole card re-themes         */
+/* Card 1 — Theme Lab: press a token, the whole card re-themes         */
 /* ------------------------------------------------------------------ */
 const themes = [
-  {
-    name: "Paper",
-    hex: "#F6F6F6",
-    bg: "#f6f6f6",
-    fg: "#0a0a0a",
-    muted: "#737373",
-  },
-  {
-    name: "Signal Amber",
-    hex: "#F59E0B",
-    bg: "#f59e0b",
-    fg: "#171204",
-    muted: "#6b4e0a",
-  },
-  {
-    name: "Ink",
-    hex: "#0A0A0A",
-    bg: "#0a0a0a",
-    fg: "#f5f5f5",
-    muted: "#a3a3a3",
-  },
+  { name: "Paper", hex: "#F6F6F6", bg: "#f6f6f6", fg: "#0a0a0a", muted: "#737373" },
+  { name: "Signal Amber", hex: "#F59E0B", bg: "#f59e0b", fg: "#171204", muted: "#6b4e0a" },
+  { name: "Ink", hex: "#0A0A0A", bg: "#0a0a0a", fg: "#f5f5f5", muted: "#a3a3a3" },
 ];
 
 /* ------------------------------------------------------------------ */
-/* Card 2 - particle burst rendered at the tap point                   */
+/* Card 2 — particle burst rendered at the tap point                   */
 /* ------------------------------------------------------------------ */
 function Burst({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -55,15 +37,13 @@ function Burst({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
       });
     }, el);
     return () => ctx.revert();
-  }, [onDone]);
+    // onDone is stable per burst (b.id never changes) — empty deps so
+    // rapid taps re-rendering the parent can't kill mid-flight particles.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <div
-      ref={ref}
-      className="burst"
-      style={{ left: x, top: y }}
-      aria-hidden="true"
-    >
+    <div ref={ref} className="burst" style={{ left: x, top: y }} aria-hidden="true">
       {Array.from({ length: 12 }).map((_, i) => (
         <span key={i} className="bp" />
       ))}
@@ -72,12 +52,12 @@ function Burst({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Card 4 - fake execution transcript                                 */
+/* Card 4 — fake execution transcript                                 */
 /* ------------------------------------------------------------------ */
 const codeLines = [
-  "export const createExperience = () => {",
+  'export const createExperience = () => {',
   '  return "wow";',
-  "}",
+  '}',
 ];
 
 export default function BentoSection() {
@@ -99,12 +79,8 @@ export default function BentoSection() {
   /* ---- Card 2 state ---- */
   const canvasRef = useRef<HTMLDivElement>(null);
   const ballRef = useRef<HTMLDivElement>(null);
-  const [ripples, setRipples] = useState<
-    { id: number; x: number; y: number }[]
-  >([]);
-  const [bursts, setBursts] = useState<{ id: number; x: number; y: number }[]>(
-    [],
-  );
+  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [bursts, setBursts] = useState<{ id: number; x: number; y: number }[]>([]);
   const [taps, setTaps] = useState(0);
 
   /* ---- Card 3 state ---- */
@@ -136,7 +112,7 @@ export default function BentoSection() {
             start: "top 80%",
             once: true,
           },
-        },
+        }
       );
     }
     return () => {
@@ -145,10 +121,7 @@ export default function BentoSection() {
   }, [reduced]);
 
   /* ---- 3D tilt + spotlight ---- */
-  const handleMouseMove = (
-    e: React.MouseEvent<HTMLDivElement>,
-    idx: number,
-  ) => {
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>, idx: number) => {
     const card = cardsRef.current[idx];
     if (!card || reduced) return;
     const rect = card.getBoundingClientRect();
@@ -164,28 +137,20 @@ export default function BentoSection() {
       transformPerspective: 1000,
       duration: 0.3,
       ease: "power2.out",
+      overwrite: "auto",
     });
   };
   const handleMouseLeave = (idx: number) => {
     const card = cardsRef.current[idx];
     if (!card || reduced) return;
-    gsap.to(card, {
-      rotateX: 0,
-      rotateY: 0,
-      duration: 0.6,
-      ease: "power3.out",
-    });
+    gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.6, ease: "power3.out", overwrite: "auto" });
   };
 
   /* ---- Card 1: theme wipe ---- */
   const pressToken = (i: number, btn: HTMLButtonElement) => {
     if (i === theme || switching.current) return;
     if (!reduced) {
-      gsap.fromTo(
-        btn,
-        { scale: 0.82 },
-        { scale: 1, duration: 0.5, ease: "back.out(3)" },
-      );
+      gsap.fromTo(btn, { scale: 0.82 }, { scale: 1, duration: 0.5, ease: "back.out(3)" });
     }
     const wipe = wipeRef.current;
     if (!wipe || reduced) {
@@ -218,6 +183,7 @@ export default function BentoSection() {
       y: e.clientY - rect.top - 14,
       duration: 0.4,
       ease: "back.out(2)",
+      overwrite: "auto",
     });
   };
   const handleCanvasTap = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -256,13 +222,7 @@ export default function BentoSection() {
     setOutLines([]);
     if (reduced) {
       setRunState("done");
-      setOutLines([
-        "$ tsc --noEmit",
-        "✓ 0 errors",
-        "$ vite build",
-        "✓ built in 842ms",
-        '→ "wow"',
-      ]);
+      setOutLines(["$ tsc --noEmit", "✓ 0 errors", "$ vite build", "✓ built in 842ms", '→ "wow"']);
       return;
     }
     setRunState("running");
@@ -294,21 +254,15 @@ export default function BentoSection() {
   return (
     <section className="bento-section block" id="bento" ref={sectionRef}>
       <div className="bento-header rv">
-        <h2 className="fit sec-fit" ref={fitRef}>
-          CAPABILITIES
-        </h2>
-        <p className="bento-desc">
-          Building digital products that feel alive. Go ahead - press things.
-        </p>
+        <h2 className="fit sec-fit" ref={fitRef}>CAPABILITIES</h2>
+        <p className="bento-desc">Building digital products that feel alive. Go ahead — press things.</p>
       </div>
 
       <div className="bento-grid">
         {/* Card 1: Theme Lab */}
         <div
           className="bento-card span-7 theme-lab"
-          ref={(el) => {
-            cardsRef.current[0] = el;
-          }}
+          ref={(el) => { cardsRef.current[0] = el; }}
           onMouseMove={(e) => handleMouseMove(e, 0)}
           onMouseLeave={() => handleMouseLeave(0)}
         >
@@ -329,16 +283,12 @@ export default function BentoSection() {
                 <span className="bento-badge tl-badge">Theme Lab</span>
                 <h3 className="bc-title">Design Systems</h3>
                 <p className="bc-desc">
-                  Cohesive, scalable tokens - press a swatch and watch the whole
+                  Cohesive, scalable tokens — press a swatch and watch the whole
                   card re-theme itself.
                 </p>
               </div>
               <div className="bc-visual tl-visual">
-                <div
-                  className="tl-chips"
-                  role="group"
-                  aria-label="Theme tokens"
-                >
+                <div className="tl-chips" role="group" aria-label="Theme tokens">
                   {themes.map((th, i) => (
                     <button
                       key={th.name}
@@ -365,11 +315,7 @@ export default function BentoSection() {
                     onClick={(e) => {
                       const b = e.currentTarget;
                       if (!reduced)
-                        gsap.fromTo(
-                          b,
-                          { scale: 0.9 },
-                          { scale: 1, duration: 0.45, ease: "back.out(3)" },
-                        );
+                        gsap.fromTo(b, { scale: 0.9 }, { scale: 1, duration: 0.45, ease: "back.out(3)" });
                     }}
                   >
                     Press me
@@ -383,13 +329,8 @@ export default function BentoSection() {
         {/* Card 2: Press Playground */}
         <div
           className="bento-card span-5 tall"
-          ref={(el) => {
-            cardsRef.current[1] = el;
-          }}
-          onMouseMove={(e) => {
-            handleMouseMove(e, 1);
-            handleBallMove(e);
-          }}
+          ref={(el) => { cardsRef.current[1] = el; }}
+          onMouseMove={(e) => { handleMouseMove(e, 1); handleBallMove(e); }}
           onMouseLeave={() => handleMouseLeave(1)}
         >
           <div className="bento-content">
@@ -397,8 +338,7 @@ export default function BentoSection() {
               <span className="bento-badge">Spring & Physics</span>
               <h3 className="bc-title">Micro-Interactions</h3>
               <p className="bc-desc">
-                Every hover, scroll, and click is an opportunity. Tap the
-                canvas.
+                Every hover, scroll, and click is an opportunity. Tap the canvas.
               </p>
             </div>
             <div className="bc-visual pg-visual">
@@ -422,26 +362,15 @@ export default function BentoSection() {
                 }}
               >
                 <div className="pg-counter" aria-live="polite">
-                  <span key={taps} className="pg-count-pop">
-                    {taps}
-                  </span>
+                  <span key={taps} className="pg-count-pop">{taps}</span>
                   <span className="pg-count-lbl">taps</span>
                 </div>
                 <div className="pg-ball" ref={ballRef} aria-hidden="true" />
                 {ripples.map((r) => (
-                  <span
-                    key={r.id}
-                    className="click-ripple"
-                    style={{ left: r.x, top: r.y }}
-                  />
+                  <span key={r.id} className="click-ripple" style={{ left: r.x, top: r.y }} />
                 ))}
                 {bursts.map((b) => (
-                  <Burst
-                    key={b.id}
-                    x={b.x}
-                    y={b.y}
-                    onDone={() => removeBurst(b.id)}
-                  />
+                  <Burst key={b.id} x={b.x} y={b.y} onDone={() => removeBurst(b.id)} />
                 ))}
                 <div className="pg-hint">Tap anywhere ✦</div>
               </div>
@@ -452,9 +381,7 @@ export default function BentoSection() {
         {/* Card 3: Mentorship network */}
         <div
           className="bento-card span-3"
-          ref={(el) => {
-            cardsRef.current[2] = el;
-          }}
+          ref={(el) => { cardsRef.current[2] = el; }}
           onMouseMove={(e) => handleMouseMove(e, 2)}
           onMouseLeave={() => handleMouseLeave(2)}
         >
@@ -462,9 +389,7 @@ export default function BentoSection() {
             <div className="bc-top">
               <span className="bento-badge">Community & Growth</span>
               <h3 className="bc-title">Mentorship</h3>
-              <p className="bc-desc">
-                Growing Palu's developer ecosystem. Ping a node.
-              </p>
+              <p className="bc-desc">Growing Palu's developer ecosystem. Ping a node.</p>
             </div>
             <div className="bc-visual net-visual">
               <div className="nodes-mockup">
@@ -476,9 +401,7 @@ export default function BentoSection() {
                   <button
                     key={n.label}
                     type="button"
-                    ref={(el) => {
-                      nodeRefs.current[i] = el;
-                    }}
+                    ref={(el) => { nodeRefs.current[i] = el; }}
                     className={`node ${n.cls}`}
                     data-label={n.label}
                     aria-label={`Ping ${n.label}`}
@@ -487,33 +410,13 @@ export default function BentoSection() {
                     <span className="node-ping" aria-hidden="true" />
                   </button>
                 ))}
-                <svg
-                  className="node-lines"
-                  width="100%"
-                  height="100%"
-                  aria-hidden="true"
-                >
-                  <line
-                    x1="25%"
-                    y1="65%"
-                    x2="50%"
-                    y2="35%"
-                    className={`animated-path ${lineFlash ? "flash" : ""}`}
-                  />
-                  <line
-                    x1="50%"
-                    y1="35%"
-                    x2="75%"
-                    y2="65%"
-                    className={`animated-path delay ${lineFlash ? "flash" : ""}`}
-                  />
+                <svg className="node-lines" width="100%" height="100%" aria-hidden="true">
+                  <line x1="25%" y1="65%" x2="50%" y2="35%" className={`animated-path ${lineFlash ? "flash" : ""}`} />
+                  <line x1="50%" y1="35%" x2="75%" y2="65%" className={`animated-path delay ${lineFlash ? "flash" : ""}`} />
                 </svg>
               </div>
               <div className="net-counter">
-                <span key={signals} className="net-pop">
-                  {signals}
-                </span>{" "}
-                signals sent
+                <span key={signals} className="net-pop">{signals}</span> signals sent
               </div>
             </div>
           </div>
@@ -522,9 +425,7 @@ export default function BentoSection() {
         {/* Card 4: Code runner */}
         <div
           className="bento-card span-4"
-          ref={(el) => {
-            cardsRef.current[3] = el;
-          }}
+          ref={(el) => { cardsRef.current[3] = el; }}
           onMouseMove={(e) => handleMouseMove(e, 3)}
           onMouseLeave={() => handleMouseLeave(3)}
         >
@@ -533,8 +434,7 @@ export default function BentoSection() {
               <span className="bento-badge">Type-Safe & Scalable</span>
               <h3 className="bc-title">Frontend Architecture</h3>
               <p className="bc-desc">
-                TypeScript, React, modern tooling. Press run and watch it
-                execute.
+                TypeScript, React, modern tooling. Press run and watch it execute.
               </p>
             </div>
             <div className="bc-visual code-visual">
@@ -545,28 +445,14 @@ export default function BentoSection() {
                     <span className="c-dot yellow" />
                     <span className="c-dot green" />
                   </div>
-                  <button
-                    type="button"
-                    className="run-btn"
-                    onClick={runCode}
-                    disabled={runState === "running"}
-                  >
-                    {runState === "running"
-                      ? "● Running…"
-                      : runState === "done"
-                        ? "↻ Run again"
-                        : "▶ Run Code"}
+                  <button type="button" className="run-btn" onClick={runCode} disabled={runState === "running"}>
+                    {runState === "running" ? "● Running…" : runState === "done" ? "↻ Run again" : "▶ Run Code"}
                   </button>
                 </div>
                 <div className="code-mockup" aria-hidden="true">
                   {codeLines.map((ln, i) => (
-                    <div
-                      key={i}
-                      className={`code-line ${execLine === i ? "exec" : ""}`}
-                    >
-                      <code
-                        dangerouslySetInnerHTML={{ __html: highlight(ln) }}
-                      />
+                    <div key={i} className={`code-line ${execLine === i ? "exec" : ""}`}>
+                      <code dangerouslySetInnerHTML={{ __html: highlight(ln) }} />
                     </div>
                   ))}
                 </div>
@@ -581,9 +467,7 @@ export default function BentoSection() {
                         )}
                       </div>
                     ))}
-                    {runState === "running" && (
-                      <span className="caret" aria-hidden="true" />
-                    )}
+                    {runState === "running" && <span className="caret" aria-hidden="true" />}
                   </div>
                 )}
               </div>

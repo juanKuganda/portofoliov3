@@ -29,10 +29,11 @@ export default function MagneticText({ children, className = "", intensity = 0.3
 
     const handleMouseMove = (e: MouseEvent) => {
       const { clientX, clientY } = e;
-      const { height, width, left, top } = el.getBoundingClientRect();
-      const x = clientX - (left + width / 2);
-      const y = clientY - (top + height / 2);
-      
+      // rect cached on mouseenter — no forced layout per mousemove
+      const r = rect ?? el.getBoundingClientRect();
+      const x = clientX - (r.left + r.width / 2);
+      const y = clientY - (r.top + r.height / 2);
+
       xTo(x * intensity);
       yTo(y * intensity);
     };
@@ -42,10 +43,17 @@ export default function MagneticText({ children, className = "", intensity = 0.3
       yTo(0);
     };
 
+    let rect: DOMRect | null = null;
+    const cacheRect = () => {
+      rect = el.getBoundingClientRect();
+    };
+
+    el.addEventListener("mouseenter", cacheRect);
     el.addEventListener("mousemove", handleMouseMove);
     el.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
+      el.removeEventListener("mouseenter", cacheRect);
       el.removeEventListener("mousemove", handleMouseMove);
       el.removeEventListener("mouseleave", handleMouseLeave);
     };

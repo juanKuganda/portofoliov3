@@ -36,11 +36,13 @@ export default function CursorPill() {
         btn.getAttribute("aria-expanded") === "true" ? "Close" : "Open"
       );
       setVisible(true);
+      startLoop();
     };
 
     const handleLeave = () => {
       isActive = false;
       setVisible(false);
+      stopLoop();
     };
 
     // Track clicks to update label
@@ -79,13 +81,22 @@ export default function CursorPill() {
     function loop() {
       pillX += (pillTX - pillX) * 0.2;
       pillY += (pillTY - pillY) * 0.2;
+      // transform-only: never touch left/top (layout thrash).
+      // Centering (-50%,-50%) lives here since inline transform wins over CSS.
       if (pill) {
-        pill.style.left = `${pillX}px`;
-        pill.style.top = `${pillY}px`;
+        pill.style.transform = `translate3d(${pillX}px, ${pillY}px, 0) translate(-50%, -50%)`;
       }
       animId = requestAnimationFrame(loop);
     }
-    animId = requestAnimationFrame(loop);
+    // Only run the loop while the pill is visible — idle otherwise.
+    // Snap to the cursor on show so it never flashes at (0,0).
+    const startLoop = () => {
+      pillX = pillTX;
+      pillY = pillTY;
+      cancelAnimationFrame(animId);
+      animId = requestAnimationFrame(loop);
+    };
+    const stopLoop = () => cancelAnimationFrame(animId);
 
     return () => {
       cancelAnimationFrame(animId);
