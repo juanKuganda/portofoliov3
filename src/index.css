@@ -424,7 +424,7 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--pop-pink);
   outline-offset: 4px;
 }
 
@@ -1930,7 +1930,7 @@ section.block {
   margin-top: 12px;
 }
 .svc-index-row:focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--pop-pink);
   outline-offset: 4px;
 }
 /* Stage: one sticky frame, panels crossfade inside */
@@ -3793,7 +3793,7 @@ footer.site {
   font: inherit;
 }
 .nodes-mockup .node:focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--pop-pink);
   outline-offset: 4px;
 }
 .node.ping {
@@ -3995,7 +3995,7 @@ footer.site {
 .tl-sample-btn:focus-visible,
 .run-btn:focus-visible,
 .playground-canvas:focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--pop-pink);
   outline-offset: 3px;
 }
 @media (prefers-reduced-motion: reduce) {
