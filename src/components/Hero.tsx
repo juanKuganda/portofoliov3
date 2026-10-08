@@ -37,7 +37,7 @@ function RoleTicker() {
 }
 
 /* Shared gradient defs for the precision doodles — one block, unique
-   ids, referenced by every icon. Identity colors only: ink + amber. */
+   ids, referenced by every icon. Full playful color; ink stays neutral. */
 function DoodleDefs() {
   return (
     <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
@@ -58,6 +58,26 @@ function DoodleDefs() {
           <stop offset="0" stopColor="#ffb62e" />
           <stop offset="1" stopColor="#e8930c" />
         </linearGradient>
+        <linearGradient id="dz-pink" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ff7a93" />
+          <stop offset="1" stopColor="#f43f5e" />
+        </linearGradient>
+        <linearGradient id="dz-blue" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#7cc4f8" />
+          <stop offset="1" stopColor="#2f9df0" />
+        </linearGradient>
+        <linearGradient id="dz-blue-h" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#7cc4f8" />
+          <stop offset="1" stopColor="#2f9df0" />
+        </linearGradient>
+        <linearGradient id="dz-green" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#7fe08f" />
+          <stop offset="1" stopColor="#37b24d" />
+        </linearGradient>
+        <linearGradient id="dz-purple" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#b197fc" />
+          <stop offset="1" stopColor="#845ef7" />
+        </linearGradient>
       </defs>
     </svg>
   );
@@ -69,7 +89,7 @@ function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "ca
   if (kind === "folder")
     return (
       <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
-        <rect x="13" y="9" width="17" height="13" rx="3.5" fill="url(#dz-amber)" />
+        <rect x="13" y="9" width="17" height="13" rx="3.5" fill="url(#dz-pink)" />
         <rect x="9" y="13" width="46" height="33" rx="5" fill="url(#dz-ink-soft)" />
         <rect x="6" y="21" width="52" height="33" rx="6.5" fill="url(#dz-ink)" />
         <rect x="11" y="25.5" width="42" height="3.4" rx="1.7" fill="#ffffff" opacity="0.16" />
@@ -79,7 +99,7 @@ function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "ca
     return (
       <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
         <g transform="rotate(45 32 32)">
-          <rect x="26" y="5" width="12" height="37" rx="3.5" fill="url(#dz-amber-h)" />
+          <rect x="26" y="5" width="12" height="37" rx="3.5" fill="url(#dz-blue-h)" />
           <rect x="28.6" y="8" width="2.6" height="30" rx="1.3" fill="#ffffff" opacity="0.28" />
           <rect x="26" y="42" width="12" height="6.5" fill="url(#dz-ink-soft)" />
           <path d="M26 48.5 L32 59 L38 48.5 Z" fill="url(#dz-ink)" />
@@ -91,9 +111,9 @@ function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "ca
       <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
         <rect x="7" y="7" width="50" height="50" rx="13" fill="url(#dz-ink)" />
         <rect x="13" y="12.5" width="38" height="4" rx="2" fill="#ffffff" opacity="0.13" />
-        <path d="M27 24 L18.5 32 L27 40" stroke="url(#dz-amber)" strokeWidth="4.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M37 24 L45.5 32 L37 40" stroke="url(#dz-amber)" strokeWidth="4.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M35.5 22.5 L28.5 41.5" stroke="url(#dz-amber)" strokeWidth="4" fill="none" strokeLinecap="round" />
+        <path d="M27 24 L18.5 32 L27 40" stroke="url(#dz-green)" strokeWidth="4.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M37 24 L45.5 32 L37 40" stroke="url(#dz-green)" strokeWidth="4.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M35.5 22.5 L28.5 41.5" stroke="url(#dz-green)" strokeWidth="4" fill="none" strokeLinecap="round" />
       </svg>
     );
   if (kind === "pin")
@@ -104,17 +124,17 @@ function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "ca
           fill="url(#dz-ink)"
         />
         <ellipse cx="23.5" cy="18" rx="3.6" ry="6" fill="#ffffff" opacity="0.18" transform="rotate(-18 23.5 18)" />
-        <circle cx="32" cy="26" r="8.5" fill="url(#dz-amber)" />
+        <circle cx="32" cy="26" r="8.5" fill="url(#dz-pink)" />
         <circle cx="29.5" cy="23.5" r="2.4" fill="#ffffff" opacity="0.35" />
       </svg>
     );
   return (
     <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
       <rect x="22" y="27" width="20" height="13" rx="3.5" fill="url(#dz-ink-soft)" />
-      <line x1="53" y1="21" x2="53" y2="37" stroke="url(#dz-amber)" strokeWidth="3" strokeLinecap="round" />
+      <line x1="53" y1="21" x2="53" y2="37" stroke="url(#dz-pink)" strokeWidth="3" strokeLinecap="round" />
       <path d="M32 6 L59 19 L32 32 L5 19 Z" fill="url(#dz-ink)" />
       <path d="M32 6 L59 19 L46 24.5 L32 17 Z" fill="#ffffff" opacity="0.07" />
-      <circle cx="53" cy="40.5" r="4.2" fill="url(#dz-amber)" />
+      <circle cx="53" cy="40.5" r="4.2" fill="url(#dz-purple)" />
     </svg>
   );
 }
@@ -144,13 +164,20 @@ const STICKERS: StickerSpec[] = [
   { kind: "pill", label: "open to work", at: { top: "81%", left: "67%" }, rot: 5, side: "r" },
 ];
 
-/* Floating cursors with chat bubbles — playful, scattered like the
-   reference. Decorative (aria-hidden); the link-free bubbles keep it
-   that way. Outer .cursor-float = entrance + explode; .cursor-par =
+/* Floating cursors, reference-style: a colored arrow cursor + a
+   rotated sticker pill (black outline, like the reference) + an
+   optional mini "YOU" bubble. Decorative (aria-hidden).
+   Outer .cursor-float = entrance + explode; .cursor-par =
    magnetic parallax; .cursor-inner = idle bob. */
 const CURSORS = [
-  { at: { top: "38%", left: "17%" }, rot: -6, side: "l", chat: "psst — keep scrolling ↓" },
-  { at: { top: "34%", left: "71%" }, rot: 8, side: "r", chat: "got a project? say hi →" },
+  {
+    at: { top: "36%", left: "15%" }, rot: -6, side: "l",
+    color: "var(--pop-pink)", pill: "PALU, ID", pillRot: -8, mini: "YOU",
+  },
+  {
+    at: { top: "32%", left: "72%" }, rot: 8, side: "r",
+    color: "var(--pop-blue)", pill: "OPEN TO WORK", pillRot: 7, mini: null,
+  },
 ];
 
 /* Ruler numbers: 0–1400 in steps of 100, tripled for a seamless loop. */
@@ -742,14 +769,14 @@ export default function Hero() {
           ))}
         </div>
 
-        {/* Floating cursors with chat bubbles — scattered like the
-            reference. Layers: outer .cursor-float = entrance pop +
-            scroll explode; .cursor-par = magnetic parallax;
-            .cursor-inner = idle bob. Decorative. */}
+        {/* Floating cursors, reference-style: colored arrow + rotated
+            sticker pill + mini bubble. Layers: outer .cursor-float =
+            entrance pop + scroll explode; .cursor-par = magnetic
+            parallax; .cursor-inner = idle bob. Decorative. */}
         <div className="reel-floaters" aria-hidden="true">
           {CURSORS.map((c) => (
             <span
-              key={c.chat}
+              key={c.pill}
               className="cursor-float"
               style={c.at}
               data-rot={c.rot}
@@ -757,22 +784,33 @@ export default function Hero() {
             >
               <span className="cursor-par">
                 <span className="cursor-inner">
+                  {c.mini && <span className="cursor-mini">{c.mini}</span>}
                   <svg
                     className="cursor-arrow"
                     viewBox="0 0 24 24"
-                    width="26"
-                    height="26"
+                    width="30"
+                    height="30"
                     aria-hidden="true"
                   >
                     <path
-                      d="M6.5 3.5 L19.5 12.5 L12.3 13.8 L9.2 21.5 Z"
-                      fill="var(--ink)"
-                      stroke="#ffffff"
-                      strokeWidth="1.6"
+                      d="M17.5 3.5 L4.5 12.5 L11.7 13.8 L14.8 21.5 Z"
+                      fill={c.color}
+                      stroke="var(--ink)"
+                      strokeWidth="1.8"
                       strokeLinejoin="round"
                     />
                   </svg>
-                  <span className="chat-bubble">{c.chat}</span>
+                  <span
+                    className="cursor-pill-tag"
+                    style={
+                      {
+                        background: c.color,
+                        "--pill-rot": `${c.pillRot}deg`,
+                      } as React.CSSProperties
+                    }
+                  >
+                    {c.pill}
+                  </span>
                 </span>
               </span>
             </span>

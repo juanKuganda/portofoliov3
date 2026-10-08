@@ -11,6 +11,12 @@
   --line: #e9e9e9;
   --zebra: #f6f6f6;
   --signal: #f59e0b;
+  /* Playful full-color accents — black & white stay the neutrals. */
+  --pop-pink: #ff4d6d;
+  --pop-blue: #4dabf7;
+  --pop-yellow: #ffd43b;
+  --pop-green: #51cf66;
+  --pop-purple: #9775fa;
   --warm-1: #fff4e3;
   --warm-2: #ffd9b3;
   --font-display: "Inter Tight", -apple-system, "Segoe UI", sans-serif;
@@ -801,9 +807,10 @@ a {
   flex: none;
   animation: dot-pulse 2.2s ease-in-out infinite;
 }
-/* ---- Floating cursors with chat bubbles: scattered like the
-   reference. Outer .cursor-float = entrance + explode; .cursor-par =
-   magnetic; .cursor-inner = idle bob (transform-only). Desktop only. */
+/* ---- Floating cursors, reference-style: colored arrow + rotated
+   sticker pill (black outline) + mini bubble. Outer .cursor-float =
+   entrance + explode; .cursor-par = magnetic; .cursor-inner = idle
+   bob (transform-only). Desktop only. */
 .reel-floaters {
   position: absolute;
   inset: 0;
@@ -820,27 +827,41 @@ a {
 .cursor-inner {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
   transform: translate(-50%, -50%);
   animation: cursor-bob 3.4s ease-in-out infinite;
 }
+.cursor-mini {
+  order: -1;
+  flex: none;
+  margin: 32px 8px 0 0;
+  background: var(--ink);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 7px 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
 .cursor-arrow {
   flex: none;
-  filter: drop-shadow(0 3px 6px rgba(10, 10, 10, 0.22));
+  filter: drop-shadow(0 3px 6px rgba(10, 10, 10, 0.25));
 }
-.chat-bubble {
-  position: relative;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
+.cursor-pill-tag {
+  flex: none;
+  margin: 18px 0 0 -4px;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  padding: 11px 18px;
+  border-radius: 999px;
+  border: 2.5px solid var(--ink);
   white-space: nowrap;
-  color: var(--ink);
-  background: var(--paper);
-  border: 1px solid var(--ink);
-  border-radius: 12px;
-  border-top-left-radius: 3px;
-  padding: 7px 12px;
-  box-shadow: 0 6px 18px rgba(10, 10, 10, 0.1);
+  transform: rotate(var(--pill-rot, -8deg));
+  box-shadow: 0 8px 20px rgba(10, 10, 10, 0.18);
 }
 @keyframes cursor-bob {
   0%,
@@ -1740,6 +1761,39 @@ section.block {
   transform: translateX(-50%) scale(1.15);
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--signal) 18%, transparent);
 }
+/* Each timeline point gets its own playful color. */
+.svc-index-list > button:nth-of-type(1).active .svc-node::after {
+  background: var(--pop-pink);
+  border-color: var(--pop-pink);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--pop-pink) 20%, transparent);
+}
+.svc-index-list > button:nth-of-type(1).active .svc-index-num {
+  color: var(--pop-pink);
+}
+.svc-index-list > button:nth-of-type(2).active .svc-node::after {
+  background: var(--pop-blue);
+  border-color: var(--pop-blue);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--pop-blue) 20%, transparent);
+}
+.svc-index-list > button:nth-of-type(2).active .svc-index-num {
+  color: var(--pop-blue);
+}
+.svc-index-list > button:nth-of-type(3).active .svc-node::after {
+  background: var(--pop-green);
+  border-color: var(--pop-green);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--pop-green) 20%, transparent);
+}
+.svc-index-list > button:nth-of-type(3).active .svc-index-num {
+  color: var(--pop-green);
+}
+.svc-index-list > button:nth-of-type(4).active .svc-node::after {
+  background: var(--pop-purple);
+  border-color: var(--pop-purple);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--pop-purple) 22%, transparent);
+}
+.svc-index-list > button:nth-of-type(4).active .svc-index-num {
+  color: var(--pop-purple);
+}
 .svc-index-num {
   display: block;
   font-family: var(--font-mono);
@@ -2418,6 +2472,7 @@ section.block {
   color: var(--paper);
   padding: clamp(110px, 17vh, 210px) var(--pad);
   overflow: hidden;
+  position: relative;
 }
 .contact-kicker {
   font-family: var(--font-mono);
@@ -2457,14 +2512,64 @@ section.block {
   color: rgba(255, 255, 255, 0.5);
   margin: clamp(26px, 5vh, 52px) 0 0;
 }
+/* Playful cursor + sticker pill pointing at the email CTA. */
+.contact-cursor {
+  position: absolute;
+  right: clamp(20px, 7vw, 110px);
+  top: clamp(70px, 12vh, 150px);
+  display: flex;
+  align-items: flex-start;
+  z-index: 2;
+  pointer-events: none;
+  animation: contact-bob 3.2s ease-in-out infinite;
+}
+.contact-arrow {
+  transform: rotate(128deg);
+}
+.contact-pill {
+  flex: none;
+  margin: 22px 0 0 -8px;
+  background: var(--pop-pink);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  padding: 11px 18px;
+  border-radius: 999px;
+  border: 2.5px solid #fff;
+  white-space: nowrap;
+  transform: rotate(7deg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+@keyframes contact-bob {
+  0%,
+  100% {
+    transform: translateY(-7px);
+  }
+  50% {
+    transform: translateY(7px);
+  }
+}
+@media (max-width: 768px) {
+  .contact-cursor {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contact-cursor {
+    animation: none;
+  }
+}
 
 /* ============================================================
-   FOOTER
+   FOOTER — playful full-color finale (dark neutral base)
    ============================================================ */
 footer.site {
   background: var(--ink);
   color: var(--paper);
   padding: 0 0 28px;
+  overflow: hidden;
 }
 .foot-else {
   padding: clamp(44px, 8vh, 88px) var(--pad) 0;
@@ -2472,56 +2577,100 @@ footer.site {
 .foot-else .mono {
   color: #8a8a8a;
 }
-.foot-mono {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  margin-top: clamp(20px, 4vh, 36px);
-  border-top: 1px solid rgba(255, 255, 255, 0.22);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
-}
-.foot-mono a {
-  display: grid;
-  gap: 10px;
-  justify-items: center;
-  align-content: center;
-  padding: clamp(36px, 7vh, 72px) 12px;
-  color: var(--paper);
-  text-decoration: none;
-  border-left: 1px solid rgba(255, 255, 255, 0.22);
-  transition: background 0.35s var(--ease), color 0.35s var(--ease);
-}
-.foot-mono a:first-child {
-  border-left: 0;
-}
-.fm-letter {
+/* Giant fit-text headline */
+.foot-talk {
+  margin: clamp(18px, 4vh, 36px) 0 0;
+  padding: 0 var(--pad);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(72px, 13vw, 200px);
-  line-height: 0.9;
-  letter-spacing: -0.04em;
-  transition: transform 0.5s var(--ease);
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  color: var(--paper);
+  white-space: nowrap;
 }
-.foot-mono a:hover .fm-letter {
-  transform: scale(1.1) rotate(-3deg);
-}
-.fm-label {
+.foot-sub {
+  margin: 14px 0 0;
+  padding: 0 var(--pad);
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: clamp(13px, 1.6vw, 16px);
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.65);
 }
-.foot-mono a:hover {
+.foot-sub strong {
+  color: var(--pop-yellow);
+  font-weight: 700;
+}
+.foot-sub-by {
+  color: rgba(255, 255, 255, 0.4);
+}
+/* Social pills — each its own pop color, playful tilt */
+.foot-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 18px;
+  align-items: center;
+  padding: clamp(28px, 5vh, 48px) var(--pad) 0;
+}
+.foot-pill-wrap {
+  position: relative;
+  display: inline-block;
+}
+.foot-pill {
+  display: inline-block;
+  padding: 14px 30px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  /* --tilt inherits from .foot-pill-wrap */
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 0.32s var(--ease), box-shadow 0.32s var(--ease);
+  will-change: transform;
+}
+.foot-pill:hover {
+  transform: rotate(0deg) translateY(-5px) scale(1.07);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+}
+.foot-pill:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 4px;
+}
+.foot-pill.pink {
+  background: var(--pop-pink);
+  color: var(--ink);
+}
+.foot-pill.paper {
   background: var(--paper);
   color: var(--ink);
 }
-.foot-mono a:hover .fm-label {
-  color: #777;
+.foot-pill.blue {
+  background: var(--pop-blue);
+  color: var(--ink);
 }
+.foot-pill.purple {
+  background: var(--pop-purple);
+  color: var(--ink);
+}
+/* Pink cursor arrow pointing at the Email pill */
+.foot-cursor-arrow {
+  position: absolute;
+  top: -30px;
+  left: -14px;
+  transform: rotate(-24deg);
+  pointer-events: none;
+  z-index: 2;
+}
+.foot-cursor-bob {
+  display: inline-block;
+  will-change: transform;
+}
+/* Colophon */
 .colophon {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 28px;
+  gap: 12px 28px;
   align-items: center;
   justify-content: space-between;
   padding: 22px var(--pad) 0;
@@ -2533,12 +2682,32 @@ footer.site {
   color: rgba(255, 255, 255, 0.45);
   text-transform: uppercase;
 }
-.colophon a {
-  color: inherit;
-  text-decoration: none;
+.foot-top {
+  background: var(--pop-yellow);
+  color: var(--ink);
+  border: none;
+  border-radius: 999px;
+  padding: 11px 22px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.3s var(--ease);
 }
-.colophon a:hover {
-  color: var(--paper);
+.foot-top:hover {
+  transform: translateY(-3px) scale(1.05);
+}
+.foot-top:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .foot-pill,
+  .foot-top {
+    transition: none;
+  }
 }
 
 /* ============================================================
@@ -2643,9 +2812,6 @@ footer.site {
   .svc-index-row {
     padding: 48px 0;
   }
-  .fm-letter {
-    font-size: clamp(56px, 20vw, 96px);
-  }
   .cursor-pill {
     display: none;
   }
@@ -2682,17 +2848,19 @@ footer.site {
   .about-statement {
     font-size: clamp(30px, 8.5vw, 46px);
   }
-  .foot-mono {
-    grid-template-columns: repeat(2, 1fr);
+  .foot-pills {
+    gap: 14px;
   }
-  .foot-mono a:nth-child(odd) {
-    border-left: 0;
+  .foot-pill {
+    padding: 12px 24px;
+    font-size: 14px;
   }
-  .foot-mono a:nth-child(n + 3) {
-    border-top: 1px solid rgba(255, 255, 255, 0.22);
+  .foot-cursor-arrow {
+    top: -26px;
+    left: -10px;
   }
-  .fm-letter {
-    font-size: clamp(64px, 24vw, 110px);
+  .colophon {
+    justify-content: flex-start;
   }
 }
 
