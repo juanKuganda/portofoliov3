@@ -1,75 +1,45 @@
-# React + TypeScript + Vite
+# portofoliov3
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal portfolio of **Juan Pablo Putra Kuganda** — junior software developer, UI/UX & graphic designer, web mentor. Monochrome editorial identity with a signal-amber accent.
 
-Currently, two official plugins are available:
+Live: `main` branch (deploy target: Vercel).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+- React 19 + TypeScript + Vite 8
+- Tailwind CSS v4 (`@tailwindcss/vite`)
+- GSAP (ScrollTrigger) + Lenis for smooth scroll choreography
+- Single-file build, no backend
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Sections
 
-## Expanding the ESLint configuration
+- **Hero — "The Reel"**: 3:4 portrait card drops in from above; scroll pins and punches in to a full-bleed cinematic hero ("Hai, I'm Juan"), then a darkened handoff into Work.
+- **Services**: index rows opening full-bleed animated dark stages (deploy pipeline, token drag-and-drop, API console, impact stats).
+- **Work**: featured SIJAGA project + project rows (`src/data/projects.ts`).
+- **Capabilities**: asymmetric interactive bento (Theme Lab, Press Playground, Network, Code Runner).
+- **Gallery / About / Contact / Footer**: footer CTA included.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Identity rule: monochrome + amber only. No rainbow bento — held by design.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Develop
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run dev      # local preview
+npm run build    # tsc -b && vite build
+npm run lint     # eslint .
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Motion notes: animate only `transform`/`opacity`; respect `prefers-reduced-motion` (static frame fallback).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Branch workflow
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `main` — stable, reviewed, deployable.
+- `pablo/dev` — assistant working branch. Changes are pushed here in reviewable batches, then opened as a PR to `main` for Juan's review before merge.
+- Pushing from this VM goes through the GitHub API (SSH egress is blocked), and **binary assets can't go through the API** — images like `public/hero-portrait.webp` must be uploaded by Juan via GitHub web → Add file → Upload files (branch `pablo/dev`).
 
-```
+## Content TODOs
+
+- Gallery still uses Picsum placeholders — replace with real work.
+- `public/hero-portrait-wide.webp` (desktop 16:10 crop) is in the repo but currently unused (hero uses the portrait crop with blur-filled sides).
+- Instagram profile link not verified.

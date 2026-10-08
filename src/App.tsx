@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
+import Statement from "./components/Statement";
 import WorkSection from "./components/WorkSection";
 import AboutSection from "./components/AboutSection";
 import BentoSection from "./components/BentoSection";
@@ -59,6 +60,7 @@ export default function App() {
       <ScrollProgress />
       <Navbar />
       <Hero />
+      <Statement />
       <main>
         <WorkSection />
         <AboutSection />

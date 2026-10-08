@@ -170,7 +170,11 @@ a {
 }
 
 /* ============================================================
-   NAV
+   NAV — flat & transparent
+   White text + `mix-blend-mode: difference` on the container: the bar
+   reads over light paper (→ dark) and over the dark full-bleed photo
+   (→ light). No background, no blur. A hairline fades in past 40px
+   of scroll. Mobile gets a full-screen ink overlay menu.
    ============================================================ */
 .nav {
   position: sticky;
@@ -179,17 +183,35 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px var(--pad);
-  background: color-mix(in srgb, var(--paper) 86%, transparent);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--line);
+  gap: 16px;
+  padding: 18px var(--pad);
+  color: #fff;
+  mix-blend-mode: difference;
+}
+.nav::after {
+  /* scroll hairline — opacity-only so it stays cheap; currentColor
+     follows the blend, visible on light and dark alike */
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.nav.is-scrolled::after {
+  opacity: 0.85;
 }
 .nav-name {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 16px;
   letter-spacing: -0.02em;
+  color: inherit;
+  text-decoration: none;
   transition: opacity 0.3s var(--ease);
 }
 .nav-name:hover {
@@ -203,8 +225,8 @@ a {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
-  color: var(--muted);
   text-transform: uppercase;
+  opacity: 0.75;
 }
 .nav-links {
   display: flex;
@@ -215,10 +237,12 @@ a {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: inherit;
+  text-decoration: none;
   position: relative;
   padding: 2px 0;
-  transition: color 0.3s var(--ease);
+  opacity: 0.75;
+  transition: opacity 0.3s var(--ease);
 }
 .nav-links a::after {
   content: "";
@@ -227,136 +251,211 @@ a {
   bottom: 0;
   height: 1px;
   width: 100%;
-  background: var(--ink);
+  background: currentColor;
   transform: scaleX(0);
   transform-origin: right;
   transition: transform 0.35s var(--ease);
 }
 .nav-links a:hover {
-  color: var(--ink);
+  opacity: 1;
 }
 .nav-links a:hover::after {
   transform: scaleX(1);
   transform-origin: left;
 }
 .nav-links a.active {
-  color: var(--ink);
+  opacity: 1;
+}
+.nav-links a.active::after {
+  transform: scaleX(1);
 }
 
-/* Mobile Navigation Toggle & Drawer Overlay */
-.mobile-nav-toggle {
-  display: none;
+/* Mobile menu button (inside the blended nav) */
+.nav-menu-btn {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  padding: 8px 16px;
-  background: var(--paper);
-  border: 1px solid var(--line);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  background: transparent;
+  border: 1px solid currentColor;
   border-radius: 99px;
+  color: inherit;
   cursor: pointer;
-  color: var(--ink);
-  transition: background-color 0.2s var(--ease), color 0.2s var(--ease), transform 0.2s var(--ease);
+  transition: opacity 0.25s var(--ease);
 }
-.mobile-nav-toggle:hover {
-  background: var(--ink);
-  color: var(--paper);
+.nav-menu-btn:hover {
+  opacity: 0.6;
 }
 
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
 @media (max-width: 768px) {
   .desktop-only {
     display: none !important;
   }
-  .mobile-nav-toggle {
-    display: block;
-  }
 }
 
-.mobile-menu-overlay {
+/* Mobile full-screen menu — solid ink, paper text, true amber accents
+   (outside the difference blend, so the amber stays amber). */
+.mnav {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(0, 0, 0, 0.4);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  display: flex;
-  justify-content: flex-end;
-  animation: fadeIn 0.3s ease;
-}
-.mobile-menu-drawer {
-  width: 85%;
-  max-width: 340px;
-  height: 100%;
-  background: var(--paper);
-  border-left: 1px solid var(--line);
-  padding: 24px;
+  background: #111;
+  color: var(--paper);
   display: flex;
   flex-direction: column;
-  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
-  animation: slideLeft 0.35s var(--ease);
+  padding: 18px var(--pad) 26px;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.35s ease,
+    visibility 0s linear 0.35s;
 }
-.mobile-menu-header {
+.mnav.open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.35s ease;
+}
+.mnav-top {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--line);
+  justify-content: space-between;
 }
-.mobile-close-btn {
-  background: none;
-  border: 1px solid var(--line);
+.mnav-clock {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.mnav-close {
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: transparent;
+  color: var(--paper);
+  font-size: 15px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
 }
-.mobile-menu-links {
+.mnav-close:hover {
+  opacity: 0.65;
+  transform: rotate(90deg);
+}
+.mnav-links {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 28px;
+  justify-content: center;
+  flex: 1;
+  gap: 2px;
 }
-.mobile-menu-link {
+.mnav-link {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 18px;
-  border-radius: 12px;
-  transition: background 0.2s;
+  align-items: baseline;
+  gap: 18px;
+  padding: 12px 0;
+  color: var(--paper);
+  text-decoration: none;
+  /* stagger-in: transform + opacity only */
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity 0.45s ease,
+    transform 0.6s cubic-bezier(0.2, 0.75, 0.25, 1);
+  transition-delay: calc(var(--i, 0) * 70ms);
 }
-.mobile-menu-link:hover, .mobile-menu-link.active {
-  background: var(--zebra);
+.mnav.open .mnav-link {
+  opacity: 1;
+  transform: translateY(0);
 }
-.mobile-menu-link .link-num {
+.mnav:not(.open) .mnav-link {
+  transition-delay: 0ms;
+}
+.mnav-num {
   font-family: var(--font-mono);
   font-size: 12px;
+  letter-spacing: 0.08em;
   color: var(--signal);
 }
-.mobile-menu-link .link-label {
+.mnav-label {
   font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: clamp(42px, 12vw, 68px);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.mnav-link.active .mnav-label {
+  color: var(--signal);
 }
-@keyframes slideLeft {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+.mnav-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.mnav-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.85;
+}
+.mnav-status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--signal);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav::after,
+  .mnav,
+  .mnav-link,
+  .mnav-close,
+  .nav-name,
+  .nav-menu-btn,
+  .nav-links a,
+  .nav-links a::after {
+    transition: none;
+  }
+  .mnav-link {
+    opacity: 1;
+    transform: none;
+  }
+  .mnav-status .dot {
+    animation: none;
+  }
 }
 
 /* ============================================================
-   HERO — THE REEL v3 (portrait card, dropped from above)
-   Scene 1: centered 3:4 portrait card on paper, entering from the
-   top, greeted by "Hai, I'm Juan".
-   Scroll: PUNCH-IN — the card dissolves while the full-bleed 16:10
-   crop rises beneath it; statement plays over the darkening photo;
-   shade deepens for the handoff to Work.
+   HERO — THE REEL v4 (busy & playful, mono + amber only)
+   Scene 1: faint grid + amber glow on paper; "Hai, I'm Juan" mask
+   reveal; 3:4 portrait card dropped from above; sticker pills,
+   starburst, squiggle arrow and FIG.01 tag around the card.
+   Scroll (desktop pin): stickers SCATTER outward (Luca-Mori beat),
+   card PUNCHES IN to full-bleed (portrait full-height, dark blurred
+   sides — never over-zoomed), caption holds, then release to Work.
    ============================================================ */
 .hero-reel {
   position: relative;
@@ -371,6 +470,34 @@ a {
   display: flex;
   flex-direction: column;
 }
+/* Faint blueprint grid, fading toward the edges (static). */
+.hero-reel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 76px 76px;
+  opacity: 0.55;
+  -webkit-mask-image: radial-gradient(ellipse 95% 85% at 50% 45%, black 25%, transparent 78%);
+  mask-image: radial-gradient(ellipse 95% 85% at 50% 45%, black 25%, transparent 78%);
+}
+/* Whisper of amber behind the card (static). */
+.hero-reel::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  width: min(680px, 90vw);
+  aspect-ratio: 1;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.13), transparent 62%);
+}
 
 /* Full-bleed layer for the punch-in (desktop scroll only).
    The portrait photo stands full-height and centered; the sides are
@@ -384,7 +511,6 @@ a {
   background: #0b0b0c;
   opacity: 0;
   visibility: hidden;
-  will-change: transform;
 }
 .reel-full .full-bg {
   position: absolute;
@@ -407,12 +533,27 @@ a {
   width: auto;
   display: block;
 }
-.reel-shade {
+/* Caption holding over the full-bleed before release. */
+.reel-fullcap {
   position: absolute;
   inset: 0;
-  background: #000;
-  opacity: 0;
+  z-index: 2;
   pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 30px var(--pad);
+  opacity: 0;
+  visibility: hidden;
+}
+.reel-fullcap p {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.85;
 }
 
 /* Top row: kicker left, role ticker right — ink on paper. */
@@ -513,7 +654,7 @@ a {
 /* The card: 3:4 portrait, border + soft shadow. */
 .reel-card {
   position: relative;
-  width: min(410px, 74vw);
+  width: min(350px, 74vw);
   aspect-ratio: 3 / 4;
   margin: 0;
   overflow: hidden;
@@ -521,7 +662,6 @@ a {
   border-radius: 20px;
   background: #101010;
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.18);
-  will-change: transform;
 }
 .reel-card .card-photo {
   position: absolute;
@@ -542,7 +682,7 @@ a {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  width: min(410px, 74vw);
+  width: min(350px, 74vw);
   color: var(--ink);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -576,67 +716,95 @@ a {
   }
 }
 
-/* Scene 2: statement over the (now full-bleed) darkening photo. */
-.reel-scene2 {
+/* ---- Sticker field: playful pills around the card ---- */
+.reel-stickers {
   position: absolute;
   inset: 0;
-  z-index: 4;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  padding: 0 var(--pad);
-  text-align: center;
-  color: #fff;
-  opacity: 0;
-  visibility: hidden;
+  z-index: 3;
   pointer-events: none;
 }
-.reel-roles {
-  margin: 0;
+.sticker {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
   font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--signal);
-}
-.reel-statement {
-  margin: 0;
-  font-family: var(--font-display);
   font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.12;
-  font-size: clamp(30px, 4.2vw, 58px);
-  max-width: 22ch;
-  text-wrap: balance;
-}
-.reel-statement span {
-  opacity: 0.62;
-}
-.reel-meta {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.75;
+  white-space: nowrap;
 }
-.reel-meta .sep {
-  opacity: 0.5;
+.sticker-ink {
+  background: var(--ink);
+  color: var(--paper);
+}
+.sticker-paper {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+}
+.sticker-amber {
+  background: var(--signal);
+  color: var(--ink);
+}
+.sticker .sdot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--signal);
+  flex: none;
+}
+.sticker-tag {
+  padding: 8px 12px;
+  border: 1.5px dashed var(--ink);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 11px;
+}
+.sticker-burst {
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.burst-svg {
+  width: 76px;
+  height: 76px;
+  display: block;
+}
+.burst-svg polygon {
+  fill: var(--signal);
+}
+.sticker-squiggle {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--ink);
+}
+.squiggle-svg {
+  width: 110px;
+  height: auto;
+  display: block;
+  opacity: 0.85;
 }
 
-/* Reduced motion: one static frame — color card, greeting, no pin. */
+/* Reduced motion: one static frame — color card, greeting, stickers,
+   no pin, no full-bleed, no CSS keyframe loops. */
 @media (prefers-reduced-motion: reduce) {
   .reel-card .photo-gray {
     display: none;
   }
   .reel-full,
-  .reel-scene2 {
+  .reel-fullcap {
     display: none;
+  }
+  .tick-word,
+  .reel-kicker .dot,
+  .reel-scroll .arrow {
+    animation: none;
   }
 }
 
@@ -652,16 +820,143 @@ a {
     font-size: clamp(36px, 10.5vw, 60px);
   }
   .reel-bottom-row {
-    width: min(410px, 74vw);
+    width: min(350px, 74vw);
   }
-  .reel-statement {
-    font-size: clamp(26px, 7.4vw, 36px);
+  .hero-reel::before {
+    background-size: 52px 52px;
   }
-  .reel-meta {
+  /* Stickers become a tidy wrapped row under the card. */
+  .reel-stickers {
+    position: static;
+    display: flex;
     flex-wrap: wrap;
+    gap: 8px;
     justify-content: center;
+    align-items: center;
+    padding: 2px var(--pad) 0;
+    z-index: 2;
+  }
+  .sticker {
+    position: static !important;
+    font-size: 11px;
+    padding: 8px 12px;
+  }
+  .sticker-tag,
+  .sticker-squiggle {
+    display: none;
+  }
+  .burst-svg {
+    width: 54px;
+    height: 54px;
   }
 }
+
+/* ================= STATEMENT ================= */
+/* "what i do" — Benjamin-style giant statement + skill blocks.
+   Identity colors only (ink / amber / paper). transform/opacity only. */
+.statement {
+  background: var(--paper);
+  color: var(--ink);
+  padding: clamp(72px, 12vh, 140px) var(--pad);
+  overflow: clip;
+}
+.st-label {
+  margin: 0 0 clamp(20px, 3vh, 36px);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.st-headline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+  font-size: clamp(40px, 6.4vw, 104px);
+  max-width: 20ch;
+}
+.st-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+.st-line-inner {
+  display: block;
+  will-change: transform;
+}
+/* inline photo chips inside the headline */
+.st-chip {
+  display: inline-block;
+  height: 0.68em;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 999px;
+  vertical-align: -0.06em;
+  margin: 0 0.08em;
+}
+.st-line:nth-child(1) .st-chip {
+  object-position: 50% 16%;
+}
+.st-line:nth-child(3) .st-chip {
+  object-position: 50% 88%;
+}
+.st-pills {
+  margin-top: clamp(28px, 5vh, 56px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: stretch;
+}
+.st-pill {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-display);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  font-size: clamp(20px, 2.6vw, 34px);
+  padding: 0.55em 1em;
+  border-radius: 4px;
+  line-height: 1.1;
+}
+.st-pill.tone-ink {
+  background: var(--ink);
+  color: var(--paper);
+}
+.st-pill.tone-amber {
+  background: var(--signal);
+  color: var(--ink);
+}
+.st-pill.tone-paper {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+}
+.st-pattern {
+  padding: 0.45em 0.6em;
+  color: var(--ink);
+  border: 1.5px dashed var(--line-strong, var(--line));
+  border-radius: 4px;
+}
+.st-pattern svg {
+  display: block;
+}
+@media (prefers-reduced-motion: reduce) {
+  .st-line-inner {
+    will-change: auto;
+  }
+}
+@media (max-width: 768px) {
+  .st-headline {
+    font-size: clamp(34px, 10.5vw, 56px);
+  }
+  .st-pill {
+    font-size: clamp(18px, 5.4vw, 26px);
+  }
+}
+/* =============== END STATEMENT =============== */
 
 /* ============================================================
    SECTION HEADERS
