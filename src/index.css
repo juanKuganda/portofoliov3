@@ -1020,44 +1020,44 @@ a {
   .hero-reel::before {
     background-size: 52px 52px;
   }
-  /* Stickers become one tidy row under the card — compact enough that
-     all five fit without wrapping. */
+  /* Mobile: stickers go back to floating OVER the card like stickers
+     on a photo (absolute), instead of a row below it. Positions are
+     tuned per-sticker below. */
   .reel-stickers {
-    position: static;
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 8px;
-    justify-content: space-between;
-    align-items: flex-end;
-    /* Bottom padding clears the absolute-positioned ruler. */
-    padding: 4px var(--pad) 48px;
-    z-index: 2;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
   }
   .sticker {
-    position: static !important;
-    flex: 1 1 0;
-    min-width: 0;
-  }
-  /* The "open to work" pill is redundant on mobile (the kicker up top
-     already says it) — hide it so the five doodles get a clean row. */
-  .sticker:has(.doodle-pill) {
-    display: none;
+    position: absolute !important;
   }
   .doodle,
   .doodle-pill {
-    transform: none;
+    transform: translate(-50%, -50%);
   }
   .doodle-svg {
-    height: 40px;
+    height: 52px;
   }
   .doodle-label {
     font-size: 8px;
     letter-spacing: 0.06em;
+    /* Labels sit on the dark photo on mobile — light text + shadow. */
+    color: var(--paper);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.65);
   }
   .doodle-pill {
     font-size: 10px;
     padding: 8px 14px;
   }
+  /* Sticker positions tuned for the mobile card (hero-relative).
+     All six sit on the portrait like stickers on a photo. */
+  .reel-stickers .sticker:nth-child(1) { top: 30% !important; left: 14% !important; } /* folder */
+  .reel-stickers .sticker:nth-child(2) { top: 62% !important; left: 12% !important; } /* pencil */
+  .reel-stickers .sticker:nth-child(3) { top: 29% !important; left: 60% !important; } /* cap */
+  .reel-stickers .sticker:nth-child(4) { top: 31% !important; left: 87% !important; } /* pin */
+  .reel-stickers .sticker:nth-child(5) { top: 58% !important; left: 88% !important; } /* code */
+  .reel-stickers .sticker:nth-child(6) { top: 74% !important; left: 50% !important; } /* pill */
   /* Ruler stays, slimmer, above the caption row. */
   .reel-ruler {
     height: 34px;
