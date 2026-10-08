@@ -1020,29 +1020,38 @@ a {
   .hero-reel::before {
     background-size: 52px 52px;
   }
-  /* Stickers become a tidy wrapped row under the card. */
+  /* Stickers become one tidy row under the card — compact enough that
+     all five fit without wrapping. */
   .reel-stickers {
     position: static;
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px 18px;
-    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 8px;
+    justify-content: space-between;
     align-items: flex-end;
     padding: 4px var(--pad) 0;
     z-index: 2;
   }
   .sticker {
     position: static !important;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  /* The "open to work" pill is redundant on mobile (the kicker up top
+     already says it) — hide it so the five doodles get a clean row. */
+  .sticker:has(.doodle-pill) {
+    display: none;
   }
   .doodle,
   .doodle-pill {
     transform: none;
   }
   .doodle-svg {
-    height: 48px;
+    height: 40px;
   }
   .doodle-label {
-    font-size: 9px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
   }
   .doodle-pill {
     font-size: 10px;

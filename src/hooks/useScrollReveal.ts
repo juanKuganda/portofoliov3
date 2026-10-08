@@ -62,20 +62,24 @@ export function useScrollReveal() {
           );
         });
 
-        // Section title parallax — all .fit.sec-fit elements
+        // Section title parallax — all .fit.sec-fit elements.
+        // The slide completes while the title is still entering (top 75%
+        // of the viewport) so it always rests at x: 0 when actually read —
+        // a scrub that ends at "bottom top" would leave it offset (and the
+        // first letter clipped) for most of its visible life.
         const sectionTitles =
           document.querySelectorAll<HTMLElement>(".fit.sec-fit");
         sectionTitles.forEach((title) => {
           gsap.fromTo(
             title,
-            { x: -30 },
+            { x: -24 },
             {
               x: 0,
               ease: "none",
               scrollTrigger: {
                 trigger: title,
-                start: "top bottom",
-                end: "bottom top",
+                start: "top 100%",
+                end: "top 72%",
                 scrub: 0.6,
               },
             }
