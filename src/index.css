@@ -444,11 +444,13 @@ a {
 /* ============================================================
    HERO — THE REEL v5 (clean & personal)
    Scene 1: faint static grid on paper; "Hai, I'm Juan" mask
-   reveal; 3:4 portrait card dropped from above; six meaningful
-   sticker pills + one static squiggle around the card.
+   reveal; 3:4 portrait card dropped from above; five glossy 3D
+   doodle icons + one status pill floating around the card.
    Interaction: magnetic parallax (rAF + quickSetter, lerped) on
-   dedicated .par-* wrappers — never fights other timelines.
-   Scroll: NO PIN — one scrub timeline eases the hero out.
+   dedicated wrappers (.par-hi, .par-card, .sticker-par) — never
+   fights the entrance or scroll-explode timelines.
+   Scroll: NO PIN — card/headline drift out, stickers EXPLODE
+   outward + upward and fade (scrub, ends "bottom 70%").
    ============================================================ */
 .hero-reel {
   position: relative;
@@ -678,8 +680,8 @@ a {
   }
 }
 
-/* ---- Sticker field: five doodles + one status pill + one squiggle,
-   hugging the card (anchored to .reel-center, the card's own stage) ---- */
+/* ---- Sticker field: five 3D icons + one status pill, floating around
+   the card (anchored to .reel-center, the card's own stage) ---- */
 .reel-stickers {
   position: absolute;
   inset: 0;
@@ -690,45 +692,30 @@ a {
   position: absolute;
   display: block;
 }
-/* Hover: no shadow animation (would repaint); the transform is
-   owned by the parallax loop, so hover only lifts stacking order. */
+/* Transform layers: outer `.sticker` = entrance pop + scroll explode;
+   inner `.sticker-par` = magnetic parallax. Hover only lifts stacking
+   order (no shadow animation — would repaint). */
 .sticker:hover {
   z-index: 10;
 }
-/* Doodle: centered on the `at` point. The magnetic loop writes its
-   transforms to the outer .sticker, so this inner centering never
-   conflicts with it. */
+.sticker-par {
+  display: block;
+}
+/* Doodle: centered on the `at` point. */
 .doodle {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   transform: translate(-50%, -50%);
 }
-.doodle-svg {
-  width: 54px;
-  height: 54px;
+/* Glossy 3D icons (transparent WebP). Height-driven so the mixed
+   aspect ratios stay visually balanced; one static soft shadow. */
+.doodle-img {
+  height: 76px;
+  width: auto;
   display: block;
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.doodle-svg .f-amber {
-  fill: var(--signal);
-  stroke: var(--ink);
-}
-.doodle-svg .f-paper {
-  fill: var(--paper);
-  stroke: var(--ink);
-}
-.doodle-svg .f-ink {
-  fill: var(--ink);
-  stroke: none;
-}
-.doodle-svg .s-amber {
-  stroke: var(--signal);
+  filter: drop-shadow(0 12px 20px rgba(17, 17, 17, 0.18));
 }
 .doodle-label {
   font-family: var(--font-mono);
@@ -775,17 +762,6 @@ a {
     opacity: 0.55;
   }
 }
-.sticker-squiggle {
-  color: var(--ink);
-}
-.squiggle-svg {
-  width: 110px;
-  height: auto;
-  display: block;
-  opacity: 0.85;
-  transform: translate(-50%, -50%);
-}
-
 /* Reduced motion: one static frame — color card, greeting, stickers. */
 @media (prefers-reduced-motion: reduce) {
   .reel-card .photo-gray {
@@ -831,13 +807,11 @@ a {
     position: static !important;
   }
   .doodle,
-  .doodle-pill,
-  .squiggle-svg {
+  .doodle-pill {
     transform: none;
   }
-  .doodle-svg {
-    width: 42px;
-    height: 42px;
+  .doodle-img {
+    height: 48px;
   }
   .doodle-label {
     font-size: 9px;
@@ -845,9 +819,6 @@ a {
   .doodle-pill {
     font-size: 10px;
     padding: 8px 14px;
-  }
-  .sticker-squiggle {
-    display: none;
   }
 }
 

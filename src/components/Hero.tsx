@@ -37,118 +37,47 @@ function RoleTicker() {
 }
 
 /**
- * Doodle stickers: five hand-drawn SVG doodles + one status pill.
- * `at` — desktop absolute position, anchored to `.reel-center`
- * (the card's own stage), so doodles sit 24–72px from the card edge
- * at any viewport height; `rot` — resting tilt in degrees.
- * The outer `.sticker` class + `data-rot` are the magnetic parallax
- * hooks — the loop writes x/rotation to them, so the doodle itself
- * lives one level deeper (`.doodle`) with its own centering.
+ * Doodle stickers: five glossy 3D icons (transparent WebP) + one
+ * status pill. `at` — desktop absolute position, anchored to
+ * `.reel-center` (the card's own stage), ~80–140px from the card edge;
+ * `rot` — resting tilt in degrees; `side` — scroll-explode direction.
+ * Transform layers: outer `.sticker` = entrance pop + scroll explode;
+ * inner `.sticker-par` = magnetic parallax. They never fight.
  */
 type StickerSpec = {
-  kind: "folder" | "pen" | "code" | "pin" | "cap" | "pill";
+  kind: "folder" | "pencil" | "code" | "pin" | "cap" | "pill";
   label: string;
+  img?: string;
+  alt?: string;
   at: React.CSSProperties;
   rot: number;
+  side: "l" | "r";
 };
 
 const STICKERS: StickerSpec[] = [
-  { kind: "folder", label: "projects", at: { top: "calc(50% - 130px)", left: "calc(50% - 245px)" }, rot: -6 },
-  { kind: "pen", label: "design", at: { top: "calc(50% + 43px)", left: "calc(50% - 245px)" }, rot: 5 },
-  { kind: "cap", label: "untad ’27", at: { top: "calc(50% + 216px)", left: "calc(50% - 245px)" }, rot: -4 },
-  { kind: "pin", label: "palu, id", at: { top: "calc(50% - 130px)", left: "calc(50% + 245px)" }, rot: 6 },
-  { kind: "code", label: "code", at: { top: "calc(50% + 43px)", left: "calc(50% + 245px)" }, rot: -5 },
-  { kind: "pill", label: "Open to work", at: { top: "calc(50% + 216px)", left: "calc(50% + 292px)" }, rot: 4 },
+  { kind: "folder", label: "projects", img: "/doodles/doodle-folder.webp", alt: "Glossy 3D folder icon", at: { top: "calc(50% - 165px)", left: "calc(50% - 300px)" }, rot: -8, side: "l" },
+  { kind: "pencil", label: "design", img: "/doodles/doodle-pencil.webp", alt: "Glossy 3D pencil icon", at: { top: "calc(50% + 25px)", left: "calc(50% - 305px)" }, rot: 7, side: "l" },
+  { kind: "cap", label: "untad ’27", img: "/doodles/doodle-cap.webp", alt: "Glossy 3D graduation cap icon", at: { top: "calc(50% + 215px)", left: "calc(50% - 290px)" }, rot: -5, side: "l" },
+  { kind: "pin", label: "palu, id", img: "/doodles/doodle-pin.webp", alt: "Glossy 3D map pin icon", at: { top: "calc(50% - 165px)", left: "calc(50% + 300px)" }, rot: 8, side: "r" },
+  { kind: "code", label: "code", img: "/doodles/doodle-code.webp", alt: "Glossy 3D code brackets icon", at: { top: "calc(50% + 25px)", left: "calc(50% + 305px)" }, rot: -7, side: "r" },
+  { kind: "pill", label: "open to work", at: { top: "calc(50% + 215px)", left: "calc(50% + 290px)" }, rot: 5, side: "r" },
 ];
-
-/* Hand-drawn doodles: ink 2.5px stroke, round caps/joins, amber
-   accents. Slight wobble in the paths keeps them sketchy. */
-function DoodleSvg({ kind }: { kind: StickerSpec["kind"] }) {
-  if (kind === "folder")
-    return (
-      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
-        <path className="f-amber" d="M15 25 V15 q0-4 4-4 h11 l6 6 h14 q4 0 4 4 V25" />
-        <path className="f-paper" d="M10 25 h44 q5 0 5 5 v15 q0 5-5 5 H10 q-5 0-5-5 V30 q0-5 5-5 Z" />
-        <path d="M5 34 h54" opacity="0.35" />
-      </svg>
-    );
-  if (kind === "pen")
-    return (
-      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
-        <path d="M21 43 L43 21" strokeWidth="13" />
-        <path className="s-amber" d="M21 43 L43 21" strokeWidth="8" fill="none" />
-        <path className="f-paper" d="M22 42 L13 46 L15 37 Z" />
-        <circle className="f-ink" cx="15.5" cy="41.5" r="1.8" />
-        <path d="M36 26 L41 31" />
-      </svg>
-    );
-  if (kind === "code")
-    return (
-      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
-        <rect className="f-paper" x="11" y="11" width="42" height="42" rx="11" />
-        <path d="M27 25 L20 32 L27 39" />
-        <path className="s-amber" d="M35 24 L29 40" fill="none" />
-        <path d="M37 25 L44 32 L37 39" />
-      </svg>
-    );
-  if (kind === "pin")
-    return (
-      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
-        <path
-          className="f-paper"
-          d="M32 7 C22 7 15 15 15 25 C15 39 30 55 30 55 C30 55 47 39 49 25 C49 15 42 7 32 7 Z"
-        />
-        <circle className="f-amber" cx="32" cy="24" r="7" />
-      </svg>
-    );
-  if (kind === "cap")
-    return (
-      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
-        <path className="f-paper" d="M32 12 L55 22 L32 32 L9 22 Z" />
-        <path d="M22 28 v9 c0 6 20 6 20 0 v-9" />
-        <path className="s-amber" d="M55 22 v14" fill="none" />
-        <circle className="f-amber" cx="55" cy="40" r="3.5" />
-      </svg>
-    );
-  return null;
-}
-
-/** Hand-drawn squiggle arrow pointing at the card (ink stroke, static). */
-function Squiggle() {
-  return (
-    <svg viewBox="0 0 120 84" className="squiggle-svg" aria-hidden="true">
-      <path
-        d="M10 14 C 52 8, 58 54, 100 46"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M88 38 L103 47 L90 58"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 /**
  * THE REEL v5 — clean & personal.
  *
  * Scene 1: faint static grid on paper; "Hai, I'm Juan" mask reveal;
- * a 3:4 portrait card DROPPED FROM ABOVE; five hand-drawn doodle
- * stickers + one status pill + one static squiggle hugging the card
- * (desktop absolute against the card's own stage, mobile wrapped row).
+ * a 3:4 portrait card DROPPED FROM ABOVE; five glossy 3D doodle icons
+ * (transparent WebP) + one status pill floating around the card at a
+ * medium distance (desktop absolute against the card's own stage,
+ * mobile wrapped row).
  * Interaction: magnetic parallax — one rAF loop, quickSetter per
- * element, lerped. Stickers ±14px alternating, card ±8px + tilt ≤4°,
- * headline ±4px. Paused on reduced-motion, mobile, or off-viewport.
- * Scroll: NO PIN — a single scrub timeline eases everything out
- * (card y:-40, headline y:-70, stickers y:-100 → opacity 0.2).
- * Mobile: no parallax, no pin, quiet exit. Reduced motion: one
+ * element, lerped, writing to inner `.sticker-par` wrappers. Stickers
+ * ±14px alternating, card ±8px + tilt ≤4°, headline ±4px. Paused on
+ * reduced-motion, mobile, or off-viewport.
+ * Scroll: NO PIN — card/headline drift softly out while the stickers
+ * EXPLODE outward + upward and fade (scrub, ends at "bottom 70%").
+ * Mobile: no parallax, no explode, quiet exit. Reduced motion: one
  * static frame.
  */
 export default function Hero() {
@@ -173,8 +102,9 @@ export default function Hero() {
   // lerped toward the pointer. Transform-only. The loop runs only
   // while the pointer moves (stops when settled), only on desktop,
   // never with reduced motion, and pauses when the hero leaves the
-  // viewport. Parallax writes to dedicated `.par-*` wrappers so it
-  // never fights the entrance or scroll timelines.
+  // viewport. Parallax writes to dedicated wrappers (`.par-hi`,
+  // `.par-card`, `.sticker-par`) so it never fights the entrance
+  // or the scroll-explode timeline, which own the outer elements.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -185,7 +115,7 @@ export default function Hero() {
     const parHi = root.querySelector<HTMLElement>(".par-hi");
     const parCard = root.querySelector<HTMLElement>(".par-card");
     const stickerEls = Array.from(
-      root.querySelectorAll<HTMLElement>(".reel-stickers .sticker")
+      root.querySelectorAll<HTMLElement>(".reel-stickers .sticker-par")
     );
     if (!parHi || !parCard || stickerEls.length === 0) return;
 
@@ -198,7 +128,9 @@ export default function Hero() {
     const setCardRX = gsap.quickSetter(parCard, "rotationX", "deg");
     const setCardRY = gsap.quickSetter(parCard, "rotationY", "deg");
     const stickers = stickerEls.map((el, i) => ({
-      baseRot: parseFloat(el.dataset.rot || "0"),
+      baseRot: parseFloat(
+        el.closest(".sticker")?.getAttribute("data-rot") || "0"
+      ),
       dir: i % 2 === 0 ? 1 : -1,
       setX: gsap.quickSetter(el, "x", "px"),
       setR: gsap.quickSetter(el, "rotation", "deg"),
@@ -348,13 +280,19 @@ export default function Hero() {
     };
   }, []);
 
-  // Scroll exit: NO PIN. One scrub timeline eases the hero out as the
-  // page scrolls past — card, headline and stickers drift up and fade.
-  // This is the only scroll animation on the hero.
+  // Scroll explode: NO PIN. Card + headline keep a soft exit drift;
+  // the stickers BURST outward + upward and fade as the hero scrolls
+  // away — finished before the statement fully arrives (end "bottom
+  // 70%"). Deterministic per-index vectors (no random per render):
+  // left stickers fly left, right stickers fly right. transform/opacity
+  // only, ease none, scrubbed. fromTo + immediateRender:false keeps the
+  // resting state exact no matter when the entrance finished.
+  // Desktop only; reduced-motion and mobile skip the explode.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
@@ -362,17 +300,37 @@ export default function Hero() {
         scrollTrigger: {
           trigger: root,
           start: "top top",
-          end: "bottom top",
+          end: "bottom 70%",
           scrub: true,
         },
       });
-      tl.to(".reel-card", { y: -40, duration: 1 }, 0)
-        .to(".reel-hi-mask", { y: -70, duration: 1 }, 0)
-        .to(
-          ".reel-stickers .sticker",
-          { y: -100, opacity: 0.2, duration: 1, stagger: 0.05 },
-          0
+      tl.to(".reel-card", { y: -40, duration: 1 }, 0).to(
+        ".reel-hi-mask",
+        { y: -70, duration: 1 },
+        0
+      );
+
+      if (!isMobile) {
+        const stickers = gsap.utils.toArray<HTMLElement>(
+          ".reel-stickers .sticker"
         );
+        stickers.forEach((el, i) => {
+          const dir = el.dataset.side === "l" ? -1 : 1;
+          tl.fromTo(
+            el,
+            { x: 0, y: 0, rotation: 0, opacity: 1 },
+            {
+              x: dir * (90 + (i % 3) * 30), // ±90..150, outward
+              y: -(70 + (i % 4) * 24), // -70..-142, upward
+              rotation: dir * (15 + (i % 3) * 10), // ±15..35
+              opacity: 0,
+              duration: 1,
+              immediateRender: false,
+            },
+            0.05 + i * 0.03
+          );
+        });
+      }
     }, root);
     return () => {
       ctx.revert();
@@ -429,10 +387,11 @@ export default function Hero() {
           </a>
         </div>
 
-        {/* Sticker field: five doodles + one status pill + one static
-            squiggle, hugging the card. Anchored to .reel-center (the
-            card's own stage) so the gap stays 24–72px at any viewport
-            height. Desktop absolute, mobile wrapped row under the card. */}
+        {/* Sticker field: five glossy 3D icons + one status pill, floating
+            around the card at a medium distance (~80–140px). Anchored to
+            .reel-center so the gap holds at any viewport height. Outer
+            .sticker = entrance pop + scroll explode; inner .sticker-par =
+            magnetic parallax. Desktop absolute, mobile wrapped row. */}
         <div className="reel-stickers" aria-hidden="true">
           {STICKERS.map((s) => (
             <span
@@ -440,27 +399,28 @@ export default function Hero() {
               className="sticker"
               style={s.at}
               data-rot={s.rot}
+              data-side={s.side}
             >
-              {s.kind === "pill" ? (
-                <span className="doodle-pill">
-                  <span className="sdot" />
-                  {s.label}
-                </span>
-              ) : (
-                <span className="doodle">
-                  <DoodleSvg kind={s.kind} />
-                  <span className="doodle-label">{s.label}</span>
-                </span>
-              )}
+              <span className="sticker-par">
+                {s.kind === "pill" ? (
+                  <span className="doodle-pill">
+                    <span className="sdot" />
+                    {s.label}
+                  </span>
+                ) : (
+                  <span className="doodle">
+                    <img
+                      className="doodle-img"
+                      src={s.img}
+                      alt={s.alt}
+                      draggable={false}
+                    />
+                    <span className="doodle-label">{s.label}</span>
+                  </span>
+                )}
+              </span>
             </span>
           ))}
-          <span
-            className="sticker sticker-squiggle"
-            style={{ top: "calc(50% + 252px)", left: "calc(50% - 332px)" }}
-            data-rot={0}
-          >
-            <Squiggle />
-          </span>
         </div>
       </div>
     </header>
