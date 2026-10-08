@@ -360,8 +360,10 @@ a {
    ============================================================ */
 .hero-reel {
   position: relative;
-  /* --reel-h is set from JS: 100svh minus the sticky nav height. */
-  height: var(--reel-h, calc(100svh - 60px));
+  /* Full viewport height: when ScrollTrigger pins the hero it becomes
+     fixed at top:0 — a (100svh − nav) height would leave a gap below.
+     Scene-1 content keeps clear of the sticky nav via padding. */
+  height: 100svh;
   min-height: 560px;
   overflow: hidden;
   background: var(--paper);
@@ -484,6 +486,9 @@ a {
   justify-content: center;
   gap: clamp(12px, 2.2vh, 24px);
   padding: clamp(10px, 2vh, 20px) var(--pad);
+  /* keep the caption row clear of the viewport bottom in normal flow,
+     where the hero starts below the sticky nav */
+  padding-bottom: calc(clamp(10px, 2vh, 20px) + var(--nav-h, 60px));
   position: relative;
   z-index: 2;
 }

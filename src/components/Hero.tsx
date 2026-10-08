@@ -52,15 +52,14 @@ function RoleTicker() {
 export default function Hero() {
   const rootRef = useRef<HTMLElement>(null);
 
-  // The sticky nav pushes the hero down — size the reel to exactly fill
-  // the remaining viewport.
+  // Measure the sticky nav so scene-1 content can pad clear of it.
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     const setH = () => {
       const nav = document.querySelector(".nav");
       const navH = nav ? Math.round(nav.getBoundingClientRect().height) : 60;
-      root.style.setProperty("--reel-h", `calc(100svh - ${navH}px)`);
+      root.style.setProperty("--nav-h", `${navH}px`);
       ScrollTrigger.refresh();
     };
     setH();
