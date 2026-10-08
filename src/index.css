@@ -395,7 +395,7 @@ a {
   line-height: 1.05;
 }
 .mnav-link.active .mnav-label {
-  color: var(--signal);
+  color: var(--pop-pink);
 }
 .mnav-foot {
   display: flex;
