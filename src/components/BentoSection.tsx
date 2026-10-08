@@ -78,6 +78,7 @@ export default function BentoSection() {
 
   /* ---- Card 2 state: whack-a-cockroach ---- */
   const arenaRef = useRef<HTMLDivElement>(null);
+  const fingerRef = useRef<HTMLDivElement>(null);
   const [roaches, setRoaches] = useState<{ id: number; x: number; y: number; rot: number }[]>([]);
   const [squishes, setSquishes] = useState<{ id: number; x: number; y: number }[]>([]);
   const [score, setScore] = useState(0);
@@ -249,6 +250,82 @@ export default function BentoSection() {
       onComplete: () => squishRoach(rc.id, rc.x, rc.y),
     });
   };
+
+  /* Finger cursor for the roach arena (fine-pointer devices only):
+     a cartoon finger follows the pointer; on press it taps down with a
+     ripple ring. transform/opacity only. */
+  useEffect(() => {
+    if (reduced) return;
+    const arena = arenaRef.current;
+    const finger = fingerRef.current;
+    if (!arena || !finger) return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches)
+      return;
+    gsap.set(finger, { xPercent: -50, yPercent: -68, scale: 0, opacity: 0 });
+    const pos = (e: PointerEvent) => {
+      const r = arena.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+    const move = (e: PointerEvent) => {
+      const p = pos(e);
+      gsap.set(finger, { x: p.x, y: p.y });
+    };
+    const enter = (e: PointerEvent) => {
+      const p = pos(e);
+      gsap.set(finger, { x: p.x, y: p.y });
+      gsap.to(finger, {
+        scale: 1,
+        opacity: 1,
+        duration: 0.25,
+        ease: "back.out(2)",
+        overwrite: "auto",
+      });
+    };
+    const leave = () =>
+      gsap.to(finger, {
+        scale: 0,
+        opacity: 0,
+        duration: 0.2,
+        overwrite: "auto",
+      });
+    const down = () => {
+      gsap.fromTo(
+        finger,
+        { scale: 1 },
+        {
+          scale: 0.8,
+          duration: 0.09,
+          yoyo: true,
+          repeat: 1,
+          ease: "power2.out",
+          overwrite: "auto",
+        },
+      );
+      const ring = finger.querySelector(".finger-ring");
+      if (ring)
+        gsap.fromTo(
+          ring,
+          { attr: { r: 5 }, opacity: 0.9 },
+          {
+            attr: { r: 13 },
+            opacity: 0,
+            duration: 0.4,
+            ease: "power2.out",
+            overwrite: "auto",
+          },
+        );
+    };
+    arena.addEventListener("pointermove", move);
+    arena.addEventListener("pointerenter", enter);
+    arena.addEventListener("pointerleave", leave);
+    arena.addEventListener("pointerdown", down);
+    return () => {
+      arena.removeEventListener("pointermove", move);
+      arena.removeEventListener("pointerenter", enter);
+      arena.removeEventListener("pointerleave", leave);
+      arena.removeEventListener("pointerdown", down);
+    };
+  }, [reduced]);
 
   /* ---- Card 3: chain-reaction network ---- */
   const doPing = (i: number) => {
@@ -530,6 +607,14 @@ export default function BentoSection() {
                   </span>
                 ))}
                 <div className="pg-hint">Tap the roach &#10022;</div>
+                <div className="roach-finger" ref={fingerRef} aria-hidden="true">
+                  <svg viewBox="0 0 40 58">
+                    <rect x="14" y="2" width="12" height="36" rx="6" fill="#ffd9b3" stroke="#0a0a0a" strokeWidth="2" />
+                    <line x1="14" y1="15" x2="26" y2="15" stroke="#0a0a0a" strokeWidth="1.4" />
+                    <rect x="17.5" y="30" width="5" height="7" rx="2.5" fill="#ffffff" stroke="#0a0a0a" strokeWidth="1.2" />
+                    <circle className="finger-ring" cx="20" cy="48" r="5" fill="none" stroke="#ff4d6d" strokeWidth="2" opacity="0" />
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
@@ -559,7 +644,7 @@ export default function BentoSection() {
                   { label: "Community", cls: "n5" },
                 ].map((n, i) => (
                   <button
-                    key={n.label}
+                    key={n.label + i}
                     type="button"
                     ref={(el) => { nodeRefs.current[i] = el; }}
                     className={`node ${n.cls}`}
@@ -568,6 +653,10 @@ export default function BentoSection() {
                     onClick={() => relaySignal(i)}
                   >
                     <span className="node-ping" aria-hidden="true" />
+                    <svg className="node-person" viewBox="0 0 16 16" aria-hidden="true">
+                      <circle cx="8" cy="5.2" r="3.1" />
+                      <path d="M 2.6 13.6 C 2.6 9.4, 13.4 9.4, 13.4 13.6 Z" />
+                    </svg>
                   </button>
                 ))}
                 <div className="signal-dot" ref={signalDotRef} aria-hidden="true" />

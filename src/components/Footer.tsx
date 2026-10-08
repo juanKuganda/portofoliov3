@@ -8,13 +8,13 @@ gsap.registerPlugin(ScrollTrigger);
 interface Row {
   label: string;
   href: string;
-  cls: "pink" | "yellow" | "blue" | "purple";
+  cls: "pink" | "orange" | "blue" | "purple";
   external: boolean;
 }
 
 const ROWS: Row[] = [
   { label: "Email", href: "mailto:jp1jn04@gmail.com", cls: "pink", external: false },
-  { label: "GitHub", href: "https://github.com/juanKuganda", cls: "yellow", external: true },
+  { label: "GitHub", href: "https://github.com/juanKuganda", cls: "orange", external: true },
   { label: "LinkedIn", href: "https://www.linkedin.com/in/juann04", cls: "blue", external: true },
   { label: "Instagram", href: "https://www.instagram.com/juann04", cls: "purple", external: true },
 ];

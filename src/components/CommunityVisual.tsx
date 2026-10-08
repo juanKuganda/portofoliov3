@@ -3,16 +3,26 @@ import gsap from "gsap";
 
 const CENTER = { x: 0.5, y: 0.54 };
 const SATS = [
-  { x: 0.2, y: 0.3, label: "A", msg: "makasih!" },
-  { x: 0.8, y: 0.28, label: "R", msg: "got the job!" },
-  { x: 0.18, y: 0.78, label: "D", msg: "shipped it!" },
-  { x: 0.82, y: 0.76, label: "S", msg: "lulus!" },
+  { x: 0.2, y: 0.3, msg: "makasih!", color: "#ff4d6d" },
+  { x: 0.8, y: 0.28, msg: "got the job!", color: "#4dabf7" },
+  { x: 0.18, y: 0.78, msg: "shipped it!", color: "#51cf66" },
+  { x: 0.82, y: 0.76, msg: "lulus!", color: "#9775fa" },
 ];
 
 // Mentorship as a living signal-relay network: Juan (center node) fires
 // pulses to mentee satellites; each arrival pops a chat bubble and ticks
 // the relay counter. Playful, people-first. Loops; pauses off-screen;
 // fully static under reduced motion. transform/opacity (+ SVG attrs) only.
+
+/** Simple person glyph: head circle + shoulders arc. Inherits fill. */
+function PersonGlyph({ s = 1 }: { s?: number }) {
+  return (
+    <g className="cm-person" transform={`scale(${s})`}>
+      <circle cx="0" cy="-4.5" r="4.6" />
+      <path d="M -9.5 9.5 C -9.5 2.5, 9.5 2.5, 9.5 9.5 Z" />
+    </g>
+  );
+}
 export default function CommunityVisual({
   active = true,
 }: {
@@ -252,12 +262,12 @@ export default function CommunityVisual({
           <g className="cm-node cm-center" data-i="c">
             <circle className="cm-orbit" r={31} />
             <circle className="cm-core" r={22} />
-            <text>J</text>
+            <PersonGlyph s={1.15} />
           </g>
           {SATS.map((s, i) => (
             <g key={`n${i}`} className="cm-node" data-i={i}>
-              <circle r={16} />
-              <text>{s.label}</text>
+              <circle r={16} style={{ fill: s.color }} />
+              <PersonGlyph s={0.85} />
             </g>
           ))}
         </svg>
