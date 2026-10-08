@@ -370,36 +370,40 @@ a {
   flex-direction: column;
 }
 
-/* Full-bleed layer for the punch-in (desktop scroll only). */
+/* Full-bleed layer for the punch-in (desktop scroll only).
+   The portrait photo stands full-height and centered; the sides are
+   filled with a dark blurred copy of the same photo — full-bleed
+   drama without cropping or over-zooming the portrait. */
 .reel-full {
   position: absolute;
   inset: 0;
   z-index: 1;
   overflow: hidden;
+  background: #0b0b0c;
   opacity: 0;
   visibility: hidden;
   will-change: transform;
 }
-.reel-full picture,
-.reel-full img {
+.reel-full .full-bg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 50% 20%;
+  filter: blur(48px) brightness(0.42);
+  transform: scale(1.12);
   display: block;
 }
-/* Desktop source is a pre-composed 16:10 crop; the mobile 3:4 source
-   biases upward so the face stays clear. */
-@media (min-width: 769px) {
-  .reel-full img {
-    object-position: 50% 50%;
-  }
-}
-@media (max-width: 768px) {
-  .reel-full img {
-    object-position: 50% 22%;
-  }
+.reel-full .full-main {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 100%;
+  width: auto;
+  display: block;
 }
 .reel-shade {
   position: absolute;

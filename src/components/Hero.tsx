@@ -189,22 +189,25 @@ export default function Hero() {
 
   return (
     <header className="hero-reel" id="top" ref={rootRef}>
-      {/* Full-bleed layer for the punch-in (rises beneath the card). */}
+      {/* Full-bleed layer for the punch-in (rises beneath the card).
+          Portrait photo shown full-height and centered; the sides are
+          filled with a dark blurred copy of the same photo so nothing
+          gets cropped or over-zoomed. */}
       <div className="reel-full" aria-hidden="true">
-        <picture>
-          <source
-            media="(min-width: 769px)"
-            srcSet="/hero-portrait-wide.webp"
-            width={925}
-            height={578}
-          />
-          <img
-            src="/hero-portrait.webp"
-            alt=""
-            width={925}
-            height={1233}
-          />
-        </picture>
+        <img
+          className="full-bg"
+          src="/hero-portrait.webp"
+          alt=""
+          width={925}
+          height={1233}
+        />
+        <img
+          className="full-main"
+          src="/hero-portrait.webp"
+          alt=""
+          width={925}
+          height={1233}
+        />
         <div className="reel-shade" />
       </div>
 
