@@ -440,12 +440,12 @@ export default function Hero() {
         // Card joins the explosion: up, shrink, tilt, fade.
         tl.fromTo(
           ".reel-card",
-          { y: 0, scale: 1, rotation: 0, opacity: 1 },
+          { y: 0, scale: 1, rotation: 0, autoAlpha: 1 },
           {
             y: -130,
             scale: 0.92,
             rotation: -2,
-            opacity: 0,
+            autoAlpha: 0,
             duration: 1,
             immediateRender: false,
           },
@@ -459,22 +459,50 @@ export default function Hero() {
           const dir = el.dataset.side === "l" ? -1 : 1;
           tl.fromTo(
             el,
-            { x: 0, y: 0, rotation: 0, opacity: 1 },
+            { x: 0, y: 0, rotation: 0, autoAlpha: 1 },
             {
               x: dir * (90 + (i % 3) * 30), // ±90..150, outward
               y: -(70 + (i % 4) * 24), // -70..-142, upward
               rotation: dir * (15 + (i % 3) * 10), // ±15..35
-              opacity: 0,
+              autoAlpha: 0,
               duration: 1,
               immediateRender: false,
             },
             0.05 + i * 0.03
           );
         });
+
+        // Bottom row joins the burst too: caption flies left, scroll cue
+        // flies right, both upward + fade.
+        tl.fromTo(
+          ".reel-cap",
+          { x: 0, y: 0, rotation: 0, autoAlpha: 1 },
+          {
+            x: -70,
+            y: -50,
+            rotation: -8,
+            autoAlpha: 0,
+            duration: 1,
+            immediateRender: false,
+          },
+          0.1
+        ).fromTo(
+          ".reel-scroll",
+          { x: 0, y: 0, rotation: 0, autoAlpha: 1 },
+          {
+            x: 70,
+            y: -50,
+            rotation: 8,
+            autoAlpha: 0,
+            duration: 1,
+            immediateRender: false,
+          },
+          0.12
+        );
       }
 
-      // The ruler fades out with the hero exit.
-      tl.to(".reel-ruler", { opacity: 0, duration: 0.4 }, 0.6);
+      // The ruler stays visible through the explode — it only leaves
+      // naturally as the hero scrolls away. (No opacity fade.)
     }, root);
 
     // Ruler shift: the canvas slides under the ruler as you scroll.
@@ -613,7 +641,7 @@ export default function Hero() {
       </div>
 
       {/* Figma-like ruler pinned to the hero bottom: the canvas slides
-          under it as you scroll. Fades out with the hero exit. */}
+          under it as you scroll. Stays visible through the explode. */}
       <div className="reel-ruler" aria-hidden="true">
         <div className="ruler-track">
           {[0, 1, 2].map((copy) => (
