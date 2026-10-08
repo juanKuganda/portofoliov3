@@ -1,14 +1,19 @@
 import { useLayoutEffect, useEffect, useRef } from "react";
 import gsap from "gsap";
 
-const PARTICLE_COLORS = ["#f59e0b", "#f5f5f5"];
+const LINES = [
+  { t: "<Button color=", c: "#ff4d6d", rest: '"pink" />' },
+  { t: "<Card ", c: "#4dabf7", rest: "tilt />" },
+  { t: "<Confetti ", c: "#51cf66", rest: "burst />" },
+  { t: "ship", c: "#9775fa", rest: "(it) →" },
+];
 
-// Deploy pipeline: a live preview assembles on the left while build logs
-// stream on the right - a full-width, left-to-right story of shipping.
-// Juice: after a successful deploy the CTA bursts 8 confetti particles,
-// a LIVE badge pops with a spring, and the cursor does a happy wiggle
-// before flying off. Loops gently; pauses off-screen; fully static
-// under reduced motion.
+const BLOCK_COLORS = ["#ff4d6d", "#4dabf7", "#51cf66", "#9775fa"];
+
+// Web dev as live coding: code lines appear one by one in the editor,
+// and each finished line pops a matching colorful block into the
+// browser preview beside it. A caret blinks along. Loops; pauses
+// off-screen; fully static under reduced motion. transform/opacity only.
 export default function WebDevVisual({ active = true }: { active?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
@@ -25,78 +30,50 @@ export default function WebDevVisual({ active = true }: { active?: boolean }) {
     if (reduced) return;
 
     const ctx = gsap.context(() => {
-      // Hidden until their moment, every loop.
-      gsap.set(".demo-live", { scale: 0, opacity: 0, y: 0 });
-      gsap.set(".demo-particle", {
-        xPercent: -50,
-        yPercent: -50,
-        scale: 0,
-        opacity: 0,
-      });
-
       const tl = gsap.timeline({
         repeat: -1,
-        repeatDelay: 2.2,
-        defaults: { ease: "power3.out" },
+        repeatDelay: 1.8,
         paused: true,
       });
 
-      tl.from(".demo-build", {
-        opacity: 0,
-        y: 12,
-        scale: 0.97,
-        duration: 0.35,
-        stagger: 0.08,
-      })
-        .set(".demo-live", { scale: 0, opacity: 0, y: 0 }, 0)
-        .from(
-          ".demo-cursor",
-          { opacity: 0, x: 90, y: -60, duration: 0.5 },
-          "-=0.15",
+      tl.call(() => {
+        gsap.set(".sv-code-line", { opacity: 0, x: -10 });
+        gsap.set(".pv-block", { scale: 0, opacity: 0 });
+        gsap.set(".sv-caret", { opacity: 1 });
+      });
+
+      LINES.forEach((_, i) => {
+        const at = 0.25 + i * 0.55;
+        // Line types in…
+        tl.to(
+          `.sv-code-line[data-i="${i}"]`,
+          { opacity: 1, x: 0, duration: 0.32, ease: "power2.out" },
+          at,
         )
-        .to(".demo-cta", { scale: 0.88, duration: 0.12 }, "+=0.2")
-        .to(".demo-cta", { scale: 1, duration: 0.5, ease: "back.out(2.5)" })
-        // Celebration: confetti bursts out of the CTA on release.
-        // Function-based values re-roll every loop.
-        .set(".demo-particle", { x: 0, y: 0, scale: 1, opacity: 1 })
-        .to(".demo-particle", {
-          x: () => gsap.utils.random(-90, 90),
-          y: () => gsap.utils.random(-70, 50),
-          scale: 0.2,
-          opacity: 0,
-          duration: 0.75,
-          ease: "power2.out",
-          stagger: 0.025,
-        })
-        .from(
-          ".sv-log-line",
-          { opacity: 0, x: -8, duration: 0.3, stagger: 0.28 },
-          "-=0.35",
-        )
-        // LIVE badge pops once the build succeeds.
+          // …and its preview block pops with a spring.
+          .fromTo(
+            `.pv-block[data-i="${i}"]`,
+            { scale: 0, opacity: 0 },
+            {
+              scale: 1,
+              opacity: 1,
+              duration: 0.5,
+              ease: "back.out(2.4)",
+            },
+            at + 0.28,
+          );
+      });
+
+      // Caret blinks while typing, then everything bows out.
+      tl.to(".sv-caret", { opacity: 0.15, duration: 0.25 }, "+=0.4")
+        .to(".sv-caret", { opacity: 1, duration: 0.25 })
+        .to(".sv-caret", { opacity: 0, duration: 0.2 })
         .to(
-          ".demo-live",
-          { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(3)" },
-          "-=0.1",
-        )
-        // Happy cursor wiggle before it flies off.
-        .to(
-          ".demo-cursor",
-          { rotation: 10, duration: 0.1, transformOrigin: "15% 10%" },
-          "+=0.15",
-        )
-        .to(".demo-cursor", { rotation: -8, duration: 0.12 })
-        .to(".demo-cursor", { rotation: 0, duration: 0.15 })
-        .to(
-          ".demo-cursor",
-          { opacity: 0, x: 50, y: -40, duration: 0.4 },
-          "+=0.6",
-        )
-        .to(
-          [".demo-build", ".sv-log-line", ".demo-live"],
-          { opacity: 0, y: -8, duration: 0.3, stagger: 0.03 },
+          [".sv-code-line", ".pv-block"],
+          { opacity: 0, y: -8, duration: 0.3, stagger: 0.04 },
           "<+=0.1",
-        );
+        )
+        .set([".sv-code-line", ".pv-block"], { y: 0 });
 
       tlRef.current = tl;
     }, root);
@@ -106,9 +83,8 @@ export default function WebDevVisual({ active = true }: { active?: boolean }) {
       tlRef.current = null;
     };
   }, []);
-  // Play/pause is driven by the parent's `active` prop — NOT by a geometric
-  // ScrollTrigger gate. The old gate broke under sticky stacking: a covered
-  // card never left the viewport band, so its infinite loop kept running.
+
+  // Play/pause is driven by the parent's `active` prop.
   useEffect(() => {
     if (reducedRef.current) return;
     const tl = tlRef.current;
@@ -123,91 +99,41 @@ export default function WebDevVisual({ active = true }: { active?: boolean }) {
         <span className="sv-dot red"></span>
         <span className="sv-dot yellow"></span>
         <span className="sv-dot green"></span>
-        <span>preview · live</span>
+        <span>app.tsx → preview</span>
         <span className="bar-right">
           <span className="sv-live-dot"></span>live
         </span>
       </div>
-      <div className="sv-stage-body sv-pipeline">
+      <div className="sv-stage-body sv-codeflow">
         <div className="sv-pane">
-          <div className="sv-pane-label">component</div>
-          <div className="demo-nav demo-build">
-            <span className="demo-logo"></span>
-            <span className="demo-link"></span>
-            <span className="demo-link"></span>
-            <span className="demo-link"></span>
-          </div>
-          <div className="demo-hero">
-            <span className="demo-bar demo-build bar-title"></span>
-            <span className="demo-bar demo-build"></span>
-            <span className="demo-bar demo-build bar-short"></span>
-          </div>
-          <div className="demo-actions">
-            <span className="demo-cta demo-build">Deploy</span>
-            <span
-              className="demo-live"
-              style={{
-                display: "inline-block",
-                background: "#27c93f",
-                color: "#0a0a0a",
-                fontFamily: "var(--font-mono)",
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                padding: "5px 12px",
-                borderRadius: 999,
-                whiteSpace: "nowrap",
-              }}
-            >
-              ● LIVE
-            </span>
-            <span
-              className="demo-particles"
-              style={{
-                position: "absolute",
-                inset: 0,
-                pointerEvents: "none",
-              }}
-            >
-              {Array.from({ length: 8 }).map((_, i) => (
-                <span
-                  key={i}
-                  className="demo-particle"
-                  style={{
-                    position: "absolute",
-                    left: 38,
-                    top: "50%",
-                    width: 7,
-                    height: 7,
-                    borderRadius: "50%",
-                    backgroundColor:
-                      PARTICLE_COLORS[i % PARTICLE_COLORS.length],
-                  }}
-                />
-              ))}
-            </span>
-            <span className="demo-cursor">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M5.636 4.223a.75.75 0 0 1 .843-.14l13.5 7.5a.75.75 0 0 1-.365 1.411l-5.642.593 3.652 5.643a.75.75 0 1 1-1.256.814l-3.65-5.642-3.83 4.148a.75.75 0 0 1-1.29-.607V4.223z"
-                  fill="#f5f5f5"
-                />
-              </svg>
-            </span>
+          <div className="sv-pane-label">editor</div>
+          <div className="sv-code">
+            {LINES.map((l, i) => (
+              <div key={i} className="sv-code-line" data-i={i}>
+                <span style={{ color: l.c }}>{l.t}</span>
+                <span className="sv-code-rest">{l.rest}</span>
+              </div>
+            ))}
+            <span className="sv-caret" />
           </div>
         </div>
         <div className="sv-pane">
-          <div className="sv-pane-label">build output</div>
-          <div className="sv-log">
-            <div className="sv-log-line">
-              <span className="dim">$</span>{" "}
-              <span className="cmd">npm run build</span>
+          <div className="sv-pane-label">preview</div>
+          <div className="sv-preview">
+            <div className="pv-nav">
+              <span className="pv-logo" />
+              <span className="pv-link" />
+              <span className="pv-link" />
             </div>
-            <div className="sv-log-line">
-              <span className="ok">✓</span> compiled in 1.2s
-            </div>
-            <div className="sv-log-line">
-              <span className="ok">✓</span> deployed · production
+            <div className="pv-blocks">
+              {BLOCK_COLORS.map((c, i) => (
+                <span
+                  key={i}
+                  className={`pv-block b${i}`}
+                  data-i={i}
+                  style={{ background: c }}
+                />
+              ))}
             </div>
           </div>
         </div>

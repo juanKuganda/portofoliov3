@@ -47,27 +47,25 @@ const services: ServiceData[] = [
   },
 ];
 
-// Each card's signature pop color (text color paired for contrast).
-const CARD_COLORS = [
-  { bg: "var(--pop-pink)", fg: "#ffffff" },
-  { bg: "var(--pop-blue)", fg: "#ffffff" },
-  { bg: "var(--pop-green)", fg: "var(--ink)" },
-  { bg: "var(--pop-purple)", fg: "#ffffff" },
-];
-
 /**
- * SERVICES — "04 disciplines" as a STACKING DECK of color cards.
- * Each service is a full card in its signature pop color
- * (pink / blue / green / purple) with the dark animated visual
- * embedded in a rounded frame. Cards are position:sticky with a
- * stepped top offset, so scrolling stacks them like a deck.
- * All visuals play while the section is on-screen (transform/
- * opacity only). Reduced motion: static cards, no entrance.
+ * SERVICES — "04 disciplines" as a TIMELINE.
+ * Left: a vertical rail with node dots; generous spacing between points.
+ * Scrolling a point through the viewport center activates it (hover /
+ * tap still work as overrides). Right: one sticky stage (the column
+ * stretches the full timeline height so it travels to the bottom)
+ * whose panels morph through ONE continuous scrubbed timeline —
+ * Figma-Smart-Animate-style zoom-through, transform/opacity only.
+ * An amber progress fill grows down the rail as you travel.
+ * Mobile: rail kept, stage stacks below (relative). Reduced motion:
+ * instant CSS swaps, no scrub, no morph.
  */
 export default function ServicesSection() {
   const fitRef = useRef<HTMLHeadingElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
-  const cardRefs = useRef<(HTMLElement | null)[]>([]);
+  const listRef = useRef<HTMLDivElement>(null);
+  const railProgressRef = useRef<HTMLSpanElement>(null);
+  const rowRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [active, setActive] = useState(0);
   const [sectionVisible, setSectionVisible] = useState(true);
   useFitText(fitRef);
 
@@ -75,7 +73,8 @@ export default function ServicesSection() {
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Pause all visuals while the whole section is off-screen.
+  // The single gate that matters: when the whole section is off-screen,
+  // the active visual pauses. Only ONE visual is ever alive.
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -90,35 +89,134 @@ export default function ServicesSection() {
     };
   }, []);
 
-  // Entrance: each card slides in as it approaches, then sticks.
+  // Scroll-driven active: each timeline point takes over the stage as
+  // it crosses the viewport center.
   useEffect(() => {
     if (reduced) return;
-    const cards = cardRefs.current.filter(Boolean) as HTMLElement[];
-    const ctx = gsap.context(() => {
-      cards.forEach((card) => {
-        gsap.from(card, {
-          y: 70,
-          opacity: 0,
-          duration: 0.75,
-          ease: "power3.out",
-          clearProps: "transform,opacity",
-          scrollTrigger: { trigger: card, start: "top 90%", once: true },
-        });
+    const triggers = services.map((_, i) => {
+      const row = rowRefs.current[i];
+      if (!row) return null;
+      return ScrollTrigger.create({
+        trigger: row,
+        start: "top 58%",
+        end: "bottom 42%",
+        onToggle: (self) => {
+          if (self.isActive) setActive(i);
+        },
       });
     });
-    return () => ctx.revert();
+    return () => {
+      triggers.forEach((t) => t?.kill());
+    };
   }, [reduced]);
 
+  // Rail progress: amber fill grows as you travel the timeline.
+  useEffect(() => {
+    if (reduced) return;
+    const bar = railProgressRef.current;
+    const list = listRef.current;
+    if (!bar || !list) return;
+    const tween = gsap.to(bar, {
+      scaleY: 1,
+      ease: "none",
+      scrollTrigger: {
+        trigger: list,
+        start: "top 62%",
+        end: "bottom 48%",
+        scrub: 0.6,
+      },
+    });
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+    };
+  }, [reduced]);
+
+  // Figma-style stage morph as ONE continuous scroll-driven animation:
+  // a single scrubbed timeline crossfades the panels in sequence
+  // (Smart-Animate-like zoom-through). Scrub owns panel visibility
+  // deterministically — no discrete state swaps, nothing gets stuck.
+  // transform/opacity only.
+  useEffect(() => {
+    if (reduced) return;
+    const section = sectionRef.current;
+    const list = listRef.current;
+    if (!section || !list) return;
+    const panels = section.querySelectorAll<HTMLElement>(".svc-stage-panel");
+    if (!panels.length) return;
+
+    gsap.set(panels, { autoAlpha: 0, scale: 0.96, y: 24 });
+    gsap.set(panels[0], { autoAlpha: 1, scale: 1, y: 0 });
+
+    const tl = gsap.timeline({
+      defaults: { ease: "power1.inOut" },
+      scrollTrigger: {
+        trigger: list,
+        start: "top 55%",
+        end: "bottom 55%",
+        scrub: 0.8,
+      },
+    });
+    for (let i = 1; i < panels.length; i++) {
+      const prev = panels[i - 1];
+      const next = panels[i];
+      tl.to(
+        prev,
+        { autoAlpha: 0, scale: 1.05, y: -18, duration: 1 },
+        i - 1
+      ).fromTo(
+        next,
+        { autoAlpha: 0, scale: 0.95, y: 26 },
+        { autoAlpha: 1, scale: 1, y: 0, duration: 1 },
+        i - 1
+      );
+    }
+    return () => {
+      tl.scrollTrigger?.kill();
+      tl.kill();
+      gsap.set(panels, { clearProps: "all" });
+    };
+  }, [reduced]);
+
+  // Entrance: rows stagger in, stage fades up.
+  useEffect(() => {
+    if (reduced) return;
+    const list = listRef.current;
+    if (!list) return;
+    const ctx = gsap.context(() => {
+      gsap.from(".svc-index-row", {
+        y: 36,
+        opacity: 0,
+        duration: 0.7,
+        stagger: 0.08,
+        ease: "power3.out",
+        scrollTrigger: { trigger: list, start: "top 82%", once: true },
+      });
+      gsap.from(".svc-stage-frame", {
+        y: 48,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.out",
+        scrollTrigger: { trigger: list, start: "top 78%", once: true },
+      });
+    }, list);
+    return () => {
+      ctx.revert();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const renderVisual = (i: number) => {
+    const playing = sectionVisible;
     switch (i) {
       case 0:
-        return <WebDevVisual active={sectionVisible} />;
+        return <WebDevVisual active={playing && active === 0} />;
       case 1:
-        return <DesignVisual active={sectionVisible} />;
+        return <DesignVisual active={playing && active === 1} />;
       case 2:
-        return <BackendVisual active={sectionVisible} />;
+        return <BackendVisual active={playing && active === 2} />;
       default:
-        return <CommunityVisual active={sectionVisible} />;
+        return <CommunityVisual active={playing && active === 3} />;
     }
   };
 
@@ -134,39 +232,70 @@ export default function ServicesSection() {
       </h2>
       <div className="sec-sub rv">
         <span>04 disciplines</span>
-        <span>Scroll — the deck stacks</span>
+        <span>Scroll the timeline — the stage follows</span>
       </div>
 
-      <div className="svc-deck">
-        {services.map((s, i) => (
-          <article
-            key={s.num}
-            className="svc-card"
-            style={
-              {
-                "--card-bg": CARD_COLORS[i].bg,
-                "--card-fg": CARD_COLORS[i].fg,
-                "--i": i,
-              } as React.CSSProperties
-            }
-            ref={(el) => {
-              cardRefs.current[i] = el;
-            }}
-            aria-label={`${s.num} — ${s.name}`}
-          >
-            <div className="svc-card-head">
-              <span className="svc-card-num" aria-hidden="true">
-                {s.num}
+      <div className="svc-index-grid">
+        <div
+          className="svc-index-list"
+          ref={listRef}
+          role="tablist"
+          aria-label="Services"
+        >
+          <span
+            className="svc-rail-progress"
+            ref={railProgressRef}
+            aria-hidden="true"
+          />
+          {services.map((s, i) => (
+            <button
+              key={s.num}
+              type="button"
+              role="tab"
+              aria-selected={i === active}
+              ref={(el) => {
+                rowRefs.current[i] = el;
+              }}
+              className={`svc-index-row${i === active ? " active" : ""}`}
+              onMouseEnter={() => setActive(i)}
+              onFocus={() => setActive(i)}
+              onClick={(e) => {
+                setActive(i);
+                // Mouse click: release focus so the focus ring doesn't
+                // look stuck. Keyboard (Enter, detail 0) keeps it.
+                if (e.detail > 0) e.currentTarget.blur();
+              }}
+            >
+              <span className="svc-node" aria-hidden="true" />
+              <span className="svc-index-main">
+                <span className="svc-index-num">{s.num}</span>
+                <span className="svc-index-name">{s.name}</span>
+                <span className="svc-index-tags">{s.tags}</span>
+                <span className="svc-index-desc">{s.description}</span>
               </span>
-              <div className="svc-card-titles">
-                <h3 className="svc-card-name">{s.name}</h3>
-                <p className="svc-card-tags">{s.tags}</p>
+            </button>
+          ))}
+        </div>
+
+        <div className="svc-stage-col">
+          <div className="svc-stage-frame">
+            {services.map((s, i) => (
+              <div
+                key={s.num}
+                className={`svc-stage-panel${i === active ? " active" : ""}`}
+                aria-hidden={i !== active}
+              >
+                {renderVisual(i)}
               </div>
-            </div>
-            <p className="svc-card-desc">{s.description}</p>
-            <div className="svc-card-visual">{renderVisual(i)}</div>
-          </article>
-        ))}
+            ))}
+          </div>
+          <p className="svc-stage-caption" aria-live="polite">
+            <span className="tick-sq" aria-hidden="true" />
+            <span>
+              [{services[active].num}] {services[active].name}
+            </span>
+          </p>
+        </div>
       </div>
     </section>
   );
