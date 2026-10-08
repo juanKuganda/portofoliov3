@@ -80,35 +80,6 @@ a {
     opacity: 0.35;
   }
 }
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-@keyframes subtle-float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-@keyframes glow-line {
-  0% {
-    transform: scaleX(0);
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    transform: scaleX(1);
-    opacity: 0;
-  }
-}
 /* Looping scroll arrow bounce */
 @keyframes bounce-arrow {
   0%, 100% {
@@ -423,9 +394,18 @@ a {
   animation: pulse 2.4s ease-in-out infinite;
 }
 
-:focus-visible {
+:focus-visible,
+.svc-index-row:focus-visible,
+.roach:focus-visible,
+.nodes-mockup .node:focus-visible,
+.tl-chip:focus-visible,
+.tl-sample-btn:focus-visible,
+.run-btn:focus-visible {
   outline: 2px solid var(--pop-pink);
   outline-offset: 4px;
+}
+.roach:focus-visible {
+  border-radius: 12px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1226,15 +1206,6 @@ a {
   background: var(--signal);
   color: var(--ink);
 }
-.st-pill.tone-paper {
-  background: transparent;
-  color: var(--ink);
-  border: 1.5px solid var(--ink);
-}
-.st-pill.tone-paper:hover {
-  border-color: var(--signal);
-  color: var(--signal);
-}
 @media (max-width: 768px) {
   .st-headline {
     font-size: clamp(34px, 10.5vw, 56px);
@@ -1915,10 +1886,6 @@ section.block {
   opacity: 1;
   margin-top: 12px;
 }
-.svc-index-row:focus-visible {
-  outline: 2px solid var(--pop-pink);
-  outline-offset: 4px;
-}
 /* Stage: one sticky stack (frame + caption travel together),
    panels crossfade inside on `active` */
 .svc-stage-col {
@@ -1973,13 +1940,6 @@ section.block {
 
 
 /* Bespoke Service Visual UI Mockups */
-.service-visual-inner {
-  /* Full-bleed stage: visuals fill the entire .svc-visual area edge to edge */
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
 /* ---- Community: mentorship signal-relay network ---- */
 .cm-body {
   position: relative;
@@ -2073,6 +2033,12 @@ section.block {
   .cm-dot {
     animation: none;
   }
+}
+/* Hidden stage panels: freeze the infinite orbit/drift so they don't
+   composite 24/7 while invisible. */
+.svc-stage-panel:not(.active) .cm-orbit,
+.svc-stage-panel:not(.active) .cm-dot {
+  animation-play-state: paused;
 }
 .cm-node.cm-center text {
   fill: #0a0a0a;
@@ -2258,16 +2224,6 @@ section.block {
 .sv-pane + .sv-pane {
   border-left: 1px solid #1e1e1e;
 }
-.sv-log {
-  font-size: 11px;
-  line-height: 2;
-  color: #8a8a8a;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.sv-log .ok { color: #27c93f; }
-.sv-log .cmd { color: #d4d4d4; }
-.sv-log .dim { color: #4d4d4d; }
 
 /* ---- Card 2: paint the wireframe ---- */
 .pt-grid {
@@ -2427,39 +2383,10 @@ section.block {
   grid-template-columns: repeat(3, 1fr);
   align-items: stretch;
 }
-.sv-stat {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 0 26px;
-  border-left: 1px solid #1e1e1e;
-  min-width: 0;
-}
-.sv-stat:first-child { border-left: none; }
-.sv-stat-val {
-  font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  font-size: clamp(30px, 3.6vw, 50px);
-  line-height: 1;
-  color: #f5f5f5;
-  white-space: nowrap;
-}
-.sv-stat-val.accent { color: var(--signal); }
-.sv-stat-lbl {
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #6f6f6f;
-  margin-top: 8px;
-}
 @media (max-width: 640px) {
   .sv-codeflow { flex-direction: column; }
   .sv-codeflow .sv-pane:last-child { display: none; }
   .sv-pane { padding: 8px 14px; }
-  .sv-stat { padding: 0 14px; }
-  .sv-api-rows { padding: 8px 12px; }
-  .sv-design-flow { grid-template-columns: 1.2fr 1fr; }
 }
 .sv-dot {
   width: 8px;
@@ -2590,16 +2517,6 @@ section.block {
     display: none;
   }
 }
-
-
-.http-badge {
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-}
-.http-badge.get { background: rgba(39, 201, 63, 0.15); color: #27c93f; }
-.http-badge.post { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
 
 .gv-1 {
   background: radial-gradient(
@@ -3273,28 +3190,6 @@ footer.site {
 /* Card 1: Design Systems Interactive Mockup */
 
 /* Card 2: Interactive Ripple & Physics Canvas */
-.click-ripple {
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  background: transparent;
-  border: 2px solid var(--signal);
-  border-radius: 50%;
-  transform: translate(-50%, -50%) scale(0.12);
-  opacity: 1;
-  animation: expand-ring 0.6s var(--ease) forwards;
-  pointer-events: none;
-}
-@keyframes expand-ring {
-  0% {
-    transform: translate(-50%, -50%) scale(0.12);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0;
-  }
-}
 
 /* Card 3: Mentorship Network Graph */
 .nodes-mockup {
@@ -3593,10 +3488,6 @@ footer.site {
 .bento-card.tall .bc-visual {
   flex: 1;
 }
-.pg-visual {
-  align-items: stretch;
-  justify-content: stretch;
-}
 /* Whack-a-cockroach arena */
 .roach-visual {
   align-items: stretch;
@@ -3660,8 +3551,6 @@ footer.site {
   filter: drop-shadow(0 4px 8px rgba(255, 77, 109, 0.55));
 }
 .roach:focus-visible {
-  outline: 2px solid var(--pop-pink);
-  outline-offset: 4px;
   border-radius: 12px;
 }
 @keyframes roach-wiggle {
@@ -3685,17 +3574,6 @@ footer.site {
 @media (prefers-reduced-motion: reduce) {
   .roach { animation: none; }
   .squish-pop { animation: none; opacity: 0; }
-}
-.playground-canvas {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 380px;
-  background: rgba(0, 0, 0, 0.025);
-  border: 1px dashed var(--line);
-  border-radius: 18px;
-  overflow: hidden;
-  cursor: crosshair;
 }
 .pg-ball {
   position: absolute;
@@ -3785,10 +3663,6 @@ footer.site {
   border: none;
   padding: 0;
   font: inherit;
-}
-.nodes-mockup .node:focus-visible {
-  outline: 2px solid var(--pop-pink);
-  outline-offset: 4px;
 }
 .node.ping {
   animation: node-thunk 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -3912,26 +3786,6 @@ footer.site {
     opacity: 0.35;
   }
 }
-.trail-wrap {
-  position: absolute;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-  z-index: 1;
-}
-.trail-dot {
-  position: absolute;
-  left: -8px;
-  top: -8px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--signal);
-  opacity: 0.5;
-  animation: trail-fade 0.55s ease-out forwards;
-}
-.trail-dot.d2 { animation-delay: 0.08s; width: 12px; height: 12px; left: -6px; top: -6px; }
-.trail-dot.d3 { animation-delay: 0.16s; width: 8px; height: 8px; left: -4px; top: -4px; }
 @keyframes trail-fade {
   to {
     opacity: 0;
@@ -3976,32 +3830,15 @@ footer.site {
 .nodes-mockup.anims-paused .animated-path {
   animation-play-state: paused;
 }
-@media (prefers-reduced-motion: reduce) {
-  .charge-ring,
-  .trail-dot,
-  .pg-combo {
-    animation: none !important;
-  }
-}
 
 /* ============ Bento: focus + reduced motion ============ */
-.tl-chip:focus-visible,
-.tl-sample-btn:focus-visible,
-.run-btn:focus-visible,
-.playground-canvas:focus-visible {
-  outline: 2px solid var(--pop-pink);
-  outline-offset: 3px;
-}
-@media (prefers-reduced-motion: reduce) {
-  .click-ripple,
-  .node-ping,
-  .animated-path,
-  .pg-count-pop,
-  .net-pop,
-  .out-line,
-  .caret::after,
-  .tick-word,
-  .scroll-cue .arrow {
-    animation: none !important;
+
+/* 360px: keep the hero FIG.01 caption on one line — tighter tracking. */
+@media (max-width: 400px) {
+  .reel-bottom-row {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    gap: 10px;
+    white-space: nowrap;
   }
 }
