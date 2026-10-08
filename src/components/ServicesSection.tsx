@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFitText } from "../hooks/useFitText";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -51,12 +51,13 @@ const services: ServiceData[] = [
  * SERVICES — "04 disciplines" as a TIMELINE.
  * Left: a vertical rail with node dots; generous spacing between points.
  * Scrolling a point through the viewport center activates it (hover /
- * tap still work as overrides). Right: one sticky stage whose panels
- * morph Figma-Smart-Animate-style on every change — incoming panel
- * zooms through (scale 0.95→1, y 28→0, expo.out), transform/opacity
- * only. An amber progress fill grows down the rail as you travel.
+ * tap still work as overrides). Right: one sticky stage (the column
+ * stretches the full timeline height so it travels to the bottom)
+ * whose panels morph through ONE continuous scrubbed timeline —
+ * Figma-Smart-Animate-style zoom-through, transform/opacity only.
+ * An amber progress fill grows down the rail as you travel.
  * Mobile: rail kept, stage stacks below (relative). Reduced motion:
- * instant swaps, no scrub, no morph.
+ * instant CSS swaps, no scrub, no morph.
  */
 export default function ServicesSection() {
   const fitRef = useRef<HTMLHeadingElement>(null);
@@ -131,41 +132,51 @@ export default function ServicesSection() {
     };
   }, [reduced]);
 
-  // Figma-style stage morph — Smart-Animate-like zoom-through on the
-  // incoming panel. useLayoutEffect: runs before paint, so the fromTo
-  // never flashes. transform/opacity only, expo easing.
-  const firstMorph = useRef(true);
-  useLayoutEffect(() => {
+  // Figma-style stage morph as ONE continuous scroll-driven animation:
+  // a single scrubbed timeline crossfades the panels in sequence
+  // (Smart-Animate-like zoom-through). Scrub owns panel visibility
+  // deterministically — no discrete state swaps, nothing gets stuck.
+  // transform/opacity only.
+  useEffect(() => {
     if (reduced) return;
     const section = sectionRef.current;
-    if (!section) return;
+    const list = listRef.current;
+    if (!section || !list) return;
     const panels = section.querySelectorAll<HTMLElement>(".svc-stage-panel");
     if (!panels.length) return;
-    if (firstMorph.current) {
-      firstMorph.current = false;
-      return;
-    }
-    gsap.fromTo(
-      panels[active],
-      { autoAlpha: 0, scale: 0.95, y: 28 },
-      {
-        autoAlpha: 1,
-        scale: 1,
-        y: 0,
-        duration: 0.7,
-        ease: "expo.out",
-        overwrite: "auto",
-      }
-    );
-    const caption = section.querySelector<HTMLElement>(".svc-stage-caption");
-    if (caption) {
-      gsap.fromTo(
-        caption,
-        { autoAlpha: 0.2, y: 8 },
-        { autoAlpha: 1, y: 0, duration: 0.5, ease: "expo.out", overwrite: "auto" }
+
+    gsap.set(panels, { autoAlpha: 0, scale: 0.96, y: 24 });
+    gsap.set(panels[0], { autoAlpha: 1, scale: 1, y: 0 });
+
+    const tl = gsap.timeline({
+      defaults: { ease: "power1.inOut" },
+      scrollTrigger: {
+        trigger: list,
+        start: "top 55%",
+        end: "bottom 55%",
+        scrub: 0.8,
+      },
+    });
+    for (let i = 1; i < panels.length; i++) {
+      const prev = panels[i - 1];
+      const next = panels[i];
+      tl.to(
+        prev,
+        { autoAlpha: 0, scale: 1.05, y: -18, duration: 1 },
+        i - 1
+      ).fromTo(
+        next,
+        { autoAlpha: 0, scale: 0.95, y: 26 },
+        { autoAlpha: 1, scale: 1, y: 0, duration: 1 },
+        i - 1
       );
     }
-  }, [active, reduced]);
+    return () => {
+      tl.scrollTrigger?.kill();
+      tl.kill();
+      gsap.set(panels, { clearProps: "all" });
+    };
+  }, [reduced]);
 
   // Entrance: rows stagger in, stage fades up.
   useEffect(() => {
@@ -248,7 +259,12 @@ export default function ServicesSection() {
               className={`svc-index-row${i === active ? " active" : ""}`}
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
-              onClick={() => setActive(i)}
+              onClick={(e) => {
+                setActive(i);
+                // Mouse click: release focus so the focus ring doesn't
+                // look stuck. Keyboard (Enter, detail 0) keeps it.
+                if (e.detail > 0) e.currentTarget.blur();
+              }}
             >
               <span className="svc-node" aria-hidden="true" />
               <span className="svc-index-main">

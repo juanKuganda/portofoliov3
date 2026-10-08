@@ -1669,7 +1669,9 @@ section.block {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
   gap: clamp(32px, 5vw, 88px);
-  align-items: start;
+  /* stretch (not start): the stage column must be as tall as the
+     timeline so the sticky frame can travel its full length */
+  align-items: stretch;
 }
 /* ---- Services TIMELINE: vertical rail + node dots, generous
    spacing between points. The amber progress fill grows (scrub) as
@@ -1705,8 +1707,8 @@ section.block {
   gap: 18px;
   align-items: start;
   width: 100%;
-  /* timeline breathing room between points */
-  padding: clamp(38px, 7vh, 66px) 0;
+  /* timeline breathing room between points — generous */
+  padding: clamp(56px, 10vh, 96px) 0;
   background: none;
   border: none;
   text-align: left;
