@@ -1797,10 +1797,11 @@ section.block {
   top: 30px;
   bottom: 30px;
   width: 1px;
-  background: var(--signal);
+  background: var(--rail-color, var(--pop-pink));
   transform: scaleY(0);
   transform-origin: top;
   will-change: transform;
+  transition: background-color 0.4s var(--ease);
 }
 .svc-index-row {
   display: grid;

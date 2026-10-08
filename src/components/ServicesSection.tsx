@@ -47,6 +47,14 @@ const services: ServiceData[] = [
   },
 ];
 
+/** Rail progress fill takes the active section's signature color. */
+const RAIL_COLORS = [
+  "var(--pop-pink)",
+  "var(--pop-blue)",
+  "var(--pop-green)",
+  "var(--pop-purple)",
+];
+
 /**
  * SERVICES — "04 disciplines" as a TIMELINE.
  * Left: a vertical rail with node dots; generous spacing between points.
@@ -241,6 +249,7 @@ export default function ServicesSection() {
           ref={listRef}
           role="tablist"
           aria-label="Services"
+          style={{ "--rail-color": RAIL_COLORS[active] } as React.CSSProperties}
         >
           <span
             className="svc-rail-progress"
