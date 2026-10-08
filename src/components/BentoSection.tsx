@@ -10,57 +10,11 @@ gsap.registerPlugin(ScrollTrigger);
 /* ------------------------------------------------------------------ */
 const themes = [
   { name: "Paper", hex: "#F6F6F6", bg: "#f6f6f6", fg: "#0a0a0a", muted: "#737373" },
-  { name: "Signal Amber", hex: "#F59E0B", bg: "#f59e0b", fg: "#171204", muted: "#6b4e0a" },
+  { name: "Grape", hex: "#9775FA", bg: "#9775fa", fg: "#ffffff", muted: "#e6defc" },
   { name: "Ink", hex: "#0A0A0A", bg: "#0a0a0a", fg: "#f5f5f5", muted: "#a3a3a3" },
 ];
 
 /* ------------------------------------------------------------------ */
-/* Card 2 — particle burst rendered at the tap point                   */
-/* ------------------------------------------------------------------ */
-function Burst({
-  x,
-  y,
-  count = 12,
-  onDone,
-}: {
-  x: number;
-  y: number;
-  count?: number;
-  onDone: () => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const ctx = gsap.context(() => {
-      gsap.to(".bp", {
-        x: () => gsap.utils.random(-110, 110),
-        y: () => gsap.utils.random(-110, 50),
-        opacity: 0,
-        scale: 0.2,
-        rotation: () => gsap.utils.random(-180, 180),
-        duration: 0.75,
-        ease: "power2.out",
-        stagger: 0.012,
-        onComplete: onDone,
-      });
-    }, el);
-    return () => ctx.revert();
-    // onDone is stable per burst (b.id never changes) — empty deps so
-    // rapid taps re-rendering the parent can't kill mid-flight particles.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <div ref={ref} className="burst" style={{ left: x, top: y }} aria-hidden="true">
-      {Array.from({ length: count }).map((_, i) => (
-        <span key={i} className="bp" />
-      ))}
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* Card 4 — fake execution transcript                                 */
 /* ------------------------------------------------------------------ */
@@ -122,19 +76,12 @@ export default function BentoSection() {
     }
   };
 
-  /* ---- Card 2 state ---- */
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const ballRef = useRef<HTMLDivElement>(null);
-  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
-  const [bursts, setBursts] = useState<{ id: number; x: number; y: number; count: number }[]>([]);
-  const [trails, setTrails] = useState<{ id: number; x: number; y: number }[]>([]);
-  const [charge, setCharge] = useState<{ id: number; x: number; y: number } | null>(null);
-  const [taps, setTaps] = useState(0);
-  const [combo, setCombo] = useState(0);
-  const [hint, setHint] = useState("Tap anywhere ✦");
-  const pressStart = useRef<{ t: number; x: number; y: number } | null>(null);
-  const lastTapAt = useRef(0);
-  const comboTimer = useRef(0);
+  /* ---- Card 2 state: whack-a-cockroach ---- */
+  const arenaRef = useRef<HTMLDivElement>(null);
+  const [roaches, setRoaches] = useState<{ id: number; x: number; y: number; rot: number }[]>([]);
+  const [squishes, setSquishes] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [score, setScore] = useState(0);
+  const roachId = useRef(0);
 
   /* ---- Card 3 state ---- */
   const [signals, setSignals] = useState(0);
@@ -244,152 +191,63 @@ export default function BentoSection() {
       .set(wipe, { opacity: 0 });
   };
 
-  /* ---- Card 2: playground ---- */
-  const handleBallMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const box = canvasRef.current;
-    const ball = ballRef.current;
-    if (!box || !ball || reduced) return;
-    const rect = box.getBoundingClientRect();
-    gsap.to(ball, {
-      x: e.clientX - rect.left - 14,
-      y: e.clientY - rect.top - 14,
-      duration: 0.4,
-      ease: "back.out(2)",
-      overwrite: "auto",
-    });
-  };
-  const removeBurst = (id: number) =>
-    setBursts((prev) => prev.filter((b) => b.id !== id));
-
-  const spawnBurst = (x: number, y: number, count: number) => {
-    const id = Date.now() + Math.random();
-    setBursts((prev) => [...prev.slice(-2), { id, x, y, count }]);
-  };
-
-  /** Combo + tap counting (shared by tap and charge-burst). */
-  const registerTap = () => {
-    const now = performance.now();
-    setCombo((c) => (now - lastTapAt.current < 500 ? c + 1 : 1));
-    lastTapAt.current = now;
-    window.clearTimeout(comboTimer.current);
-    comboTimer.current = window.setTimeout(() => setCombo(0), 900);
-    setTaps((c) => {
-      const n = c + 1;
-      if (n % 10 === 0) {
-        setHint("Deca-tap! ✦");
-        window.setTimeout(() => setHint("Tap anywhere ✦"), 2200);
-      }
-      return n;
-    });
-  };
-
-  /** Directional squash & stretch of the ball toward the tap point. */
-  const squashBall = (x: number, y: number) => {
-    const ball = ballRef.current;
-    const box = canvasRef.current;
-    if (!ball || !box) return;
-    const br = ball.getBoundingClientRect();
-    const r = box.getBoundingClientRect();
-    const ang =
-      (Math.atan2(
-        r.top + y - (br.top + br.height / 2),
-        r.left + x - (br.left + br.width / 2)
-      ) *
-        180) /
-      Math.PI;
-    gsap
-      .timeline()
-      .set(ball, { rotation: ang })
-      .to(ball, {
-        scaleX: 1.45,
-        scaleY: 0.6,
-        duration: 0.12,
-        ease: "power2.out",
-        overwrite: "auto",
-      })
-      .to(ball, { scaleX: 1, scaleY: 1, duration: 0.55, ease: "back.out(3)" });
-  };
-
-  /** Fading motion-trail dots at the ball's position. */
-  const spawnTrail = () => {
-    const ball = ballRef.current;
-    const box = canvasRef.current;
-    if (!ball || !box) return;
-    const br = ball.getBoundingClientRect();
-    const r = box.getBoundingClientRect();
-    const id = Date.now() + Math.random();
-    const x = br.left + br.width / 2 - r.left;
-    const y = br.top + br.height / 2 - r.top;
-    setTrails((prev) => [...prev.slice(-5), { id, x, y }]);
-    window.setTimeout(() => {
-      setTrails((prev) => prev.filter((t) => t.id !== id));
-    }, 650);
-  };
-
-  /** A standard tap: ripple + burst + squash + trail. */
-  const fireTap = (x: number, y: number, big = false) => {
-    const id = Date.now() + Math.random();
-    if (!reduced) {
-      setRipples((prev) => [...prev.slice(-4), { id, x, y }]);
-      spawnBurst(x, y, big ? 24 : 12);
-      squashBall(x, y);
-      spawnTrail();
-    }
-    registerTap();
-  };
-
-  /* Press-and-hold: charge ring grows, ball magnetizes; release fires a
-     burst sized by hold time (cap ~1s). Quick taps fall through to fireTap. */
-  const onCanvasPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    const box = canvasRef.current;
-    if (!box) return;
-    const rect = box.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    pressStart.current = { t: performance.now(), x, y };
+  /* ---- Card 2: whack-a-cockroach ---- */
+  // Spawner: a roach pops up every ~1.5s (max 3 alive); ignored roaches
+  // scurry away after ~2.8s. transform/opacity only; static when reduced.
+  useEffect(() => {
     if (reduced) return;
-    setCharge({ id: Date.now() + Math.random(), x, y });
-    const ball = ballRef.current;
-    if (ball) {
-      gsap.to(ball, {
-        x: x - 14,
-        y: y - 14,
-        duration: 0.3,
-        ease: "power2.out",
-        overwrite: "auto",
-      });
-    }
-  };
-  const onCanvasPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    const press = pressStart.current;
-    pressStart.current = null;
-    setCharge(null);
-    if (!press) return;
-    const box = canvasRef.current;
-    if (!box) return;
-    const rect = box.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const held = performance.now() - press.t;
-    if (held >= 180 && !reduced) {
-      const power = Math.min(held / 1000, 1);
-      const id = Date.now() + Math.random();
-      setRipples((prev) => [...prev.slice(-4), { id, x, y }]);
-      spawnBurst(x, y, Math.round(12 + power * 12));
-      squashBall(x, y);
-      gsap.fromTo(
-        box,
-        { scale: 0.985 },
-        { scale: 1, duration: 0.5, ease: "back.out(3)", overwrite: "auto" }
+    const spawn = () => {
+      const arena = arenaRef.current;
+      if (!arena) return;
+      const r = arena.getBoundingClientRect();
+      if (r.width < 80) return;
+      const id = ++roachId.current;
+      const x = gsap.utils.random(46, Math.max(66, r.width - 46));
+      const y = gsap.utils.random(60, Math.max(80, r.height - 46));
+      setRoaches((prev) =>
+        prev.length >= 3
+          ? prev
+          : [...prev, { id, x, y, rot: gsap.utils.random(-18, 18) }]
       );
-      registerTap();
-    } else {
-      fireTap(x, y);
-    }
+      window.setTimeout(() => {
+        setRoaches((prev) => prev.filter((rc) => rc.id !== id));
+      }, 2800);
+    };
+    spawn();
+    const iv = window.setInterval(spawn, 1500);
+    return () => window.clearInterval(iv);
+  }, [reduced]);
+
+  const squishRoach = (id: number, x: number, y: number) => {
+    setRoaches((prev) => prev.filter((r) => r.id !== id));
+    setScore((sc) => sc + 1);
+    const sid = ++roachId.current;
+    setSquishes((prev) => [...prev.slice(-4), { id: sid, x, y }]);
+    window.setTimeout(() => {
+      setSquishes((prev) => prev.filter((sq) => sq.id !== sid));
+    }, 850);
   };
-  const cancelCharge = () => {
-    pressStart.current = null;
-    setCharge(null);
+
+  /** Tap a roach: stop its wiggle, squash flat, then score it. */
+  const onRoachTap = (
+    e: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement>,
+    rc: { id: number; x: number; y: number }
+  ) => {
+    const b = e.currentTarget as HTMLButtonElement;
+    if (reduced || typeof (e as React.KeyboardEvent).key === "string") {
+      squishRoach(rc.id, rc.x, rc.y);
+      return;
+    }
+    b.style.animation = "none";
+    gsap.to(b, {
+      scaleY: 0.12,
+      scaleX: 1.6,
+      opacity: 0,
+      duration: 0.16,
+      ease: "power2.in",
+      overwrite: "auto",
+      onComplete: () => squishRoach(rc.id, rc.x, rc.y),
+    });
   };
 
   /* ---- Card 3: chain-reaction network ---- */
@@ -608,64 +466,70 @@ export default function BentoSection() {
           </div>
         </div>
 
-        {/* Card 2: Press Playground */}
+        {/* Card 2: Whack-a-cockroach */}
         <div
           className="bento-card span-5 tall"
           ref={(el) => { cardsRef.current[1] = el; }}
-          onMouseMove={(e) => { handleMouseMove(e, 1); handleBallMove(e); }}
+          onMouseMove={(e) => { handleMouseMove(e, 1); }}
           onMouseLeave={() => handleMouseLeave(1)}
         >
           <div className="bento-content">
             <div className="bc-top">
-              <span className="bento-badge">Spring & Physics</span>
+              <span className="bento-badge">Pest Control</span>
               <h3 className="bc-title">Micro-Interactions</h3>
               <p className="bc-desc">
-                Every hover, scroll, and click is an opportunity. Tap — or press and hold.
+                Bugs in the code? Tap the cockroach to squish it — every tap scores.
               </p>
             </div>
-            <div className="bc-visual pg-visual">
-              <div
-                className="playground-canvas"
-                ref={canvasRef}
-                onPointerDown={onCanvasPointerDown}
-                onPointerUp={onCanvasPointerUp}
-                onPointerLeave={cancelCharge}
-                role="button"
-                tabIndex={0}
-                aria-label="Interactive canvas. Press Enter to tap, or press and hold for a charge burst."
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    const r = canvasRef.current?.getBoundingClientRect();
-                    if (r) fireTap(r.width / 2, r.height / 2);
-                  }
-                }}
-              >
+            <div className="bc-visual roach-visual">
+              <div className="roach-arena" ref={arenaRef}>
                 <div className="pg-counter" aria-live="polite">
-                  <span key={taps} className="pg-count-pop">{taps}</span>
-                  <span className="pg-count-lbl">taps</span>
-                  {combo >= 2 && (
-                    <span key={combo} className="pg-combo">×{combo}</span>
-                  )}
+                  <span key={score} className="pg-count-pop">{score}</span>
+                  <span className="pg-count-lbl">squished</span>
                 </div>
-                <div className="pg-ball" ref={ballRef} aria-hidden="true" />
-                {trails.map((tr) => (
-                  <span key={tr.id} className="trail-wrap" style={{ left: tr.x, top: tr.y }} aria-hidden="true">
-                    <span className="trail-dot" />
-                    <span className="trail-dot d2" />
-                    <span className="trail-dot d3" />
+                {roaches.map((rc) => (
+                  <button
+                    key={rc.id}
+                    type="button"
+                    className="roach"
+                    style={{ left: rc.x, top: rc.y, ["--rr" as string]: `${rc.rot}deg` }}
+                    onClick={(e) => onRoachTap(e, rc)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onRoachTap(e, rc);
+                      }
+                    }}
+                    aria-label="Squish the cockroach"
+                  >
+                    <svg viewBox="0 0 48 46" aria-hidden="true">
+                      <g stroke="#5b3a24" strokeWidth="2.2" strokeLinecap="round">
+                        <line x1="15" y1="20" x2="6" y2="13" />
+                        <line x1="14" y1="27" x2="5" y2="28" />
+                        <line x1="15" y1="34" x2="8" y2="41" />
+                        <line x1="33" y1="20" x2="42" y2="13" />
+                        <line x1="34" y1="27" x2="43" y2="28" />
+                        <line x1="33" y1="34" x2="40" y2="41" />
+                      </g>
+                      <path d="M24 10 C 20 4, 14 2, 9 1" stroke="#5b3a24" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+                      <path d="M24 10 C 28 4, 34 2, 39 1" stroke="#5b3a24" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+                      <ellipse cx="24" cy="28" rx="12" ry="11" fill="#7a5230" />
+                      <ellipse cx="24" cy="28" rx="12" ry="11" fill="none" stroke="#5b3a24" strokeWidth="2" />
+                      <line x1="24" y1="18" x2="24" y2="38" stroke="#5b3a24" strokeWidth="1.6" />
+                      <circle cx="24" cy="12" r="6.5" fill="#5b3a24" />
+                      <circle cx="21.8" cy="11" r="1.6" fill="#fff" />
+                      <circle cx="26.2" cy="11" r="1.6" fill="#fff" />
+                      <circle cx="21.8" cy="11" r="0.8" fill="#0a0a0a" />
+                      <circle cx="26.2" cy="11" r="0.8" fill="#0a0a0a" />
+                    </svg>
+                  </button>
+                ))}
+                {squishes.map((sq) => (
+                  <span key={sq.id} className="squish-pop" style={{ left: sq.x, top: sq.y }} aria-hidden="true">
+                    +1
                   </span>
                 ))}
-                {ripples.map((r) => (
-                  <span key={r.id} className="click-ripple" style={{ left: r.x, top: r.y }} />
-                ))}
-                {charge && (
-                  <span key={charge.id} className="charge-ring" style={{ left: charge.x, top: charge.y }} aria-hidden="true" />
-                )}
-                {bursts.map((b) => (
-                  <Burst key={b.id} x={b.x} y={b.y} count={b.count} onDone={() => removeBurst(b.id)} />
-                ))}
-                <div className="pg-hint">{hint}</div>
+                <div className="pg-hint">Tap the roach &#10022;</div>
               </div>
             </div>
           </div>
