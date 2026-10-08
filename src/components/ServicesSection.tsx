@@ -186,15 +186,15 @@ export default function ServicesSection() {
     });
   }, [active, reduced]);
 
-  // Entrance: rows stagger in, stage fades up.
+  // Entrance: rows stagger in on scroll-enter.
+  // NOTE: the stage frame itself gets NO entrance tween on purpose —
+  // a sticky stage must never be hidden by JS. A `gsap.from` + `once`
+  // trigger can leave it stuck at opacity 0 if the trigger misfires,
+  // which is worse than skipping a subtle fade-up.
   useEffect(() => {
     if (reduced) return;
-    const section = sectionRef.current;
     const list = listRef.current;
-    if (!section || !list) return;
-    // Row stagger is scoped to the list; the stage frame lives in the
-    // sibling column, so it gets its own unscoped tween (a scoped
-    // selector here would silently find nothing).
+    if (!list) return;
     const ctx = gsap.context(() => {
       gsap.from(".svc-index-row", {
         y: 36,
@@ -203,19 +203,12 @@ export default function ServicesSection() {
         stagger: 0.08,
         ease: "power3.out",
         scrollTrigger: { trigger: list, start: "top 82%", once: true },
+        onComplete: () =>
+          gsap.set(".svc-index-row", { clearProps: "transform,opacity" }),
       });
     }, list);
-    const frameTween = gsap.from(".svc-stage-frame", {
-      y: 48,
-      opacity: 0,
-      duration: 0.8,
-      ease: "power3.out",
-      scrollTrigger: { trigger: section, start: "top 78%", once: true },
-    });
     return () => {
       ctx.revert();
-      frameTween.scrollTrigger?.kill();
-      frameTween.kill();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
