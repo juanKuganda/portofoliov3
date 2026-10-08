@@ -2986,9 +2986,19 @@ footer.site {
     grid-template-columns: minmax(0, 1fr);
     gap: 28px;
   }
+  /* Mobile: the stage pins under the nav while the timeline scrolls
+     beneath it — otherwise you'd only ever see the last panel,
+     because the stage sits below the whole list. */
+  .svc-stage-col {
+    order: -1;
+    position: sticky;
+    top: 68px;
+    z-index: 5;
+    background: var(--paper);
+    padding-bottom: 10px;
+  }
   .svc-stage-sticky {
-    position: relative;
-    top: 0;
+    position: static;
   }
   .svc-stage-frame {
     position: relative;
