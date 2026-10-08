@@ -29,9 +29,12 @@ export default function Statement() {
     if (reduced) return;
 
     const ctx = gsap.context(() => {
-      gsap.set(".st-line-inner", { yPercent: 115 });
-      gsap.set(".st-pill", { y: 28, opacity: 0 });
+      // Initial states
+      gsap.set(".st-label", { opacity: 0, x: -20, letterSpacing: "0.5em" });
+      gsap.set(".st-line-inner", { yPercent: 115, rotateX: 12, scale: 0.97 });
+      gsap.set(".st-pill", { y: 40, opacity: 0, scale: 0.85, rotation: -3 });
 
+      // ---- Entrance timeline ----
       const tl = gsap.timeline({
         defaults: { ease: "power4.out" },
         scrollTrigger: {
@@ -40,15 +43,71 @@ export default function Statement() {
           once: true,
         },
       });
-      tl.to(".st-line-inner", { yPercent: 0, duration: 0.9, stagger: 0.09 })
+
+      // Label draws in with spacing animation
+      tl.to(".st-label", {
+        opacity: 1,
+        x: 0,
+        letterSpacing: "0.22em",
+        duration: 0.7,
+        ease: "expo.out",
+      })
+        // Lines reveal with cinematic unfolding
+        .to(
+          ".st-line-inner",
+          {
+            yPercent: 0,
+            rotateX: 0,
+            scale: 1,
+            duration: 1.0,
+            stagger: 0.1,
+            ease: "expo.out",
+          },
+          "-=0.4"
+        )
+        // Pills pop in with spring overshoot
         .to(
           ".st-pill",
-          { y: 0, opacity: 1, duration: 0.6, stagger: 0.08 },
-          "-=0.45"
+          {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            rotation: 0,
+            duration: 0.7,
+            stagger: 0.07,
+            ease: "back.out(1.4)",
+          },
+          "-=0.5"
         );
 
       tl.eventCallback("onComplete", () => {
-        gsap.set(".st-line-inner, .st-pill", { clearProps: "all" });
+        gsap.set(".st-line-inner, .st-pill, .st-label", {
+          clearProps: "all",
+        });
+      });
+
+      // ---- Slow parallax scrub on headline as user scrolls ----
+      gsap.to(".st-headline", {
+        y: -30,
+        ease: "none",
+        scrollTrigger: {
+          trigger: root,
+          start: "top 60%",
+          end: "bottom 20%",
+          scrub: 1.5,
+        },
+      });
+
+      // ---- Parallax on pills (slower layer) ----
+      gsap.to(".st-pills", {
+        y: -16,
+        ease: "none",
+        scrollTrigger: {
+          trigger: root,
+          start: "top 60%",
+          end: "bottom 20%",
+          scrub: 2,
+        },
       });
     }, root);
     return () => {

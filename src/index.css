@@ -114,6 +114,44 @@ a {
     opacity: 1;
   }
 }
+/* Starburst slow rotate */
+@keyframes burst-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+/* Sticker magnetic hover pulse */
+@keyframes sticker-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+/* Grid parallax drift */
+@keyframes grid-drift {
+  0%   { background-position: 0 0, 0 0; }
+  100% { background-position: 76px 76px, 76px 76px; }
+}
+/* Title shimmer sweep */
+@keyframes title-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+/* Pill pop hover */
+@keyframes pill-pop {
+  0%   { transform: scale(1) rotate(0deg); }
+  25%  { transform: scale(1.07) rotate(-1.5deg); }
+  75%  { transform: scale(1.03) rotate(0.5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+/* Statement chips float */
+@keyframes chip-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33%      { transform: translateY(-3px) rotate(2deg); }
+  66%      { transform: translateY(2px) rotate(-1deg); }
+}
+/* Scroll cue glow */
+@keyframes scroll-glow {
+  0%, 100% { text-shadow: 0 0 0 transparent; }
+  50%      { text-shadow: 0 0 12px rgba(245,158,11,0.5); }
+}
 /* Infinite horizontal marquee */
 @keyframes marquee {
   0% {
@@ -189,21 +227,8 @@ a {
   mix-blend-mode: difference;
 }
 .nav::after {
-  /* scroll hairline — opacity-only so it stays cheap; currentColor
-     follows the blend, visible on light and dark alike */
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: currentColor;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  pointer-events: none;
-}
-.nav.is-scrolled::after {
-  opacity: 0.85;
+  /* border removed per request */
+  display: none;
 }
 .nav-name {
   font-family: var(--font-display);
@@ -470,11 +495,11 @@ a {
   display: flex;
   flex-direction: column;
 }
-/* Faint blueprint grid, fading toward the edges (static). */
+/* Faint blueprint grid — animated parallax drift on desktop. */
 .hero-reel::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -76px;
   z-index: 0;
   pointer-events: none;
   background-image:
@@ -484,8 +509,9 @@ a {
   opacity: 0.55;
   -webkit-mask-image: radial-gradient(ellipse 95% 85% at 50% 45%, black 25%, transparent 78%);
   mask-image: radial-gradient(ellipse 95% 85% at 50% 45%, black 25%, transparent 78%);
+  animation: grid-drift 28s linear infinite;
 }
-/* Whisper of amber behind the card (static). */
+/* Whisper of amber behind the card — breathing glow. */
 .hero-reel::after {
   content: "";
   position: absolute;
@@ -497,6 +523,7 @@ a {
   top: 48%;
   transform: translate(-50%, -50%);
   background: radial-gradient(circle, rgba(245, 158, 11, 0.13), transparent 62%);
+  animation: pulse 5s ease-in-out infinite;
 }
 
 /* Full-bleed layer for the punch-in (desktop scroll only).
@@ -649,6 +676,21 @@ a {
   color: var(--ink);
   text-align: center;
   white-space: nowrap;
+  /* Subtle shimmer on the title text */
+  background: linear-gradient(
+    90deg,
+    var(--ink) 0%,
+    var(--ink) 40%,
+    var(--signal) 50%,
+    var(--ink) 60%,
+    var(--ink) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: title-shimmer 5s ease-in-out infinite;
+  animation-delay: 2s;
 }
 
 /* The card: 3:4 portrait, border + soft shadow. */
@@ -662,6 +704,11 @@ a {
   border-radius: 20px;
   background: #101010;
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.18);
+  transition: box-shadow 0.5s var(--ease);
+}
+.reel-card:hover {
+  box-shadow: 0 38px 90px rgba(0, 0, 0, 0.28),
+    0 0 0 2px var(--signal);
 }
 .reel-card .card-photo {
   position: absolute;
@@ -700,6 +747,15 @@ a {
   color: var(--ink);
   text-decoration: none;
   white-space: nowrap;
+  transition: transform 0.3s var(--ease), letter-spacing 0.3s var(--ease);
+  cursor: pointer;
+}
+.reel-scroll:hover {
+  transform: translateY(2px);
+  letter-spacing: 0.18em;
+}
+.reel-scroll:hover span:first-child {
+  animation: scroll-glow 1.6s ease-in-out infinite;
 }
 .reel-scroll .arrow {
   display: inline-block;
@@ -736,19 +792,39 @@ a {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.3, 1),
+    box-shadow 0.4s var(--ease);
+  will-change: transform;
+}
+/* Magnetic hover: stickers react when the cursor approaches */
+.sticker:hover {
+  transform: scale(1.08) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  z-index: 10;
 }
 .sticker-ink {
   background: var(--ink);
   color: var(--paper);
+}
+.sticker-ink:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
 }
 .sticker-paper {
   background: var(--paper);
   color: var(--ink);
   border: 1.5px solid var(--ink);
 }
+.sticker-paper:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1.5px var(--signal);
+  border-color: var(--signal);
+}
 .sticker-amber {
   background: var(--signal);
   color: var(--ink);
+}
+.sticker-amber:hover {
+  box-shadow: 0 8px 28px rgba(245, 158, 11, 0.35);
 }
 .sticker .sdot {
   width: 8px;
@@ -774,6 +850,7 @@ a {
   width: 76px;
   height: 76px;
   display: block;
+  animation: burst-spin 22s linear infinite;
 }
 .burst-svg polygon {
   fill: var(--signal);
@@ -859,6 +936,24 @@ a {
   color: var(--ink);
   padding: clamp(72px, 12vh, 140px) var(--pad);
   overflow: clip;
+  position: relative;
+}
+/* Cinematic transition bridge from hero: gradient veil at top */
+.statement::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 20%,
+    var(--paper) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
 }
 .st-label {
   margin: 0 0 clamp(20px, 3vh, 36px);
@@ -867,6 +962,8 @@ a {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--muted);
+  position: relative;
+  z-index: 3;
 }
 .st-headline {
   margin: 0;
@@ -876,6 +973,8 @@ a {
   line-height: 1.04;
   font-size: clamp(40px, 6.4vw, 104px);
   max-width: 20ch;
+  position: relative;
+  z-index: 3;
 }
 .st-line {
   display: block;
@@ -887,7 +986,7 @@ a {
   display: block;
   will-change: transform;
 }
-/* inline photo chips inside the headline */
+/* inline photo chips inside the headline — floating + hover */
 .st-chip {
   display: inline-block;
   height: 0.68em;
@@ -896,12 +995,21 @@ a {
   border-radius: 999px;
   vertical-align: -0.06em;
   margin: 0 0.08em;
+  animation: chip-float 4s ease-in-out infinite;
+  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
+  cursor: pointer;
+}
+.st-chip:hover {
+  transform: scale(1.2) rotate(3deg) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 .st-line:nth-child(1) .st-chip {
   object-position: 50% 16%;
+  animation-delay: 0s;
 }
 .st-line:nth-child(3) .st-chip {
   object-position: 50% 88%;
+  animation-delay: 1.3s;
 }
 .st-pills {
   margin-top: clamp(28px, 5vh, 56px);
@@ -909,6 +1017,8 @@ a {
   flex-wrap: wrap;
   gap: 12px;
   align-items: stretch;
+  position: relative;
+  z-index: 3;
 }
 .st-pill {
   display: inline-flex;
@@ -920,25 +1030,52 @@ a {
   padding: 0.55em 1em;
   border-radius: 4px;
   line-height: 1.1;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease),
+    background-color 0.35s var(--ease);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+/* Pill hover effects */
+.st-pill:hover {
+  transform: translateY(-3px) scale(1.03);
 }
 .st-pill.tone-ink {
   background: var(--ink);
   color: var(--paper);
 }
+.st-pill.tone-ink:hover {
+  background: #1a1a1a;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
 .st-pill.tone-amber {
   background: var(--signal);
   color: var(--ink);
+}
+.st-pill.tone-amber:hover {
+  background: #ffb020;
+  box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4);
 }
 .st-pill.tone-paper {
   background: transparent;
   color: var(--ink);
   border: 1.5px solid var(--ink);
 }
+.st-pill.tone-paper:hover {
+  border-color: var(--signal);
+  color: var(--signal);
+  box-shadow: 0 8px 30px rgba(245, 158, 11, 0.15);
+}
 .st-pattern {
   padding: 0.45em 0.6em;
   color: var(--ink);
   border: 1.5px dashed var(--line-strong, var(--line));
   border-radius: 4px;
+  transition: transform 0.35s var(--ease), border-color 0.35s var(--ease);
+}
+.st-pattern:hover {
+  transform: rotate(6deg) scale(1.05);
+  border-color: var(--signal);
 }
 .st-pattern svg {
   display: block;
@@ -947,6 +1084,22 @@ a {
   .st-line-inner {
     will-change: auto;
   }
+  .st-chip {
+    animation: none;
+  }
+  .hero-reel::before {
+    animation: none;
+  }
+  .hero-reel::after {
+    animation: none;
+  }
+  .burst-svg {
+    animation: none;
+  }
+  .reel-hi {
+    animation: none;
+    -webkit-text-fill-color: var(--ink);
+  }
 }
 @media (max-width: 768px) {
   .st-headline {
@@ -954,6 +1107,9 @@ a {
   }
   .st-pill {
     font-size: clamp(18px, 5.4vw, 26px);
+  }
+  .statement::before {
+    height: 80px;
   }
 }
 /* =============== END STATEMENT =============== */

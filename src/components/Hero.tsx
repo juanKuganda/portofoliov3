@@ -130,6 +130,82 @@ export default function Hero() {
     return () => window.removeEventListener("resize", setH);
   }, []);
 
+  // Mouse-driven magnetic parallax: stickers, card, and headline
+  // respond at different intensities for a layered depth effect.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    const isMobile = window.innerWidth < 769;
+    if (reduced || isMobile) return;
+
+    let rafId: number;
+    let mx = 0;
+    let my = 0;
+
+    const onMove = (e: MouseEvent) => {
+      const rect = root.getBoundingClientRect();
+      // Normalized -1..1 from center
+      mx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      my = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    };
+
+    const tick = () => {
+      // Stickers: strong parallax (depth layer = far)
+      const stickers = root.querySelectorAll<HTMLElement>(
+        ".reel-stickers .sticker"
+      );
+      stickers.forEach((el, i) => {
+        const sign = i % 2 === 0 ? 1 : -1;
+        const intensity = 16 + (i % 3) * 6;
+        const baseRot = parseFloat(el.dataset.rot || "0");
+        gsap.to(el, {
+          x: mx * intensity * sign,
+          y: my * intensity * 0.6,
+          rotation: baseRot + mx * 3 * sign,
+          duration: 0.9,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
+      });
+
+      // Card: moderate parallax + 3D tilt
+      gsap.to(".reel-card", {
+        x: mx * -8,
+        y: my * -5,
+        rotateY: mx * 3,
+        rotateX: -my * 2,
+        duration: 1,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
+
+      // Headline: subtle parallax (depth layer = near)
+      gsap.to(".reel-hi", {
+        x: mx * -4,
+        y: my * -3,
+        duration: 1.1,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    root.addEventListener("mousemove", onMove);
+    rafId = requestAnimationFrame(tick);
+
+    return () => {
+      root.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(rafId);
+      // Reset transforms
+      gsap.set(".reel-card", { x: 0, y: 0, rotateY: 0, rotateX: 0 });
+      gsap.set(".reel-hi", { x: 0, y: 0 });
+    };
+  }, []);
+
   // Entrance (<1.2s): card drops from above, headline reveals, stickers
   // pop in with stagger, then THE BLOOM (grayscale → color, once).
   // transform/opacity only.
@@ -271,9 +347,16 @@ export default function Hero() {
         .fromTo(".reel-fullcap", { opacity: 0, visibility: "hidden", y: 24 }, {
           opacity: 1, visibility: "visible", y: 0, duration: 0.35, immediateRender: false,
         }, 0.95)
-        // Release: caption leaves, shade holds, handoff to Work.
+        // Release: caption leaves, full-bleed dissolves to white —
+        // cinematic bridge into the Statement section.
         .to(".reel-fullcap", { opacity: 0, duration: 0.35 }, 2.0)
-        .to(".reel-full", { scale: 1.18, duration: 0.6 }, 2.0);
+        .to(".reel-full", {
+          scale: 1.22,
+          opacity: 0.3,
+          filter: "brightness(2.5) blur(6px)",
+          duration: 0.65,
+          ease: "power2.in",
+        }, 2.0);
 
       // matchMedia cleanup: drop the will-change hints (onToggle won't
       // fire again once the trigger is reverted).
