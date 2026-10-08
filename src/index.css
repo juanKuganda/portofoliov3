@@ -570,9 +570,13 @@ a {
 }
 .reel-hi-mask {
   overflow: hidden;
-  /* breathing room so the magnetic parallax never clips the text */
-  padding: 0 10px 0.12em;
-  margin: 0 -10px -0.12em;
+  /* breathing room so the magnetic parallax never clips the text,
+     and the figma-select box (inset -10px) stays visible */
+  padding: 14px 20px 0.12em;
+  margin: -14px -20px -0.12em;
+  /* jangan sampai menyusut saat kolom flex overflow di mobile —
+     mask yang terjepit memotong headline (hanya sliver terlihat) */
+  flex-shrink: 0;
 }
 .reel-hi {
   margin: 0;
@@ -680,7 +684,45 @@ a {
   }
 }
 
-/* ---- Sticker field: five 3D icons + one status pill, floating around
+/* ---- Figma-select: the headline wrapped in a Figma-style selection.
+   The blue box + 8 handles stay as a designer signature after the
+   one-time cursor sweep. Lives inside .par-hi so it follows the
+   magnetic parallax and the scroll explode with the text. ---- */
+.hi-select {
+  position: relative;
+  display: inline-block;
+}
+.hi-box {
+  position: absolute;
+  inset: -10px -18px;
+  border: 1.5px solid #0d99ff;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.hi-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #ffffff;
+  border: 1.5px solid #0d99ff;
+  border-radius: 1.5px;
+}
+.hi-handle.h-nw { top: -5px; left: -5px; }
+.hi-handle.h-n  { top: -5px; left: calc(50% - 4px); }
+.hi-handle.h-ne { top: -5px; right: -5px; }
+.hi-handle.h-w  { top: calc(50% - 4px); left: -5px; }
+.hi-handle.h-e  { top: calc(50% - 4px); right: -5px; }
+.hi-handle.h-sw { bottom: -5px; left: -5px; }
+.hi-handle.h-s  { bottom: -5px; left: calc(50% - 4px); }
+.hi-handle.h-se { bottom: -5px; right: -5px; }
+.hi-cursor {
+  position: absolute;
+  left: -6px;
+  top: 52%;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(10, 10, 10, 0.25));
+}
+/* ---- Sticker field: five precision doodles + one status pill, floating around
    the card (anchored to .reel-center, the card's own stage) ---- */
 .reel-stickers {
   position: absolute;
@@ -709,13 +751,12 @@ a {
   gap: 8px;
   transform: translate(-50%, -50%);
 }
-/* Glossy 3D icons (transparent WebP). Height-driven so the mixed
-   aspect ratios stay visually balanced; one static soft shadow. */
-.doodle-img {
+/* Apple-precision vector doodles: geometric, crisp, subtle depth via
+   internal gradients. Height-driven so the icons stay balanced. */
+.doodle-svg {
   height: 76px;
   width: auto;
   display: block;
-  filter: drop-shadow(0 12px 20px rgba(17, 17, 17, 0.18));
 }
 .doodle-label {
   font-family: var(--font-mono);
@@ -762,7 +803,54 @@ a {
     opacity: 0.55;
   }
 }
-/* Reduced motion: one static frame — color card, greeting, stickers. */
+/* ---- Figma-like ruler pinned to the hero bottom. The track slides
+   (scrub) as you scroll — like the canvas moving under the ruler —
+   and fades out with the hero exit. ---- */
+.reel-ruler {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26px;
+  z-index: 4;
+  overflow: hidden;
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  pointer-events: none;
+}
+.ruler-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  /* minor ticks every 10px (8px tall), major ticks every 100px (14px),
+     drawn at the bottom so they travel WITH the numbers */
+  background-image:
+    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 10px),
+    repeating-linear-gradient(90deg, var(--faint) 0 1px, transparent 1px 100px);
+  background-size:
+    100% 8px,
+    100% 14px;
+  background-position:
+    left bottom,
+    left bottom;
+  background-repeat: repeat-x;
+  will-change: transform;
+}
+.ruler-copy {
+  display: flex;
+}
+.rnum {
+  flex: none;
+  width: 100px;
+  padding: 3px 0 0 5px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  user-select: none;
+}
+/* Reduced motion: one static frame — color card, greeting, stickers,
+   selection box shown, ruler static, no cursor sweep. */
 @media (prefers-reduced-motion: reduce) {
   .reel-card .photo-gray {
     display: none;
@@ -772,6 +860,12 @@ a {
   .doodle-pill .sdot,
   .reel-scroll .arrow {
     animation: none;
+  }
+  .hi-cursor {
+    display: none;
+  }
+  .ruler-track {
+    will-change: auto;
   }
 }
 
@@ -810,7 +904,7 @@ a {
   .doodle-pill {
     transform: none;
   }
-  .doodle-img {
+  .doodle-svg {
     height: 48px;
   }
   .doodle-label {
@@ -819,6 +913,28 @@ a {
   .doodle-pill {
     font-size: 10px;
     padding: 8px 14px;
+  }
+  /* Ruler stays, slimmer, above the caption row. */
+  .reel-ruler {
+    height: 22px;
+  }
+  .rnum {
+    font-size: 8px;
+    padding-top: 2px;
+  }
+  .ruler-track {
+    background-size:
+      100% 6px,
+      100% 11px;
+  }
+  /* Figma-select box hugs the smaller headline automatically
+     (inset-relative), cursor scales with it. */
+  .hi-box {
+    inset: -7px -12px;
+  }
+  .hi-cursor {
+    width: 18px;
+    height: 18px;
   }
 }
 
