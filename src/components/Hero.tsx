@@ -162,7 +162,7 @@ const RULER_NUMS: number[] = Array.from({ length: 15 }, (_, i) => i * 100);
  * Scroll: NO PIN — the card JOINS the stickers in the explode
  * (card flies up + shrinks + fades, headline drifts, stickers burst
  * outward + upward), scrubbed, finished at "bottom 70%".
- * Mobile: no parallax, no explode, quiet exit. Reduced motion: one
+ * Mobile: no parallax, mini explode (small vectors). Reduced motion: one
  * static frame (selection box shown, ruler static).
  */
 export default function Hero() {
@@ -430,11 +430,45 @@ export default function Hero() {
       });
 
       if (isMobile) {
-        // Quiet exit on mobile: gentle drift only, no burst.
-        tl.to(".reel-card", { y: -40, duration: 1 }, 0).to(
-          ".reel-hi-mask",
-          { y: -70, duration: 1 },
+        // Mini explode on mobile: everything joins the burst, but with
+        // smaller vectors than desktop — no pin, no parallax here.
+        tl.fromTo(
+          ".reel-card",
+          { y: 0, scale: 1, autoAlpha: 1 },
+          {
+            y: -70,
+            scale: 0.96,
+            autoAlpha: 0,
+            duration: 1,
+            immediateRender: false,
+          },
           0
+        ).to(".reel-hi-mask", { y: -60, autoAlpha: 0, duration: 1 }, 0);
+        const mStickers = gsap.utils.toArray<HTMLElement>(
+          ".reel-stickers .sticker"
+        );
+        mStickers.forEach((el, i) => {
+          // Vertical scatter (no horizontal push): the wrapped row is
+          // tight, so sideways vectors would collide mid-flight.
+          const dir = i % 2 === 0 ? -1 : 1;
+          tl.fromTo(
+            el,
+            { x: 0, y: 0, rotation: 0, autoAlpha: 1 },
+            {
+              x: 0,
+              y: -(44 + (i % 3) * 22),
+              rotation: dir * 8,
+              autoAlpha: 0,
+              duration: 1,
+              immediateRender: false,
+            },
+            0.05 + i * 0.04
+          );
+        });
+        tl.to(".reel-cap", { y: -24, autoAlpha: 0, duration: 0.8 }, 0.1).to(
+          ".reel-scroll",
+          { y: -24, autoAlpha: 0, duration: 0.8 },
+          0.12
         );
       } else {
         // Card joins the explosion: up, shrink, tilt, fade.

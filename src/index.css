@@ -615,8 +615,12 @@ a {
   transition: opacity 0.5s var(--ease);
   pointer-events: none;
 }
-.par-card:hover::after {
-  opacity: 1;
+/* Hover glow only where hover truly exists — on touch screens a tap
+   would leave the amber ring stuck on the card. */
+@media (hover: hover) {
+  .par-card:hover::after {
+    opacity: 1;
+  }
 }
 
 /* The card: 3:4 portrait, border + soft shadow. */
@@ -920,6 +924,27 @@ a {
 @media (max-width: 768px) {
   .reel-top {
     padding: 18px var(--pad) 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  /* Mobile hero flows naturally instead of forcing 100svh: the stacked
+     kicker + headline + card + doodles exceed small viewports, and
+     overflow:hidden would clip them. min-height keeps the full-screen
+     feel on tall screens. */
+  .hero-reel {
+    height: auto;
+    min-height: 100svh;
+  }
+  /* Clear the role ticker from the select box: give the headline
+     breathing room above instead of the -14px pull-up. */
+  .reel-hi-mask {
+    margin: 6px -24px -20px;
+  }
+  /* Unstack the center column: more air between headline, card,
+     caption row and doodles. */
+  .reel-center {
+    gap: clamp(20px, 3.4vh, 34px);
   }
   .reel-kicker .sep,
   .reel-kicker span:nth-child(n + 4) {
