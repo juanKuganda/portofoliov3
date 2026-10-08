@@ -2394,7 +2394,7 @@ section.block {
   border-radius: 50%;
 }
 .sv-dot.red { background: #ff5f56; }
-.sv-dot.yellow { background: #ffbd2e; }
+.sv-dot.yellow { background: var(--pop-orange); }
 .sv-dot.green { background: #27c93f; }
 
 /* ---- Live preview demo (Web Development folder) ----
@@ -3297,7 +3297,7 @@ footer.site {
   border-radius: 50%;
 }
 .c-dot.red { background: #ff5f56; }
-.c-dot.yellow { background: #ffbd2e; }
+.c-dot.yellow { background: var(--pop-orange); }
 .c-dot.green { background: #27c93f; }
 .run-btn {
   background: #252525;
