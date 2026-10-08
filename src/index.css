@@ -351,10 +351,12 @@ a {
 }
 
 /* ============================================================
-   HERO — THE REEL v2 (the card that opens)
-   Scene 1: centered 16:10 portrait card on paper, "Hai, I'm Juan".
-   Scroll: the card expands to full-bleed, statement plays over the
-   darkening photo, shade deepens for the handoff to Work.
+   HERO — THE REEL v3 (portrait card, dropped from above)
+   Scene 1: centered 3:4 portrait card on paper, entering from the
+   top, greeted by "Hai, I'm Juan".
+   Scroll: PUNCH-IN — the card dissolves while the full-bleed 16:10
+   crop rises beneath it; statement plays over the darkening photo;
+   shade deepens for the handoff to Work.
    ============================================================ */
 .hero-reel {
   position: relative;
@@ -366,6 +368,45 @@ a {
   isolation: isolate;
   display: flex;
   flex-direction: column;
+}
+
+/* Full-bleed layer for the punch-in (desktop scroll only). */
+.reel-full {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  will-change: transform;
+}
+.reel-full picture,
+.reel-full img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Desktop source is a pre-composed 16:10 crop; the mobile 3:4 source
+   biases upward so the face stays clear. */
+@media (min-width: 769px) {
+  .reel-full img {
+    object-position: 50% 50%;
+  }
+}
+@media (max-width: 768px) {
+  .reel-full img {
+    object-position: 50% 22%;
+  }
+}
+.reel-shade {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Top row: kicker left, role ticker right — ink on paper. */
@@ -429,7 +470,7 @@ a {
   }
 }
 
-/* Center stage: greeting, card, caption row. */
+/* Center stage: greeting, portrait card, caption row. */
 .reel-center {
   flex: 1;
   min-height: 0;
@@ -437,8 +478,8 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(14px, 2.6vh, 28px);
-  padding: clamp(12px, 2vh, 24px) var(--pad);
+  gap: clamp(12px, 2.2vh, 24px);
+  padding: clamp(10px, 2vh, 20px) var(--pad);
   position: relative;
   z-index: 2;
 }
@@ -454,59 +495,37 @@ a {
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1;
-  font-size: clamp(44px, 7vw, 108px);
+  font-size: clamp(40px, 6.4vw, 96px);
   color: var(--ink);
   text-align: center;
   white-space: nowrap;
 }
 
-/* The card: 16:10 portrait, border + soft shadow. On scroll it scales
-   uniformly to cover the viewport — the photo "opens up". */
+/* The card: 3:4 portrait, border + soft shadow. */
 .reel-card {
   position: relative;
-  width: min(780px, 88vw);
-  aspect-ratio: 16 / 10;
+  width: min(410px, 74vw);
+  aspect-ratio: 3 / 4;
   margin: 0;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 20px;
   background: #101010;
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.18);
   will-change: transform;
 }
-.reel-card picture {
+.reel-card .card-photo {
   position: absolute;
   inset: 0;
-  display: block;
-  margin: 0;
-}
-.reel-card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* 3:4 source, bias upward so the face clears the frame. */
+  object-position: 50% 20%;
   display: block;
-}
-/* Desktop source is a pre-composed 16:10 crop; the mobile 3:4 source
-   biases upward so the face stays clear. */
-@media (min-width: 769px) {
-  .reel-card img {
-    object-position: 50% 50%;
-  }
-}
-@media (max-width: 768px) {
-  .reel-card img {
-    object-position: 50% 22%;
-  }
 }
 .reel-card .photo-gray {
   filter: grayscale(1) contrast(1.03);
-}
-.reel-shade {
-  position: absolute;
-  inset: 0;
-  background: #000;
-  opacity: 0;
-  pointer-events: none;
 }
 
 .reel-bottom-row {
@@ -514,7 +533,7 @@ a {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  width: min(780px, 88vw);
+  width: min(410px, 74vw);
   color: var(--ink);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -606,6 +625,7 @@ a {
   .reel-card .photo-gray {
     display: none;
   }
+  .reel-full,
   .reel-scene2 {
     display: none;
   }
@@ -620,10 +640,10 @@ a {
     display: none;
   }
   .reel-hi {
-    font-size: clamp(38px, 11vw, 64px);
+    font-size: clamp(36px, 10.5vw, 60px);
   }
   .reel-bottom-row {
-    width: 88vw;
+    width: min(410px, 74vw);
   }
   .reel-statement {
     font-size: clamp(26px, 7.4vw, 36px);
