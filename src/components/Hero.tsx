@@ -118,18 +118,48 @@ export default function Hero() {
           0.5
         )
         .from(".hero-meta", { y: 22, opacity: 0, duration: 0.5 }, 0.58)
-        .from(".hero-portrait", { y: 48, opacity: 0, duration: 0.7 }, 0.55)
+        // Photo wipe: the frame unveils bottom-to-top via clip-path while
+        // the figure itself just fades — one crisp reveal, no double motion.
+        .from(".hero-photo", { opacity: 0, duration: 0.5 }, 0.35)
+        .from(".hero-photo-cap.cap-a", { opacity: 0, y: 8, duration: 0.5 }, 0.9)
         .from(".hero-scroll-strip", { opacity: 0, duration: 0.5 }, 1.0);
+      // The wipe's initial state is set via GSAP (not CSS) so no-JS still
+      // shows the photo.
+      gsap.set(".hero-photo-frame", { clipPath: "inset(100% 0% 0% 0%)" });
+      tl.to(
+        ".hero-photo-frame",
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.9, ease: "power3.inOut" },
+        0.35
+      );
+      // THE BLOOM: the grayscale layer fades once, ~1.6s in — the blazer
+      // turns blue as the single color moment on the page. opacity-only,
+      // compositor-cheap (two stacked <img>, one file).
+      tl.to(
+        ".photo-gray",
+        { opacity: 0, duration: 1.2, ease: "power2.inOut" },
+        1.6
+      );
       // Once done, wipe GSAP's inline styles — nothing lingers in the DOM.
       // NOTE: surgical clearProps — "all" on .hero-name would wipe the
-      // font-size that useFitText sets inline.
+      // font-size that useFitText sets inline. .photo-gray is NOT cleared:
+      // its opacity:0 is the final (color) state.
       tl.eventCallback("onComplete", () => {
         gsap.set(
-          ".hero-kicker, .role-ticker, .hero-side .statement, .hero-meta, .hero-portrait, .hero-scroll-strip, .hero-name .ch-copy, .hero-name .copy-ring",
+          ".hero-kicker, .role-ticker, .hero-side .statement, .hero-meta, .hero-photo, .hero-photo-cap.cap-a, .hero-scroll-strip, .hero-name .ch-copy, .hero-name .copy-ring",
           { clearProps: "all" }
         );
+        gsap.set(".hero-photo-frame", { clearProps: "clipPath" });
         gsap.set(".hero-name", { clearProps: "transform" });
         gsap.set(".hero-name .ch", { clearProps: "opacity" });
+        // Idle drift: the frame breathes on y (x is reserved for the
+        // pointer parallax). Barely-there, transform-only.
+        gsap.to(".hero-photo-frame", {
+          y: 8,
+          duration: 7,
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+        });
       });
     }, root);
 
@@ -252,8 +282,32 @@ export default function Hero() {
     };
   }, []);
 
-  // Pinned hero exit (desktop): the hero holds while its content lifts and
-  // fades, then the Work section wipes up over it — the scroll payoff.
+  // Photo pointer parallax (desktop): the frame counter-moves on x only —
+  // y belongs to the idle drift, so the two never fight. Lerped, ±12px.
+  useEffect(() => {
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    if (reduced) return;
+    const mm = gsap.matchMedia();
+    mm.add("(min-width: 769px)", () => {
+      const xTo = gsap.quickTo(".hero-photo-frame", "x", {
+        duration: 0.9,
+        ease: "power3.out",
+      });
+      const onMove = (e: PointerEvent) => {
+        xTo((e.clientX / window.innerWidth - 0.5) * -24);
+      };
+      window.addEventListener("pointermove", onMove, { passive: true });
+      return () => window.removeEventListener("pointermove", onMove);
+    });
+    return () => {
+      mm.revert();
+    };
+  }, []);
+
+  // Scroll film (desktop): the hero pins while the photo plays three
+  // scenes — words leave, Ken Burns push-in, cinematic handoff.
   // Mobile: simple drift, no pin (a pinned hero is exhausting on small screens).
   useEffect(() => {
     const reduced = window.matchMedia(
@@ -266,14 +320,21 @@ export default function Hero() {
     const mm = gsap.matchMedia();
 
     mm.add("(min-width: 768px)", () => {
-      // Multi-speed parallax exit: each layer leaves at its own pace —
-      // chips/kicker fastest, name fast, portrait lingers. Depth you feel.
+      // SCROLL FILM — the hero is pinned for +=160% and the photo plays
+      // three scenes as you scroll, like a video:
+      //   1. the words leave (kicker/ticker/strip, then name, then statement)
+      //   2. the Ken Burns — the photo slowly pushes in and drifts
+      //   3. the handoff — the photo darkens cinematically, then the pin
+      //      releases and Work wipes up over it.
+      // All transform/opacity; the idle drift (frame y) and pointer
+      // parallax (frame x) live on the frame, the scrub on the figure/imgs —
+      // the layers never fight.
       const tl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
           trigger: root,
           start: "top top",
-          end: "+=70%",
+          end: "+=160%",
           scrub: 0.6,
           pin: true,
           anticipatePin: 1,
@@ -281,23 +342,29 @@ export default function Hero() {
       });
       tl.to(
         ".hero-kicker, .role-ticker, .hero-scroll-strip",
-        { y: -60, opacity: 0, duration: 0.3 },
+        { y: -60, opacity: 0, duration: 0.22 },
         0
       )
-        .to(
-          ".hero-grid",
-          { y: -110, opacity: 0, scale: 0.98, duration: 0.55 },
-          0
+        .to(".name-mask", { y: -90, opacity: 0, duration: 0.3 }, 0.04)
+        .to(".hero-side", { y: -70, opacity: 0, duration: 0.28 }, 0.08)
+        .fromTo(
+          ".hero-photo .photo-color, .hero-photo .photo-gray",
+          { scale: 1, yPercent: 0 },
+          { scale: 1.14, yPercent: -4, duration: 0.6 },
+          0.1
         )
+        .to(".hero-photo-cap.cap-a", { opacity: 0, duration: 0.12 }, 0.32)
+        .to(".hero-photo-cap.cap-b", { opacity: 1, duration: 0.12 }, 0.4)
+        .to(".photo-shade", { opacity: 0.55, duration: 0.35 }, 0.6)
         .to(
-          ".hero-portrait",
-          { y: -30, scale: 1.05, opacity: 0.25, duration: 0.9 },
-          0.05
+          ".hero-photo",
+          { scale: 0.96, opacity: 0.9, duration: 0.35 },
+          0.65
         );
     });
 
     mm.add("(max-width: 767px)", () => {
-      gsap.to(".hero-grid", {
+      gsap.to(".hero-stage", {
         y: -40,
         opacity: 0.3,
         ease: "none",
@@ -309,13 +376,13 @@ export default function Hero() {
         },
       });
       gsap.fromTo(
-        ".hero-portrait img",
+        ".hero-photo .photo-color",
         { scale: 1.07 },
         {
           scale: 1,
           ease: "none",
           scrollTrigger: {
-            trigger: ".hero-portrait",
+            trigger: ".hero-photo",
             start: "top bottom",
             end: "+=600",
             scrub: true,
@@ -339,7 +406,34 @@ export default function Hero() {
         <span>Palu, ID</span>
       </div>
       <RoleTicker />
-      <div className="hero-grid">
+      <div className="hero-stage">
+        <figure className="hero-photo">
+          <div className="hero-photo-frame">
+            <img
+              className="photo-color"
+              src="/hero-portrait.webp"
+              alt="Portrait of Juan Pablo Putra Kuganda"
+              width={925}
+              height={1600}
+              fetchPriority="high"
+            />
+            <img
+              className="photo-gray"
+              src="/hero-portrait.webp"
+              alt=""
+              aria-hidden="true"
+              width={925}
+              height={1600}
+            />
+            <div className="photo-shade" aria-hidden="true" />
+          </div>
+          <figcaption className="hero-photo-cap cap-a" aria-hidden="true">
+            FIG.01 — JUAN, PALU · 2026
+          </figcaption>
+          <figcaption className="hero-photo-cap cap-b" aria-hidden="true">
+            DEVELOPER · DESIGNER · MENTOR
+          </figcaption>
+        </figure>
         <div className="name-mask">
           <h1 className="fit hero-name" ref={nameRef}>
             JUAN KUGANDA©
@@ -367,18 +461,6 @@ export default function Hero() {
         </span>
         <span className="rule" aria-hidden="true" />
       </a>
-
-      {/* TODO: ganti dengan foto Juan — cukup tukar src di bawah */}
-      <figure className="hero-portrait">
-        <img
-          src="/hero-portrait.png"
-          alt="Architectural brutalist portrait"
-          width={1024}
-          height={1024}
-          fetchPriority="high"
-        />
-        <figcaption className="tag">Portrait.jpg · abstract</figcaption>
-      </figure>
     </header>
   );
 }

@@ -9,12 +9,8 @@ export function useFitText(ref: RefObject<HTMLElement | null>) {
     const el = ref.current;
     if (!el) return;
 
-    // Temporarily set a reference font-size to measure natural width
-    el.style.fontSize = "100px";
-    const w = el.scrollWidth || 1;
-
-    // Target width = parent width (for block elements, use own content box)
-    let target = el.parentElement?.clientWidth ?? w;
+    // Target width first, in normal layout.
+    let target = el.parentElement?.clientWidth ?? 1;
     const cs = getComputedStyle(el);
     if (cs.display === "block") {
       const padX =
@@ -24,7 +20,29 @@ export function useFitText(ref: RefObject<HTMLElement | null>) {
       if (own > 0 && own < target) target = own;
     }
 
+    // Measure natural text width at a reference font-size. Shrink to
+    // max-content first: otherwise scrollWidth is clamped to the element's
+    // own box when the text is narrower than it, and the computed font-size
+    // comes out too small (text never fills the container).
+    // Kill transitions on the element AND its descendants first: the
+    // reduced-motion reset sets `transition-duration: 0.001s !important`
+    // on `*`, so the spans would transition their inherited font-size and
+    // the synchronous read below would see the stale (pre-change) width.
+    const prevWidth = el.style.width;
+    const killTransition = (target: HTMLElement) =>
+      target.style.setProperty("transition", "none", "important");
+    killTransition(el);
+    el.querySelectorAll<HTMLElement>("*").forEach(killTransition);
+    el.style.fontSize = "100px";
+    el.style.width = "max-content";
+    const w = el.scrollWidth || 1;
+    el.style.width = prevWidth;
+
     el.style.fontSize = `${Math.max(20, (100 * target) / w)}px`;
+    el.style.removeProperty("transition");
+    el.querySelectorAll<HTMLElement>("*").forEach((d) =>
+      d.style.removeProperty("transition")
+    );
   }, [ref]);
 
   useEffect(() => {

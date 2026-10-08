@@ -503,17 +503,32 @@ a {
      slide out of the mask's clip box. */
   margin-left: calc(var(--pad) * -1);
   padding-left: var(--pad);
+  /* Overlap choreography: the mask spans both stage columns but the name
+     only fills 80% — its last 1-2 glyphs land on the photo's dark left
+     edge while the face (photo center) stays clear. */
+  grid-column: 1 / -1;
+  grid-row: 1;
+  position: relative;
+  z-index: 2;
+  width: 80%;
 }
 .hero-name {
   margin: 0;
   color: var(--ink);
 }
-.hero-grid {
+.hero-stage {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 26%);
-  gap: clamp(24px, 4vw, 80px);
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr) clamp(280px, 30%, 400px);
+  column-gap: clamp(24px, 4vw, 64px);
+  align-items: start;
   margin-top: clamp(24px, 4vh, 44px);
+  padding-bottom: 46px; /* room for the absolute photo caption */
+}
+.hero-side {
+  grid-column: 1;
+  grid-row: 2;
+  margin-top: clamp(20px, 3vh, 36px);
+  max-width: 36rem;
 }
 .hero-side {
   display: grid;
@@ -555,57 +570,92 @@ a {
   display: inline-block;
   animation: bounce-arrow 2s ease-in-out infinite;
 }
-.hero-portrait {
-  margin: clamp(32px, 5vh, 60px) calc(var(--pad) * -1) 0;
+/* Hero photo: vertical portrait in the right column, spanning the name +
+   statement rows; the name overlaps its left edge (z-index: photo 1,
+   name-mask 2). */
+.hero-photo {
+  grid-column: 2;
+  grid-row: 1 / span 2;
   position: relative;
-  border-radius: 0;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  margin: 6px 0 0 0;
+  z-index: 1;
+}
+.hero-photo-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
   background: #101010;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.16);
 }
-.hero-portrait img {
-  display: block;
-  width: 100%;
-  height: clamp(320px, 62vh, 620px);
-  object-fit: cover;
-  filter: grayscale(1) contrast(1.04);
-  transition: filter 0.8s var(--ease);
-}
-.hero-portrait:hover img {
-  filter: grayscale(0.3) contrast(1.08);
-}
-.portrait-placeholder {
-  width: 100%;
-  height: clamp(320px, 62vh, 620px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: repeating-linear-gradient(
-    45deg,
-    #141414,
-    #141414 10px,
-    #1a1a1a 10px,
-    #1a1a1a 20px
-  );
-  color: #444;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.2em;
-}
-.hero-portrait .tag {
+.hero-photo-frame img {
   position: absolute;
-  left: 18px;
-  bottom: 16px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 12%;
+  display: block;
+}
+.photo-gray {
+  filter: grayscale(1) contrast(1.03);
+}
+.photo-shade {
+  position: absolute;
+  inset: 0;
+  background: #0a0a0a;
+  opacity: 0;
+  pointer-events: none;
+}
+.hero-photo-cap {
+  position: absolute;
+  left: 2px;
+  bottom: -30px;
+  margin: 0;
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(0, 0, 0, 0.45);
-  padding: 8px 14px;
-  border-radius: 999px;
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  animation: subtle-float 4s ease-in-out infinite;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.hero-photo-cap.cap-b {
+  opacity: 0;
+}
+
+/* Reduced motion: the photo is simply there, in color — no wipe, no bloom,
+   no drift. (The entrance timeline returns early under reduced motion.) */
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo-frame img.photo-gray {
+    display: none;
+  }
+}
+
+
+@media (max-width: 768px) {
+  /* Mobile hero: single column — name, photo, statement, in flow. */
+  .hero-stage {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 40px;
+  }
+  .hero-stage .name-mask {
+    width: 100%;
+    order: 1;
+  }
+  .hero-stage .hero-photo {
+    order: 2;
+    width: min(76%, 330px);
+    margin: 26px auto 36px;
+  }
+  .hero-stage .hero-side {
+    order: 3;
+    max-width: 100%;
+  }
 }
 
 
