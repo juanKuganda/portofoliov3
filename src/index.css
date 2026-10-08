@@ -1202,6 +1202,22 @@ a {
 .st-pill:hover {
   transform: translateY(-3px) scale(1.03);
 }
+.st-pill.tone-pink {
+  background: var(--pop-pink);
+  color: #fff;
+}
+.st-pill.tone-blue {
+  background: var(--pop-blue);
+  color: #fff;
+}
+.st-pill.tone-green {
+  background: var(--pop-green);
+  color: var(--ink);
+}
+.st-pill.tone-purple {
+  background: var(--pop-purple);
+  color: #fff;
+}
 .st-pill.tone-ink {
   background: var(--ink);
   color: var(--paper);
@@ -1298,6 +1314,19 @@ section.block {
   letter-spacing: 0.08em;
   color: var(--muted);
   transition: color 0.35s var(--ease);
+}
+/* Project index numbers cycle playful colors. */
+#work > article:nth-of-type(1) .proj-idx {
+  color: var(--pop-pink);
+}
+#work > article:nth-of-type(2) .proj-idx {
+  color: var(--pop-blue);
+}
+#work > article:nth-of-type(3) .proj-idx {
+  color: var(--pop-green);
+}
+#work > article:nth-of-type(4) .proj-idx {
+  color: var(--pop-purple);
 }
 .proj-head:hover .proj-idx {
   color: var(--signal);
@@ -1538,6 +1567,15 @@ section.block {
 .about-statement .dim {
   color: #5c5c5c;
 }
+.about-statement .cw-pink {
+  color: var(--pop-pink);
+}
+.about-statement .cw-blue {
+  color: var(--pop-blue);
+}
+.about-statement .cw-green {
+  color: var(--pop-green);
+}
 .about-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1586,11 +1624,29 @@ section.block {
   cursor: pointer;
 }
 .stack-pill:hover {
-  background: var(--signal);
-  color: #000;
-  border-color: var(--signal);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+/* Stack pills cycle playful colors (dark section: vivid fills). */
+.stack-pill.sp-0 {
+  background: var(--pop-pink);
+  border-color: var(--pop-pink);
+  color: #fff;
+}
+.stack-pill.sp-1 {
+  background: var(--pop-blue);
+  border-color: var(--pop-blue);
+  color: #fff;
+}
+.stack-pill.sp-2 {
+  background: var(--pop-green);
+  border-color: var(--pop-green);
+  color: #06130a;
+}
+.stack-pill.sp-3 {
+  background: var(--pop-purple);
+  border-color: var(--pop-purple);
+  color: #fff;
 }
 .status-strip {
   display: flex;
@@ -2468,8 +2524,8 @@ section.block {
    CONTACT
    ============================================================ */
 .contact {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--paper);
+  color: var(--ink);
   padding: clamp(110px, 17vh, 210px) var(--pad);
   overflow: hidden;
   position: relative;
@@ -2479,15 +2535,15 @@ section.block {
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--warm-2);
+  color: var(--muted);
   margin: 0 0 clamp(22px, 4vh, 44px);
 }
 .contact-kicker .brk {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--pop-pink);
 }
 .contact-email {
   display: block;
-  color: var(--paper);
+  color: var(--ink);
   text-decoration: none;
   margin-top: clamp(18px, 3.5vh, 36px);
 }
@@ -2498,19 +2554,59 @@ section.block {
   letter-spacing: -0.03em;
   line-height: 1;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.4s var(--ease);
-  color: var(--paper);
+  color: var(--ink);
 }
 .contact-email:hover .fit {
   transform: rotate(-3deg) scale(1.02);
-  color: var(--signal);
+  color: var(--pop-pink);
 }
 .contact-sub {
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--muted);
   margin: clamp(26px, 5vh, 52px) 0 0;
+}
+/* Floating sticker pills around the email CTA. */
+.contact-stickers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.contact-sticker {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 8px 15px;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  color: #fff;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgba(10, 10, 10, 0.12);
+}
+.contact-sticker.cs-1 {
+  background: var(--pop-pink);
+  top: 16%;
+  left: 5%;
+  transform: rotate(-8deg);
+}
+.contact-sticker.cs-2 {
+  background: var(--pop-blue);
+  bottom: 20%;
+  right: 7%;
+  transform: rotate(6deg);
+}
+.contact-sticker.cs-3 {
+  background: var(--pop-green);
+  color: var(--ink);
+  bottom: 18%;
+  left: 10%;
+  transform: rotate(5deg);
 }
 /* Playful cursor + sticker pill pointing at the email CTA. */
 .contact-cursor {
@@ -2537,10 +2633,10 @@ section.block {
   letter-spacing: 0.05em;
   padding: 11px 18px;
   border-radius: 999px;
-  border: 2.5px solid #fff;
+  border: 2.5px solid var(--ink);
   white-space: nowrap;
   transform: rotate(7deg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(10, 10, 10, 0.18);
 }
 @keyframes contact-bob {
   0%,
@@ -2553,6 +2649,9 @@ section.block {
 }
 @media (max-width: 768px) {
   .contact-cursor {
+    display: none;
+  }
+  .contact-stickers {
     display: none;
   }
 }
@@ -2723,8 +2822,8 @@ footer.site {
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--pop-pink);
+  color: #fff;
   border-radius: 999px;
   padding: 10px 18px;
   opacity: 0;
@@ -2936,6 +3035,23 @@ footer.site {
   padding: 4px 10px;
   border-radius: 99px;
   margin-bottom: 12px;
+}
+/* Bento badges cycle playful colors per card. */
+.bento-card:nth-of-type(1) .bento-badge {
+  background: var(--pop-pink);
+  color: #fff;
+}
+.bento-card:nth-of-type(2) .bento-badge {
+  background: var(--pop-blue);
+  color: #fff;
+}
+.bento-card:nth-of-type(3) .bento-badge {
+  background: var(--pop-green);
+  color: var(--ink);
+}
+.bento-card:nth-of-type(4) .bento-badge {
+  background: var(--pop-purple);
+  color: #fff;
 }
 /* Magnetic spotlight effect */
 .bento-card::before {

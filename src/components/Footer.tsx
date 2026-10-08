@@ -91,10 +91,10 @@ export default function Footer() {
       </div>
 
       <h2 className="fit foot-talk" ref={fitRef}>
-        LET&rsquo;S TALK
+        ELSEWHERE
       </h2>
       <p className="foot-sub">
-        Got a project? <strong>Say hi.</strong> <span className="foot-sub-by">— Juan</span>
+        More of me, around the internet. <span className="foot-sub-by">— Juan</span>
       </p>
 
       <div className="foot-pills">

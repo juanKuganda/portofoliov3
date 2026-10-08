@@ -5,16 +5,16 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 const SKILLS = [
-  { label: "Web Development", tone: "ink" },
-  { label: "UI/UX Design", tone: "amber" },
-  { label: "Design Systems", tone: "paper" },
-  { label: "Mentoring", tone: "ink" },
+  { label: "Web Development", tone: "pink" },
+  { label: "UI/UX Design", tone: "blue" },
+  { label: "Design Systems", tone: "green" },
+  { label: "Mentoring", tone: "purple" },
 ] as const;
 
 /**
  * STATEMENT — "what i do", Benjamin-style, kept clean & simple.
- * Giant statement typography with inline photo chips + skill blocks
- * in identity colors only (ink / amber / paper).
+ * Giant statement typography with inline photo chips + skill pills
+ * in full playful color (pink / blue / green / purple).
  * Animation is minimal and meaningful: line-mask reveal + a soft
  * pill stagger on scroll-enter, hover lift on pills/chips.
  * transform/opacity only; static under reduced motion.

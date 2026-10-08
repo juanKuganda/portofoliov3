@@ -21,19 +21,25 @@ export default function AboutSection() {
     const el = statementRef.current;
     if (!el) return;
 
-    // Split into word spans, preserving the .dim styling.
-    const frags: { text: string; dim: boolean }[] = [];
+    // Split into word spans, preserving the .dim / .cw-* styling.
+    const frags: { text: string; cls: string }[] = [];
     el.childNodes.forEach((node) => {
       const words = (node.textContent || "").split(/\s+/).filter(Boolean);
-      const dim =
-        node.nodeType === Node.ELEMENT_NODE &&
-        (node as HTMLElement).classList.contains("dim");
-      words.forEach((w) => frags.push({ text: w, dim }));
+      let cls = "";
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const cl = (node as HTMLElement).classList;
+        if (cl.contains("dim")) cls = " dim";
+        else {
+          const cw = Array.from(cl).find((c) => c.startsWith("cw-"));
+          if (cw) cls = " " + cw;
+        }
+      }
+      words.forEach((w) => frags.push({ text: w, cls }));
     });
     el.innerHTML = "";
     frags.forEach((f) => {
       const s = document.createElement("span");
-      s.className = "w" + (f.dim ? " dim" : "");
+      s.className = "w" + f.cls;
       s.textContent = f.text;
       el.appendChild(s);
       el.appendChild(document.createTextNode(" "));
@@ -87,8 +93,9 @@ export default function AboutSection() {
         <span>Palu, ID · WITA</span>
       </div>
       <p className="about-statement" ref={statementRef}>
-        Engineer, design, people -{" "}
-        <span className="dim">in that order, most days.</span>
+        <span className="cw-pink">Engineer,</span>{" "}
+        <span className="cw-blue">design,</span> <span className="cw-green">people</span>{" "}
+        - <span className="dim">in that order, most days.</span>
       </p>
       <div className="about-grid">
         <div className="rv rv-left">
@@ -113,9 +120,9 @@ export default function AboutSection() {
           <div className="about-stack-wrap">
             <span className="stack-heading">Core Stack &amp; Tools:</span>
             <div className="stack-pills">
-              {stackItems.map((item) => (
+              {stackItems.map((item, i) => (
                 <MagneticText key={item} intensity={0.2}>
-                  <span className="stack-pill">{item}</span>
+                  <span className={`stack-pill sp-${i % 4}`}>{item}</span>
                 </MagneticText>
               ))}
             </div>
