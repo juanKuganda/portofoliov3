@@ -1,9 +1,14 @@
 import { useLayoutEffect, useEffect, useRef } from "react";
 import gsap from "gsap";
 
+const PARTICLE_COLORS = ["#f59e0b", "#f5f5f5"];
+
 // Deploy pipeline: a live preview assembles on the left while build logs
 // stream on the right - a full-width, left-to-right story of shipping.
-// Loops gently; pauses off-screen; fully static under reduced motion.
+// Juice: after a successful deploy the CTA bursts 8 confetti particles,
+// a LIVE badge pops with a spring, and the cursor does a happy wiggle
+// before flying off. Loops gently; pauses off-screen; fully static
+// under reduced motion.
 export default function WebDevVisual({ active = true }: { active?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
@@ -20,6 +25,15 @@ export default function WebDevVisual({ active = true }: { active?: boolean }) {
     if (reduced) return;
 
     const ctx = gsap.context(() => {
+      // Hidden until their moment, every loop.
+      gsap.set(".demo-live", { scale: 0, opacity: 0, y: 0 });
+      gsap.set(".demo-particle", {
+        xPercent: -50,
+        yPercent: -50,
+        scale: 0,
+        opacity: 0,
+      });
+
       const tl = gsap.timeline({
         repeat: -1,
         repeatDelay: 2.2,
@@ -34,6 +48,7 @@ export default function WebDevVisual({ active = true }: { active?: boolean }) {
         duration: 0.35,
         stagger: 0.08,
       })
+        .set(".demo-live", { scale: 0, opacity: 0, y: 0 }, 0)
         .from(
           ".demo-cursor",
           { opacity: 0, x: 90, y: -60, duration: 0.5 },
@@ -41,18 +56,44 @@ export default function WebDevVisual({ active = true }: { active?: boolean }) {
         )
         .to(".demo-cta", { scale: 0.88, duration: 0.12 }, "+=0.2")
         .to(".demo-cta", { scale: 1, duration: 0.5, ease: "back.out(2.5)" })
+        // Celebration: confetti bursts out of the CTA on release.
+        // Function-based values re-roll every loop.
+        .set(".demo-particle", { x: 0, y: 0, scale: 1, opacity: 1 })
+        .to(".demo-particle", {
+          x: () => gsap.utils.random(-90, 90),
+          y: () => gsap.utils.random(-70, 50),
+          scale: 0.2,
+          opacity: 0,
+          duration: 0.75,
+          ease: "power2.out",
+          stagger: 0.025,
+        })
         .from(
           ".sv-log-line",
           { opacity: 0, x: -8, duration: 0.3, stagger: 0.28 },
-          "-=0.2",
+          "-=0.35",
         )
+        // LIVE badge pops once the build succeeds.
+        .to(
+          ".demo-live",
+          { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(3)" },
+          "-=0.1",
+        )
+        // Happy cursor wiggle before it flies off.
+        .to(
+          ".demo-cursor",
+          { rotation: 10, duration: 0.1, transformOrigin: "15% 10%" },
+          "+=0.15",
+        )
+        .to(".demo-cursor", { rotation: -8, duration: 0.12 })
+        .to(".demo-cursor", { rotation: 0, duration: 0.15 })
         .to(
           ".demo-cursor",
           { opacity: 0, x: 50, y: -40, duration: 0.4 },
-          "+=1.4",
+          "+=0.6",
         )
         .to(
-          [".demo-build", ".sv-log-line"],
+          [".demo-build", ".sv-log-line", ".demo-live"],
           { opacity: 0, y: -8, duration: 0.3, stagger: 0.03 },
           "<+=0.1",
         );
@@ -103,6 +144,48 @@ export default function WebDevVisual({ active = true }: { active?: boolean }) {
           </div>
           <div className="demo-actions">
             <span className="demo-cta demo-build">Deploy</span>
+            <span
+              className="demo-live"
+              style={{
+                display: "inline-block",
+                background: "#27c93f",
+                color: "#0a0a0a",
+                fontFamily: "var(--font-mono)",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                padding: "5px 12px",
+                borderRadius: 999,
+                whiteSpace: "nowrap",
+              }}
+            >
+              ● LIVE
+            </span>
+            <span
+              className="demo-particles"
+              style={{
+                position: "absolute",
+                inset: 0,
+                pointerEvents: "none",
+              }}
+            >
+              {Array.from({ length: 8 }).map((_, i) => (
+                <span
+                  key={i}
+                  className="demo-particle"
+                  style={{
+                    position: "absolute",
+                    left: 38,
+                    top: "50%",
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    backgroundColor:
+                      PARTICLE_COLORS[i % PARTICLE_COLORS.length],
+                  }}
+                />
+              ))}
+            </span>
             <span className="demo-cursor">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
                 <path

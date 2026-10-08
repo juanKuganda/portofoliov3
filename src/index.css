@@ -1707,8 +1707,8 @@ section.block {
   gap: 18px;
   align-items: start;
   width: 100%;
-  /* timeline breathing room between points — generous */
-  padding: clamp(56px, 10vh, 96px) 0;
+  /* timeline breathing room between points — very generous */
+  padding: clamp(84px, 15vh, 140px) 0;
   background: none;
   border: none;
   text-align: left;
@@ -1853,6 +1853,85 @@ section.block {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+/* ---- Community: mentorship signal-relay network ---- */
+.cm-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.cm-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.cm-link {
+  stroke: #3a3a3a;
+  stroke-width: 1.5;
+}
+.cm-node {
+  transform-box: fill-box;
+}
+.cm-node circle {
+  fill: #1e1e1e;
+  stroke: #4a4a4a;
+  stroke-width: 1.5;
+}
+.cm-node text {
+  fill: #f5f5f5;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  user-select: none;
+}
+.cm-node.cm-center circle {
+  fill: var(--signal);
+  stroke: var(--signal);
+}
+.cm-node.cm-center text {
+  fill: #0a0a0a;
+  font-weight: 700;
+  font-size: 15px;
+}
+.cm-pulse {
+  fill: var(--signal);
+  opacity: 0;
+}
+.cm-bubble-pos {
+  position: absolute;
+  transform: translate(-50%, -140%);
+  pointer-events: none;
+}
+.cm-bubble {
+  display: inline-block;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 6px 11px;
+  border-radius: 11px;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.cm-counter {
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8a8a8a;
+}
+.cm-count {
+  color: var(--signal);
+  font-weight: 700;
 }
 
 /* ---- Shared full-bleed dark workspace stage ---- */
@@ -2562,7 +2641,7 @@ footer.site {
     aspect-ratio: 16 / 10;
   }
   .svc-index-row {
-    padding: 30px 0;
+    padding: 48px 0;
   }
   .fm-letter {
     font-size: clamp(56px, 20vw, 96px);
