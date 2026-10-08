@@ -59,13 +59,13 @@ const RAIL_COLORS = [
  * SERVICES — "04 disciplines" as a TIMELINE.
  * Left: a vertical rail with node dots; generous spacing between points.
  * Scrolling a point through the viewport center activates it (hover /
- * tap still work as overrides). Right: one sticky stage (the column
- * stretches the full timeline height so it travels to the bottom)
- * whose panels morph through ONE continuous scrubbed timeline —
- * Figma-Smart-Animate-style zoom-through, transform/opacity only.
- * An amber progress fill grows down the rail as you travel.
+ * tap still work as overrides). Right: one sticky stage (frame + caption
+ * travel together) whose panels crossfade on `active` — the same state
+ * that drives the node highlight, caption, rail color, and which visual
+ * plays, so nothing can desync. Figma-Smart-Animate-style zoom-through,
+ * transform/opacity only.
  * Mobile: rail kept, stage stacks below (relative). Reduced motion:
- * instant CSS swaps, no scrub, no morph.
+ * instant CSS swaps, no morph.
  */
 export default function ServicesSection() {
   const fitRef = useRef<HTMLHeadingElement>(null);
@@ -118,7 +118,7 @@ export default function ServicesSection() {
     };
   }, [reduced]);
 
-  // Rail progress: amber fill grows as you travel the timeline.
+  // Rail progress: section-colored fill grows as you travel the timeline.
   useEffect(() => {
     if (reduced) return;
     const bar = railProgressRef.current;
@@ -140,51 +140,51 @@ export default function ServicesSection() {
     };
   }, [reduced]);
 
-  // Figma-style stage morph as ONE continuous scroll-driven animation:
-  // a single scrubbed timeline crossfades the panels in sequence
-  // (Smart-Animate-like zoom-through). Scrub owns panel visibility
-  // deterministically — no discrete state swaps, nothing gets stuck.
+  // Panel crossfade follows `active` — the single source of truth that
+  // also drives the node highlight, caption, rail color, and which
+  // visual plays. Firing on the same state makes desync impossible:
+  // the panel can never switch before (or after) its row activates.
+  // The Figma-style zoom-through choreography is preserved —
   // transform/opacity only.
+  const firstPanelRun = useRef(true);
   useEffect(() => {
     if (reduced) return;
     const section = sectionRef.current;
-    const list = listRef.current;
-    if (!section || !list) return;
+    if (!section) return;
     const panels = section.querySelectorAll<HTMLElement>(".svc-stage-panel");
     if (!panels.length) return;
-
-    gsap.set(panels, { autoAlpha: 0, scale: 0.96, y: 24 });
-    gsap.set(panels[0], { autoAlpha: 1, scale: 1, y: 0 });
-
-    const tl = gsap.timeline({
-      defaults: { ease: "power1.inOut" },
-      scrollTrigger: {
-        trigger: list,
-        start: "top 55%",
-        end: "bottom 55%",
-        scrub: 0.8,
-      },
-    });
-    for (let i = 1; i < panels.length; i++) {
-      const prev = panels[i - 1];
-      const next = panels[i];
-      tl.to(
-        prev,
-        { autoAlpha: 0, scale: 1.05, y: -18, duration: 1 },
-        i - 1
-      ).fromTo(
-        next,
-        { autoAlpha: 0, scale: 0.95, y: 26 },
-        { autoAlpha: 1, scale: 1, y: 0, duration: 1 },
-        i - 1
-      );
+    if (firstPanelRun.current) {
+      firstPanelRun.current = false;
+      gsap.set(panels, { autoAlpha: 0, scale: 0.95, y: 26 });
+      gsap.set(panels[active], { autoAlpha: 1, scale: 1, y: 0 });
+      return;
     }
-    return () => {
-      tl.scrollTrigger?.kill();
-      tl.kill();
-      gsap.set(panels, { clearProps: "all" });
-    };
-  }, [reduced]);
+    panels.forEach((p, i) => {
+      if (i === active) {
+        gsap.fromTo(
+          p,
+          { autoAlpha: 0, scale: 0.95, y: 26 },
+          {
+            autoAlpha: 1,
+            scale: 1,
+            y: 0,
+            duration: 0.55,
+            ease: "power2.out",
+            overwrite: "auto",
+          }
+        );
+      } else {
+        gsap.to(p, {
+          autoAlpha: 0,
+          scale: 1.04,
+          y: -16,
+          duration: 0.45,
+          ease: "power2.in",
+          overwrite: "auto",
+        });
+      }
+    });
+  }, [active, reduced]);
 
   // Entrance: rows stagger in, stage fades up.
   useEffect(() => {
@@ -287,23 +287,25 @@ export default function ServicesSection() {
         </div>
 
         <div className="svc-stage-col">
-          <div className="svc-stage-frame">
-            {services.map((s, i) => (
-              <div
-                key={s.num}
-                className={`svc-stage-panel${i === active ? " active" : ""}`}
-                aria-hidden={i !== active}
-              >
-                {renderVisual(i)}
-              </div>
-            ))}
+          <div className="svc-stage-sticky">
+            <div className="svc-stage-frame">
+              {services.map((s, i) => (
+                <div
+                  key={s.num}
+                  className={`svc-stage-panel${i === active ? " active" : ""}`}
+                  aria-hidden={i !== active}
+                >
+                  {renderVisual(i)}
+                </div>
+              ))}
+            </div>
+            <p className="svc-stage-caption" aria-live="polite">
+              <span className="tick-sq" aria-hidden="true" />
+              <span>
+                [{services[active].num}] {services[active].name}
+              </span>
+            </p>
           </div>
-          <p className="svc-stage-caption" aria-live="polite">
-            <span className="tick-sq" aria-hidden="true" />
-            <span>
-              [{services[active].num}] {services[active].name}
-            </span>
-          </p>
         </div>
       </div>
     </section>

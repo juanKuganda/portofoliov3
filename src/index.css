@@ -1919,13 +1919,17 @@ section.block {
   outline: 2px solid var(--pop-pink);
   outline-offset: 4px;
 }
-/* Stage: one sticky frame, panels crossfade inside */
+/* Stage: one sticky stack (frame + caption travel together),
+   panels crossfade inside on `active` */
 .svc-stage-col {
   position: relative;
 }
-.svc-stage-frame {
+.svc-stage-sticky {
   position: sticky;
   top: 110px;
+}
+.svc-stage-frame {
+  position: relative;
   height: clamp(380px, 55vh, 540px);
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -3064,6 +3068,10 @@ footer.site {
   .svc-index-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 28px;
+  }
+  .svc-stage-sticky {
+    position: relative;
+    top: 0;
   }
   .svc-stage-frame {
     position: relative;
