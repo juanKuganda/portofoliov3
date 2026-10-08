@@ -637,7 +637,7 @@ export default function Hero() {
     // Transform-only scrub; static under reduced motion.
     const rulerCtx = gsap.context(() => {
       gsap.to(".ruler-track", {
-        x: -160,
+        x: -260,
         ease: "none",
         scrollTrigger: {
           trigger: root,

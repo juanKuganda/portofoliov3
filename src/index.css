@@ -944,7 +944,7 @@ a {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 26px;
+  height: 46px;
   z-index: 4;
   overflow: hidden;
   background: var(--paper);
@@ -955,14 +955,14 @@ a {
   display: flex;
   width: max-content;
   height: 100%;
-  /* minor ticks every 10px (8px tall), major ticks every 100px (14px),
+  /* minor ticks every 10px, major ticks every 100px (with the numbers),
      drawn at the bottom so they travel WITH the numbers */
   background-image:
-    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 10px),
-    repeating-linear-gradient(90deg, var(--faint) 0 1px, transparent 1px 100px);
+    repeating-linear-gradient(90deg, var(--faint) 0 1px, transparent 1px 10px),
+    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 100px);
   background-size:
-    100% 8px,
-    100% 14px;
+    100% 16px,
+    100% 28px;
   background-position:
     left bottom,
     left bottom;
@@ -975,9 +975,9 @@ a {
 .rnum {
   flex: none;
   width: 100px;
-  padding: 3px 0 0 5px;
+  padding: 6px 0 0 6px;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   color: var(--muted);
   user-select: none;
@@ -1070,16 +1070,16 @@ a {
   }
   /* Ruler stays, slimmer, above the caption row. */
   .reel-ruler {
-    height: 22px;
+    height: 34px;
   }
   .rnum {
-    font-size: 8px;
-    padding-top: 2px;
+    font-size: 10px;
+    padding-top: 4px;
   }
   .ruler-track {
     background-size:
-      100% 6px,
-      100% 11px;
+      100% 11px,
+      100% 19px;
   }
   /* Figma-select box hugs the smaller headline automatically
      (inset-relative), cursor scales with it. */
