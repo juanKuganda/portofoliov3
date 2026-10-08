@@ -357,6 +357,107 @@ a {
   padding: clamp(56px, 9vh, 110px) var(--pad) clamp(40px, 6vh, 72px);
   position: relative;
 }
+/* Role ticker: [ Developer ] → [ Designer ] → [ Mentor ] */
+.role-ticker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.tick-sq {
+  width: 8px;
+  height: 8px;
+  background: var(--signal);
+  border-radius: 2px;
+  flex: none;
+}
+.tick-bracket {
+  color: var(--ink);
+  font-weight: 700;
+}
+.tick-word {
+  display: inline-block;
+  color: var(--ink);
+  font-weight: 600;
+  min-width: 92px;
+  animation: tick-in 0.45s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+@keyframes tick-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+/* Amber © glyph + its one-shot expanding ring */
+.hero-name .ch-copy {
+  color: var(--signal);
+  position: relative;
+}
+.copy-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150%;
+  aspect-ratio: 1;
+  border: 1px solid var(--signal);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+/* Per-char magnetic headline: CSS transition smooths the direct writes */
+.hero-name.magnetic-on .ch {
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+/* Full-width scroll cue strip */
+.hero-scroll-strip {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: clamp(28px, 4vh, 48px) calc(var(--pad) * -1) 0;
+  padding: 14px var(--pad);
+  text-decoration: none;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  transition: color 0.3s var(--ease), background-color 0.3s var(--ease);
+}
+.hero-scroll-strip:hover {
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.025);
+}
+.hero-scroll-strip .rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.scroll-cue {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.scroll-cue .arrow {
+  display: inline-block;
+  color: var(--signal);
+  animation: cue-bob 1.8s ease-in-out infinite;
+}
+@keyframes cue-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
 .hero-kicker {
   display: flex;
   flex-wrap: wrap;
@@ -2514,7 +2615,9 @@ footer.site {
   .pg-count-pop,
   .net-pop,
   .out-line,
-  .caret::after {
+  .caret::after,
+  .tick-word,
+  .scroll-cue .arrow {
     animation: none !important;
   }
 }
