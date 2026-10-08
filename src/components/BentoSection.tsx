@@ -20,7 +20,7 @@ const themes = [
 /* ------------------------------------------------------------------ */
 const codeLines = [
   'export const createExperience = () => {',
-  '  return "wow";',
+  '  return "shipped";',
   '}',
 ];
 
@@ -202,6 +202,9 @@ export default function BentoSection() {
       if (!arena) return;
       const r = arena.getBoundingClientRect();
       if (r.width < 80) return;
+      // Off-screen: skip spawning so the JS thread idles when the
+      // card isn't visible (battery-friendly on mobile).
+      if (r.bottom < 0 || r.top > window.innerHeight) return;
       const id = ++roachId.current;
       const x = gsap.utils.random(46, Math.max(66, r.width - 46));
       const y = gsap.utils.random(60, Math.max(80, r.height - 46));
@@ -440,7 +443,7 @@ export default function BentoSection() {
     setOutLines([]);
     if (reduced) {
       setRunState("done");
-      setOutLines(["$ tsc --noEmit", "✓ 0 errors", "$ vite build", "✓ built in 842ms", '→ "wow"']);
+      setOutLines(["$ tsc --noEmit", "✓ 0 errors", "$ vite build", "✓ built in 842ms", '→ "shipped"']);
       return;
     }
     setRunState("running");
@@ -462,7 +465,7 @@ export default function BentoSection() {
     tl.call(() => setOutLines((o) => [...o, "✓ built in 842ms"]));
     tl.to({}, { duration: 0.25 });
     tl.call(() => {
-      setOutLines((o) => [...o, '→ "wow"']);
+      setOutLines((o) => [...o, '→ "shipped"']);
       setRunState("done");
     });
   };
@@ -473,7 +476,7 @@ export default function BentoSection() {
     <section className="bento-section block" id="bento" ref={sectionRef}>
       <div className="bento-header rv">
         <h2 className="fit sec-fit" ref={fitRef}>CAPABILITIES</h2>
-        <p className="bento-desc">Building digital products that feel alive. Go ahead — press things.</p>
+        <p className="bento-desc">This section is hands-on. Go ahead — press things.</p>
       </div>
 
       <div className="bento-grid">
@@ -561,7 +564,7 @@ export default function BentoSection() {
             <div className="bc-visual roach-visual">
               <div className="roach-arena" ref={arenaRef}>
                 <div className="pg-counter" aria-live="polite">
-                  <span key={score} className="pg-count-pop">{score}</span>
+                  <span key={score} className="pg-count-pop">{score}</span>{" "}
                   <span className="pg-count-lbl">squished</span>
                 </div>
                 {roaches.map((rc) => (
@@ -740,5 +743,5 @@ function highlight(line: string): string {
     .replace(/export const/g, '<span class="kw">export const</span>')
     .replace(/createExperience/g, '<span class="fn">createExperience</span>')
     .replace(/return/g, '<span class="kw">return</span>')
-    .replace(/"wow"/g, '<span class="str">"wow"</span>');
+    .replace(/"shipped"/g, '<span class="str">"shipped"</span>');
 }

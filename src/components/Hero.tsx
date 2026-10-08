@@ -26,7 +26,7 @@ function RoleTicker() {
   }, [reduced]);
 
   return (
-    <p className="role-ticker" aria-live="polite">
+    <p className="role-ticker" aria-hidden="true">
       <span className="tick-bracket" aria-hidden="true">[</span>
       <span className="tick-word" key={idx}>
         {ROLES[idx]}
@@ -821,7 +821,7 @@ export default function Hero() {
           reference — coordinates (personal) left, roles right, plus
           crop-marks at the corners. Desktop only, joins the explode. */}
       <span className="reel-edge reel-edge-l" aria-hidden="true">
-        0.90°S — 119.41°E · PALU
+        0.90°S — 119.86°E · PALU
       </span>
       <span className="reel-edge reel-edge-r" aria-hidden="true">
         ENGINEER · DESIGN · PEOPLE

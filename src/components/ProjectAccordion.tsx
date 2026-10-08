@@ -2,6 +2,22 @@ import { useRef } from "react";
 import type { Project } from "../data/projects";
 import GalleryDensity from "./GalleryDensity";
 
+/**
+ * Minimal allowlist sanitizer for project descriptions.
+ * The data is static and authored locally, but the pattern stays safe
+ * even if descriptions ever come from elsewhere: only <strong>/<em>
+ * survive, everything else (including attributes) is stripped.
+ */
+function sanitizeDescription(html: string): string {
+  return html.replace(
+    /<(\/?)([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g,
+    (_m, close: string, tag: string) => {
+      const t = tag.toLowerCase();
+      return t === "strong" || t === "em" ? `<${close}${t}>` : "";
+    }
+  );
+}
+
 interface Props {
   project: Project;
   isOpen: boolean;
@@ -37,7 +53,7 @@ export default function ProjectAccordion({ project, isOpen, onToggle }: Props) {
         <div className="proj-inner">
           <p
             className="proj-desc"
-            dangerouslySetInnerHTML={{ __html: project.description }}
+            dangerouslySetInnerHTML={{ __html: sanitizeDescription(project.description) }}
           />
           <div className="proj-meta">
             {project.meta.map((m, i) => (

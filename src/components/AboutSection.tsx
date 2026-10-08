@@ -95,7 +95,7 @@ export default function AboutSection() {
       <p className="about-statement" ref={statementRef}>
         <span className="cw-pink">Engineer,</span>{" "}
         <span className="cw-blue">design,</span> <span className="cw-green">people</span>{" "}
-        - <span className="dim">in that order, most days.</span>
+        — <span className="dim">in that order, most days.</span>
       </p>
       <div className="about-grid">
         <div className="rv rv-left">
@@ -103,13 +103,13 @@ export default function AboutSection() {
             I&rsquo;m <strong>Juan Kuganda</strong>, an informatics undergrad at{" "}
             <strong>Universitas Tadulako</strong> (class of 2027, GPA 3.89)
             working at the intersection of development and design. I build
-            interactive, pixel-perfect digital experiences with a deep focus on
-            user experience and maintainable architecture.
+            interfaces people understand at a glance — engineered clean,
+            designed with intent.
           </p>
           <p>
             Outside of code, I mentor web development across Palu&rsquo;s dev
             communities and chair Palu Dev. I care about software that is
-            legible, in its interface, its architecture, and its intent.
+            legible — in its interface, its architecture, and its intent.
           </p>
         </div>
         <div className="rv rv-right rv-d1">

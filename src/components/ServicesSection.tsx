@@ -189,8 +189,12 @@ export default function ServicesSection() {
   // Entrance: rows stagger in, stage fades up.
   useEffect(() => {
     if (reduced) return;
+    const section = sectionRef.current;
     const list = listRef.current;
-    if (!list) return;
+    if (!section || !list) return;
+    // Row stagger is scoped to the list; the stage frame lives in the
+    // sibling column, so it gets its own unscoped tween (a scoped
+    // selector here would silently find nothing).
     const ctx = gsap.context(() => {
       gsap.from(".svc-index-row", {
         y: 36,
@@ -200,16 +204,18 @@ export default function ServicesSection() {
         ease: "power3.out",
         scrollTrigger: { trigger: list, start: "top 82%", once: true },
       });
-      gsap.from(".svc-stage-frame", {
-        y: 48,
-        opacity: 0,
-        duration: 0.8,
-        ease: "power3.out",
-        scrollTrigger: { trigger: list, start: "top 78%", once: true },
-      });
     }, list);
+    const frameTween = gsap.from(".svc-stage-frame", {
+      y: 48,
+      opacity: 0,
+      duration: 0.8,
+      ease: "power3.out",
+      scrollTrigger: { trigger: section, start: "top 78%", once: true },
+    });
     return () => {
       ctx.revert();
+      frameTween.scrollTrigger?.kill();
+      frameTween.kill();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
