@@ -571,9 +571,14 @@ a {
 .reel-hi-mask {
   overflow: hidden;
   /* breathing room so the magnetic parallax never clips the text,
-     and the figma-select box (inset -10px) stays visible */
-  padding: 14px 20px 0.12em;
-  margin: -14px -20px -0.12em;
+     and the figma-select box (inset -10px -18px, handles +5px out)
+     stays fully visible: 20px bottom clears the 15px the box needs */
+  padding: 14px 24px 20px;
+  margin: -14px -24px -20px;
+  /* paint above the card so the selection box's bottom edge + handles
+     draw over the card top like a real Figma selection */
+  position: relative;
+  z-index: 3;
   /* jangan sampai menyusut saat kolom flex overflow di mobile —
      mask yang terjepit memotong headline (hanya sliver terlihat) */
   flex-shrink: 0;
