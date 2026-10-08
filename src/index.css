@@ -490,9 +490,22 @@ a {
 .fit .ch {
   display: inline-block;
 }
+/* Line-mask for the hero name reveal: the h1 slides up from behind it.
+   The top padding (negated by margin) extends the clip box upward so the
+   pressure-lifted chars are never clipped. */
+.name-mask {
+  overflow: hidden;
+  min-width: 0;
+  padding-top: 18px;
+  margin-top: -18px;
+  /* The breakout alignment lives on the mask now (it is the grid item);
+     the h1 inside must not carry its own negative margin, or it would
+     slide out of the mask's clip box. */
+  margin-left: calc(var(--pad) * -1);
+  padding-left: var(--pad);
+}
 .hero-name {
-  margin: 0 0 0 calc(var(--pad) * -1);
-  padding: 0 0 0 var(--pad);
+  margin: 0;
   color: var(--ink);
 }
 .hero-grid {
@@ -1031,168 +1044,156 @@ section.block {
 }
 
 /* ============================================================
-   SERVICES : STICKY STACKING DECK
+   SERVICES : INDEX + STAGE
+   Editorial index rows on the left; ONE sticky visual stage on the
+   right. Only the active visual is alive — this is what kills the
+   old sticky-stack jank structurally.
    ============================================================ */
-/* ============================================================
-   SERVICES : PHYSICAL FILE FOLDER DECK
-   ============================================================ */
-.svc-deck {
+.svc-index-grid {
   margin-top: clamp(28px, 5vh, 54px);
-  padding: 0 var(--pad);
   display: grid;
-  gap: 24px;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: clamp(32px, 5vw, 88px);
+  align-items: start;
 }
-.svc-folder-item {
-  position: sticky;
-  top: calc(110px + var(--i) * 40px);
-  isolation: isolate;
-  /* NOTE (Fase 1 perf): no transform-style: preserve-3d — it forced the
-     whole subtree into a 3D rendering context and defeated flattening.
-     The GSAP tilt uses transformPerspective on the card itself. */
+.svc-index-list {
+  display: flex;
+  flex-direction: column;
 }
-.svc-folder-tab-bar {
+.svc-index-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 12px;
+  gap: 18px;
+  align-items: start;
+  width: 100%;
+  padding: 26px 6px 26px 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink);
+  font: inherit;
+}
+.svc-index-row:first-child {
+  border-top: 1px solid var(--line);
+}
+.svc-index-num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding-top: 8px;
+  transition: color 0.3s var(--ease);
+}
+.svc-index-name {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(26px, 2.6vw, 40px);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  transition: transform 0.35s var(--ease);
+}
+.svc-index-tags {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.svc-index-desc {
+  display: block;
+  margin-top: 0;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted-ink, #555);
+  transition: max-height 0.45s var(--ease), opacity 0.35s var(--ease),
+    margin-top 0.45s var(--ease);
+}
+.svc-index-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 12px;
+  border-radius: 2px;
+  background: var(--line);
+  transition: background-color 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.svc-index-row:hover .svc-index-name {
+  transform: translateX(6px);
+}
+.svc-index-row.active .svc-index-num {
+  color: var(--signal);
+  font-weight: 700;
+}
+.svc-index-row.active .svc-index-name {
+  transform: translateX(6px);
+}
+.svc-index-row.active .svc-index-desc {
+  max-height: 120px;
+  opacity: 1;
+  margin-top: 12px;
+}
+.svc-index-row.active .svc-index-dot {
+  background: var(--signal);
+  transform: rotate(45deg);
+}
+.svc-index-row:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 4px;
+}
+/* Stage: one sticky frame, panels crossfade inside */
+.svc-stage-col {
   position: relative;
-  height: 44px;
-  z-index: 3;
 }
-.svc-folder-tab {
+.svc-stage-frame {
+  position: sticky;
+  top: 110px;
+  height: clamp(380px, 55vh, 540px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  overflow: hidden;
+  background: #0f0f0f;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
+}
+.svc-stage-panel {
   position: absolute;
-  left: calc(20px + var(--i) * 210px);
-  top: 0;
-  height: 44px;
-  padding: 0 24px;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s var(--ease), visibility 0s linear 0.5s;
+}
+.svc-stage-panel.active {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.5s var(--ease);
+}
+.svc-stage-caption {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-bottom: none;
-  border-radius: 16px 16px 0 0;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  color: var(--ink);
-  box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.04);
-  transition: background-color 0.3s var(--ease), color 0.3s var(--ease), border-color 0.3s var(--ease);
-}
-.svc-folder-item:hover .svc-folder-tab {
-  background: var(--warm-1);
-  border-color: var(--signal);
-  transform: translateY(-3px);
-}
-.folder-tab-icon {
-  font-size: 14px;
-}
-.folder-tab-title {
-  font-weight: 600;
-}
-
-/* Realistic Folder Body Card */
-.svc-folder-card {
-  position: relative;
-  z-index: 2;
-  margin-top: -1px;
-  min-height: 56vh;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 0 24px 24px 24px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.08), 0 16px 36px rgba(0, 0, 0, 0.06);
-  /* NOTE: no `transform` here — the 3D tilt writes transform via GSAP on every
-     mousemove, and a CSS transition would intercept each write, making the
-     tilt lag ~0.4s behind the cursor and thrashing style recalc. */
-  transition: box-shadow 0.4s var(--ease);
-}
-.svc-folder-card:hover {
-  box-shadow: 0 -16px 50px rgba(0, 0, 0, 0.12), 0 20px 48px rgba(0, 0, 0, 0.1);
-}
-
-/* NOTE (Fase 1 perf): the 700px radial spotlight ::before was removed from
-   service cards — it repainted the whole 56vh card on every mousemove.
-   The subtler bento-card spotlight stays. */
-
-/* Paper sheets sticking out top */
-.folder-paper-sheets {
-  position: absolute;
-  top: -10px;
-  right: 32px;
-  width: 220px;
-  height: 20px;
-  z-index: 1;
-  pointer-events: none;
-}
-.paper-sheet {
-  position: absolute;
-  inset: 0;
-  background: #fcfcfc;
-  border: 1px solid #e2e2e2;
-  border-radius: 8px 8px 0 0;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.4s var(--ease);
-}
-.paper-sheet.sheet-back {
-  transform: rotate(1.5deg) translateY(-4px);
-  background: #f4f4f4;
-}
-.paper-sheet.sheet-front {
-  transform: rotate(-0.8deg) translateY(-2px);
-}
-.svc-folder-card:hover .paper-sheet.sheet-back {
-  transform: rotate(3deg) translateY(-8px);
-}
-.svc-folder-card:hover .paper-sheet.sheet-front {
-  transform: rotate(-2deg) translateY(-6px);
-}
-
-/* Folder Header Bar with Metal Clip */
-.folder-header-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 28px;
-  border-bottom: 1px solid var(--line);
-  background: rgba(0, 0, 0, 0.015);
+  margin: 14px 0 0;
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--muted);
 }
-.folder-meta-code {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-transform: uppercase;
+@media (prefers-reduced-motion: reduce) {
+  .svc-stage-panel,
+  .svc-stage-panel.active,
+  .svc-index-desc,
+  .svc-index-name,
+  .svc-index-dot {
+    transition: none;
+  }
 }
-.folder-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--signal);
-}
-.folder-metal-clip {
-  width: 36px;
-  height: 8px;
-  background: linear-gradient(90deg, #d0d0d0, #ffffff, #b8b8b8);
-  border-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-}
-.svc-visual {
-  position: relative;
-  height: 24vh;
-  min-height: 170px;
-  flex: none;
-  overflow: hidden;
-}
-.svc-visual::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.07;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+
 
 /* Bespoke Service Visual UI Mockups */
 .service-visual-inner {
@@ -1898,44 +1899,18 @@ footer.site {
   .resume-row {
     grid-template-columns: minmax(0, 1fr);
   }
-  .svc-deck {
-    padding: 0 var(--pad);
-    gap: 16px;
+  .svc-index-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
   }
-  .svc-folder-item {
-    top: 0;
-    margin-bottom: 24px;
-  }
-  .svc-folder-tab-bar {
-    height: 38px;
-  }
-  .svc-folder-tab {
+  .svc-stage-frame {
     position: relative;
-    left: 0 !important;
     top: 0;
-    height: 38px;
-    padding: 0 14px;
-    font-size: 11px;
-    border-radius: 12px 12px 0 0;
-    max-width: 100%;
-    display: inline-flex;
-  }
-  .svc-folder-card {
-    border-radius: 0 16px 16px 16px;
-    min-height: auto;
-  }
-  .folder-paper-sheets {
-    display: none;
-  }
-  .folder-header-bar {
-    padding: 12px 16px;
-  }
-  .svc-visual {
     height: auto;
-    min-height: 140px;
+    aspect-ratio: 16 / 10;
   }
-  .svc-ghost {
-    font-size: clamp(80px, 26vw, 140px);
+  .svc-index-row {
+    padding: 20px 6px 20px 0;
   }
   .fm-letter {
     font-size: clamp(56px, 20vw, 96px);

@@ -81,22 +81,36 @@ export default function Hero() {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       tl.from(".hero-kicker", { y: 14, opacity: 0, duration: 0.35 }, 0.05)
         .from(".role-ticker", { y: 10, opacity: 0, duration: 0.4 }, 0.15)
+        // Line-mask reveal: the name slides up from behind its mask…
         .from(
-          ".hero-name .ch",
-          { yPercent: 70, opacity: 0, duration: 0.55, stagger: 0.016 },
+          ".hero-name",
+          { yPercent: 112, duration: 0.85, ease: "power4.out" },
           0.12
+        )
+        // …while its weight inflates from thin to black, char by char.
+        .fromTo(
+          ".hero-name .ch",
+          { fontVariationSettings: '"wght" 300', opacity: 0 },
+          {
+            fontVariationSettings: '"wght" 800',
+            opacity: 1,
+            duration: 0.9,
+            stagger: 0.02,
+            ease: "power3.out",
+          },
+          0.18
         )
         .fromTo(
           ".hero-name .ch-copy",
           { scale: 0 },
           { scale: 1, duration: 0.6, ease: "back.out(2.2)" },
-          0.85
+          0.9
         )
         .fromTo(
           ".hero-name .copy-ring",
           { scale: 0.4, opacity: 0.9 },
           { scale: 1.7, opacity: 0, duration: 0.9, ease: "power2.out" },
-          0.95
+          1.0
         )
         .from(
           ".hero-side .statement",
@@ -107,11 +121,15 @@ export default function Hero() {
         .from(".hero-portrait", { y: 48, opacity: 0, duration: 0.7 }, 0.55)
         .from(".hero-scroll-strip", { opacity: 0, duration: 0.5 }, 1.0);
       // Once done, wipe GSAP's inline styles — nothing lingers in the DOM.
+      // NOTE: surgical clearProps — "all" on .hero-name would wipe the
+      // font-size that useFitText sets inline.
       tl.eventCallback("onComplete", () => {
-        tl.getChildren().forEach((child) => {
-          const targets = (child as gsap.core.Tween).targets?.() ?? [];
-          if (targets.length) gsap.set(targets, { clearProps: "all" });
-        });
+        gsap.set(
+          ".hero-kicker, .role-ticker, .hero-side .statement, .hero-meta, .hero-portrait, .hero-scroll-strip, .hero-name .ch-copy, .hero-name .copy-ring",
+          { clearProps: "all" }
+        );
+        gsap.set(".hero-name", { clearProps: "transform" });
+        gsap.set(".hero-name .ch", { clearProps: "opacity" });
       });
     }, root);
 
@@ -122,23 +140,25 @@ export default function Hero() {
     };
   }, []);
 
-  // THE HOOK — per-character magnetic headline. Chars near the pointer lift
-  // (max ~10px) with a smooth falloff; the headline feels alive and answers
-  // the visitor. transform/opacity only, one layout read per pointermove,
-  // rAF-free (CSS transition smooths the direct writes). Enabled after the
-  // entrance settles; skipped on touch / reduced motion.
+  // THE HOOK — "Text Pressure": cursor proximity drives each char's
+  // variable-font weight (560 → 900) plus a small physical lift.
+  // An autonomous wave sweeps the name every ~6s so touch users get the
+  // hook too. transform + font-variation-settings writes only, offsets
+  // cached, 1 layout read per pointermove. Static under reduced motion.
   useEffect(() => {
     const el = nameRef.current;
     if (!el) return;
-    const fine = window.matchMedia("(pointer: fine)").matches;
     const reduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
-    if (!fine || reduced) return;
+    if (reduced) return;
 
+    const RADIUS = 150;
     let chars: HTMLElement[] = [];
     let offsets: { x: number; y: number }[] = [];
     let enabled = false;
+    let pointerActive = false;
+    let waveTween: gsap.core.Tween | null = null;
 
     const measure = () => {
       const h1 = el.getBoundingClientRect();
@@ -152,34 +172,72 @@ export default function Hero() {
       });
     };
 
+    const applyPressure = (px: number, py: number) => {
+      for (let i = 0; i < chars.length; i++) {
+        const dx = px - offsets[i].x;
+        const dy = py - offsets[i].y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        const p = d < RADIUS ? 1 - d / RADIUS : 0;
+        const eased = p * p * (3 - 2 * p); // smoothstep: fatter peak
+        const wght = Math.round(560 + eased * 340); // 560 → 900
+        chars[i].style.fontVariationSettings = `"wght" ${wght}`;
+        chars[i].style.transform =
+          eased > 0.02 ? `translate3d(0, ${(-eased * 6).toFixed(1)}px, 0)` : "";
+      }
+    };
+
+    const releaseAll = () => {
+      for (const ch of chars) {
+        ch.style.fontVariationSettings = '"wght" 800';
+        ch.style.transform = "";
+      }
+    };
+
+    // Autonomous wave: a virtual cursor sweeps the name every ~6s.
+    const sweep = () => {
+      if (!enabled) return;
+      const w = el.getBoundingClientRect().width;
+      const h2 = el.getBoundingClientRect().height / 2;
+      const proxy = { x: -RADIUS - 20 };
+      waveTween = gsap.to(proxy, {
+        x: w + RADIUS + 20,
+        duration: 2.2,
+        ease: "power2.inOut",
+        onUpdate: () => {
+          if (!pointerActive && enabled) applyPressure(proxy.x, h2);
+        },
+        onComplete: () => {
+          if (!pointerActive && enabled) releaseAll();
+          if (enabled) waveTween = gsap.delayedCall(4.2, sweep);
+        },
+      });
+    };
+
     const enable = () => {
       if (enabled) return;
       enabled = true;
       measure();
       el.classList.add("magnetic-on");
+      waveTween = gsap.delayedCall(2.2, sweep);
     };
     // After the entrance timeline (+ © pop) has settled.
-    const timer = window.setTimeout(enable, 1600);
+    const timer = window.setTimeout(enable, 1700);
 
-    const RADIUS = 130;
-    const LIFT = 10;
     const onMove = (e: PointerEvent) => {
       if (!enabled || !chars.length) return;
+      pointerActive = true;
+      waveTween?.kill();
       const h1 = el.getBoundingClientRect();
-      const px = e.clientX - h1.left;
-      const py = e.clientY - h1.top;
-      for (let i = 0; i < chars.length; i++) {
-        const dx = px - offsets[i].x;
-        const dy = py - offsets[i].y;
-        const d = Math.sqrt(dx * dx + dy * dy);
-        const lift = d < RADIUS ? (1 - d / RADIUS) * LIFT : 0;
-        chars[i].style.transform =
-          lift > 0.4 ? `translate3d(0, ${(-lift).toFixed(1)}px, 0)` : "";
-      }
+      applyPressure(e.clientX - h1.left, e.clientY - h1.top);
     };
     const onLeave = () => {
-      if (!enabled) return;
-      for (const ch of chars) ch.style.transform = "";
+      pointerActive = false;
+      if (enabled) {
+        releaseAll();
+        // resume the wave after a beat
+        waveTween?.kill();
+        waveTween = gsap.delayedCall(3, sweep);
+      }
     };
 
     window.addEventListener("resize", measure);
@@ -187,6 +245,7 @@ export default function Hero() {
     el.addEventListener("pointerleave", onLeave);
     return () => {
       window.clearTimeout(timer);
+      waveTween?.kill();
       window.removeEventListener("resize", measure);
       el.removeEventListener("pointermove", onMove);
       el.removeEventListener("pointerleave", onLeave);
@@ -207,6 +266,8 @@ export default function Hero() {
     const mm = gsap.matchMedia();
 
     mm.add("(min-width: 768px)", () => {
+      // Multi-speed parallax exit: each layer leaves at its own pace —
+      // chips/kicker fastest, name fast, portrait lingers. Depth you feel.
       const tl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
@@ -218,13 +279,20 @@ export default function Hero() {
           anticipatePin: 1,
         },
       });
-      tl.to(".hero-kicker, .role-ticker", { y: -50, opacity: 0, duration: 0.35 }, 0)
-        .to(".hero-grid", { y: -90, opacity: 0, scale: 0.985, duration: 0.6 }, 0)
-        .to(".hero-scroll-strip", { opacity: 0, duration: 0.3 }, 0)
+      tl.to(
+        ".hero-kicker, .role-ticker, .hero-scroll-strip",
+        { y: -60, opacity: 0, duration: 0.3 },
+        0
+      )
+        .to(
+          ".hero-grid",
+          { y: -110, opacity: 0, scale: 0.98, duration: 0.55 },
+          0
+        )
         .to(
           ".hero-portrait",
-          { y: -70, scale: 1.03, opacity: 0.12, duration: 0.7 },
-          0.1
+          { y: -30, scale: 1.05, opacity: 0.25, duration: 0.9 },
+          0.05
         );
     });
 
@@ -272,9 +340,11 @@ export default function Hero() {
       </div>
       <RoleTicker />
       <div className="hero-grid">
-        <h1 className="fit hero-name" ref={nameRef}>
-          JUAN KUGANDA©
-        </h1>
+        <div className="name-mask">
+          <h1 className="fit hero-name" ref={nameRef}>
+            JUAN KUGANDA©
+          </h1>
+        </div>
         <div className="hero-side">
           <p className="statement">
             I build interfaces for the web —{" "}
