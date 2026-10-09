@@ -16,7 +16,7 @@ export default function GalleryDensity({ tiles }: Props) {
       if (newDensity === density) return;
 
       const reduced = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
+        "(prefers-reduced-motion: reduce)",
       ).matches;
 
       const gallery = galleryRef.current;
@@ -25,7 +25,9 @@ export default function GalleryDensity({ tiles }: Props) {
         return;
       }
 
-      const tileEls = Array.from(gallery.querySelectorAll<HTMLElement>(".tile"));
+      const tileEls = Array.from(
+        gallery.querySelectorAll<HTMLElement>(".tile"),
+      );
 
       // Capture "first" positions for FLIP
       const firstRects = new Map<HTMLElement, DOMRect>();
@@ -58,12 +60,12 @@ export default function GalleryDensity({ tiles }: Props) {
               },
               { transform: "translate(0,0) scale(1,1)" },
             ],
-            { duration: 650, easing: "cubic-bezier(.22,1,.36,1)" }
+            { duration: 650, easing: "cubic-bezier(.22,1,.36,1)" },
           );
         });
       });
     },
-    [density]
+    [density],
   );
 
   const densities: Density[] = ["featured", "uniform", "dense"];
@@ -88,7 +90,7 @@ export default function GalleryDensity({ tiles }: Props) {
           <figure className="tile" key={tile.seed}>
             <img
               src={`https://picsum.photos/seed/${tile.seed}/800/600?grayscale`}
-              alt={`Placeholder image — ${tile.cap}`}
+              alt={tile.cap}
               loading="lazy"
               decoding="async"
               onError={(e) => {

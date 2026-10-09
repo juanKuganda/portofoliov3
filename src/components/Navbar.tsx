@@ -1,128 +1,166 @@
 import { useEffect, useRef, useState } from "react";
 import { useClock } from "../hooks/useClock";
-import MagneticText from "./MagneticText";
 
+const NAV_ITEMS = [
+  { id: "work", label: "Work" },
+  { id: "about", label: "About" },
+  { id: "services", label: "Services" },
+  { id: "contact", label: "Contact" },
+];
+
+/**
+ * NAV — flat & transparent, difference-blend.
+ * White text + mix-blend-mode: difference = automatic contrast over
+ * light AND dark sections, no background fill, no blur, no border.
+ * Mobile gets a full-screen paper overlay menu (not blended).
+ */
 export default function Navbar() {
   const time = useClock();
   const [active, setActive] = useState<string>("");
-  const [menuOpen, setMenuOpen] = useState<boolean>(false);
-  const linksRef = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
 
-  // Active section tracking via IntersectionObserver
+  const clockLabel = time ? `Palu · ${time} WITA` : "Palu · WITA";
+
+  // Active section tracking via IntersectionObserver.
   useEffect(() => {
-    const sectionIds = ["work", "about", "services", "contact"];
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((en) => {
-          if (en.isIntersecting) {
-            setActive(en.target.id);
-          }
-        });
+        for (const en of entries) {
+          if (en.isIntersecting) setActive(en.target.id);
+        }
       },
       { rootMargin: "-40% 0px -55% 0px" }
     );
-
-    sectionIds.forEach((id) => {
+    for (const { id } of NAV_ITEMS) {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
-    });
-
+    }
     return () => observer.disconnect();
   }, []);
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    e.preventDefault();
+  // Mobile menu: Escape closes, body scroll locks, focus moves sanely.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    closeBtnRef.current?.focus();
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.documentElement.style.overflow = prev;
+      menuBtnRef.current?.focus();
+    };
+  }, [menuOpen]);
+
+  const goTo = (id: string) => {
     setMenuOpen(false);
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const navItems = [
-    { id: "work", label: "Work" },
-    { id: "about", label: "About" },
-    { id: "services", label: "Services" },
-    { id: "contact", label: "Contact" },
-  ];
+  const goTop = () => {
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <>
       <nav className="nav" aria-label="Primary">
-        <MagneticText intensity={0.4}>
-          <a
-            className="nav-name"
-            href="#top"
-            onClick={(e) => {
-              e.preventDefault();
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          >
-            JUAN KUGANDA<sup>©</sup>
-          </a>
-        </MagneticText>
-        <span className="nav-clock desktop-only">
-          {time ? `Palu — ${time} WITA` : "Palu — WITA"}
+        <a
+          className="nav-name"
+          href="#top"
+          onClick={(e) => {
+            e.preventDefault();
+            goTop();
+          }}
+        >
+          JUAN KUGANDA<sup>©</sup>
+        </a>
+        <span className="nav-clock desktop-only" aria-hidden="true">
+          {clockLabel}
         </span>
         <div className="nav-links desktop-only">
-          {navItems.map(({ id, label }) => (
-            <MagneticText key={id} intensity={0.4}>
-              <a
-                href={`#${id}`}
-                data-nav={id}
-                className={active === id ? "active" : ""}
-                ref={(el) => {
-                  linksRef.current[id] = el;
-                }}
-                onClick={(e) => handleClick(e, id)}
-              >
-                {label}
-              </a>
-            </MagneticText>
+          {NAV_ITEMS.map(({ id, label }) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              data-nav={id}
+              className={active === id ? "active" : ""}
+              aria-current={active === id ? "true" : undefined}
+              onClick={(e) => {
+                e.preventDefault();
+                goTo(id);
+              }}
+            >
+              {label}
+            </a>
           ))}
         </div>
         <button
+          ref={menuBtnRef}
           type="button"
-          className="mobile-nav-toggle"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle navigation menu"
+          className="nav-menu-btn mobile-only"
+          aria-expanded={menuOpen}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          onClick={() => setMenuOpen((v) => !v)}
         >
-          {menuOpen ? "✕" : "MENU"}
+          Menu
         </button>
       </nav>
 
-      {/* Mobile Drawer Menu Overlay */}
-      {menuOpen && (
-        <div className="mobile-menu-overlay" onClick={() => setMenuOpen(false)}>
-          <div className="mobile-menu-drawer" onClick={(e) => e.stopPropagation()}>
-            <div className="mobile-menu-header">
-              <span className="nav-clock">
-                {time ? `Palu — ${time} WITA` : "Palu — WITA"}
-              </span>
-              <button
-                type="button"
-                className="mobile-close-btn"
-                onClick={() => setMenuOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="mobile-menu-links">
-              {navItems.map(({ id, label }, i) => (
-                <a
-                  key={id}
-                  href={`#${id}`}
-                  className={`mobile-menu-link ${active === id ? "active" : ""}`}
-                  onClick={(e) => handleClick(e, id)}
-                >
-                  <span className="link-num">0{i + 1}</span>
-                  <span className="link-label">{label}</span>
-                </a>
-              ))}
-            </div>
-          </div>
+      {/* Mobile full-screen menu */}
+      <div
+        className={`mnav${menuOpen ? " open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        aria-hidden={!menuOpen}
+        inert={!menuOpen}
+      >
+        <div className="mnav-top">
+          <span className="mnav-clock">{clockLabel}</span>
+          <button
+            ref={closeBtnRef}
+            type="button"
+            className="mnav-close"
+            aria-label="Close menu"
+            onClick={() => setMenuOpen(false)}
+          >
+            <span aria-hidden="true">✕</span>
+          </button>
         </div>
-      )}
+        <nav className="mnav-links" aria-label="Mobile">
+          {NAV_ITEMS.map(({ id, label }, i) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              className={`mnav-link${active === id ? " active" : ""}`}
+              style={{ "--i": i } as React.CSSProperties}
+              tabIndex={menuOpen ? 0 : -1}
+              onClick={(e) => {
+                e.preventDefault();
+                goTo(id);
+              }}
+            >
+              <span className="mnav-num" aria-hidden="true">
+                0{i + 1}
+              </span>
+              <span className="mnav-label">{label}</span>
+            </a>
+          ))}
+        </nav>
+        <div className="mnav-foot" aria-hidden="true">
+          <span className="mnav-status">
+            <span className="dot" />
+            Open to work
+          </span>
+          <span className="mnav-clock">{clockLabel}</span>
+        </div>
+      </div>
     </>
   );
 }

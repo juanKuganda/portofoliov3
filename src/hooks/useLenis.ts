@@ -1,9 +1,14 @@
 import { useEffect, useRef } from "react";
 import Lenis from "lenis";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 /**
- * Initialises Lenis smooth scroll. Returns the Lenis instance ref
- * for scrollTo usage elsewhere. Respects prefers-reduced-motion.
+ * Initialises Lenis smooth scroll, driven by the GSAP ticker so scroll
+ * and scrubbed animations stay in sync (no tearing). Respects
+ * prefers-reduced-motion.
  */
 export function useLenis() {
   const lenisRef = useRef<Lenis | null>(null);
@@ -17,13 +22,15 @@ export function useLenis() {
     const lenis = new Lenis({ lerp: 0.1, wheelMultiplier: 1 });
     lenisRef.current = lenis;
 
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
+    lenis.on("scroll", ScrollTrigger.update);
+    const tick = (time: number) => {
+      lenis.raf(time * 1000);
+    };
+    gsap.ticker.add(tick);
+    gsap.ticker.lagSmoothing(0);
 
     return () => {
+      gsap.ticker.remove(tick);
       lenis.destroy();
       lenisRef.current = null;
     };
