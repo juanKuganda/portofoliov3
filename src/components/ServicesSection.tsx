@@ -195,20 +195,31 @@ export default function ServicesSection() {
     if (reduced) return;
     const list = listRef.current;
     if (!list) return;
-    const ctx = gsap.context(() => {
-      gsap.from(".svc-index-row", {
-        y: 36,
-        opacity: 0,
-        duration: 0.7,
-        stagger: 0.08,
-        ease: "power3.out",
-        scrollTrigger: { trigger: list, start: "top 82%", once: true },
-        onComplete: () =>
-          gsap.set(".svc-index-row", { clearProps: "transform,opacity" }),
-      });
-    }, list);
+    // Entrance via IntersectionObserver (not gsap.from + once): IO fires
+    // reliably even on mid-page reload, where ScrollTrigger once-triggers
+    // can leave elements stuck invisible.
+    const rows = list.querySelectorAll<HTMLElement>(".svc-index-row");
+    gsap.set(rows, { y: 36, opacity: 0 });
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          io.disconnect();
+          gsap.to(rows, {
+            y: 0,
+            opacity: 1,
+            duration: 0.7,
+            stagger: 0.08,
+            ease: "power3.out",
+            onComplete: () =>
+              gsap.set(rows, { clearProps: "transform,opacity" }),
+          });
+        }
+      },
+      { threshold: 0.08 }
+    );
+    io.observe(list);
     return () => {
-      ctx.revert();
+      io.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

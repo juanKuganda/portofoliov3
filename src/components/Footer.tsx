@@ -38,33 +38,29 @@ export default function Footer() {
     if (reduced) return;
     const root = rootRef.current;
     if (!root) return;
-    const ctx = gsap.context(() => {
-      gsap.from(".foot-row", {
-        y: 48,
-        opacity: 0,
-        duration: 0.65,
-        ease: "power3.out",
-        stagger: 0.08,
-        clearProps: "transform,opacity",
-        scrollTrigger: { trigger: root, start: "top 80%", once: true },
-      });
-      gsap.from(".foot-cursor-arrow", {
-        scale: 0,
-        opacity: 0,
-        duration: 0.5,
-        ease: "back.out(2.5)",
-        clearProps: "transform,opacity",
-        scrollTrigger: { trigger: root, start: "top 80%", once: true },
-      });
-      gsap.to(".foot-cursor-bob", {
-        y: -8,
-        duration: 1.1,
-        ease: "sine.inOut",
-        yoyo: true,
-        repeat: -1,
-      });
-    }, root);
-    return () => ctx.revert();
+    // Entrance via IntersectionObserver (not gsap.from + once): IO fires
+    // reliably even on mid-page reload, where ScrollTrigger once-triggers
+    // can leave elements stuck invisible.
+    const rows = root.querySelectorAll<HTMLElement>(".foot-row");
+    gsap.set(rows, { y: 48, opacity: 0 });
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          io.disconnect();
+          gsap.to(rows, {
+            y: 0,
+            opacity: 1,
+            duration: 0.65,
+            ease: "power3.out",
+            stagger: 0.08,
+            clearProps: "transform,opacity",
+          });
+        }
+      },
+      { threshold: 0.08 }
+    );
+    io.observe(root);
+    return () => io.disconnect();
   }, [reduced]);
 
   return (
@@ -76,21 +72,6 @@ export default function Footer() {
       <nav className="foot-nav" aria-label="Social links">
         {ROWS.map((r, i) => (
           <div key={r.label} className="foot-row-wrap">
-            {i === 0 && (
-              <span className="foot-cursor-arrow" aria-hidden="true">
-                <span className="foot-cursor-bob">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M6.2 3.4 19.6 12l-7.2 1.1-2.9 6.7z"
-                      fill="var(--pop-pink)"
-                      stroke="var(--ink)"
-                      strokeWidth="1.4"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-              </span>
-            )}
             <a
               className={`foot-row ${r.cls}`}
               href={r.href}
