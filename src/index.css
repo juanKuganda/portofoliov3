@@ -2844,20 +2844,6 @@ footer.site {
   outline: 2px solid var(--paper);
   outline-offset: -2px;
 }
-/* Pink cursor arrow pointing at the Email row — overlaps the row's
-   top edge so the tip clearly indicates EMAIL (not floating in the void) */
-.foot-cursor-arrow {
-  position: absolute;
-  top: -6px;
-  left: clamp(110px, 11vw, 190px);
-  transform: rotate(-18deg);
-  pointer-events: none;
-  z-index: 2;
-}
-.foot-cursor-bob {
-  display: inline-block;
-  will-change: transform;
-}
 /* Colophon */
 .colophon {
   display: flex;
@@ -3059,10 +3045,6 @@ footer.site {
   .foot-row {
     grid-template-columns: 44px minmax(0, 1fr) auto;
     gap: 12px;
-  }
-  .foot-cursor-arrow {
-    top: -10px;
-    left: 8px;
   }
   .colophon {
     justify-content: flex-start;

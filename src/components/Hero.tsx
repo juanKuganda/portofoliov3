@@ -203,6 +203,10 @@ const RULER_NUMS: number[] = Array.from({ length: 15 }, (_, i) => i * 100);
  */
 export default function Hero() {
   const rootRef = useRef<HTMLElement>(null);
+  // The scroll-scrub timeline stays disabled until the entrance completes,
+  // so the two never fight over the stickers/card (which left elements
+  // stuck invisible when users scrolled mid-entrance).
+  const scrollSTRef = useRef<{ enable(): void } | null>(null);
 
   // Measure the sticky nav so scene-1 content can pad clear of it.
   useLayoutEffect(() => {
@@ -447,6 +451,10 @@ export default function Hero() {
         gsap.set(".reel-card", { clearProps: "transform,opacity" });
         gsap.set(stickers, { clearProps: "transform,opacity" });
         gsap.set(floaters, { clearProps: "transform,opacity" });
+        // Entrance done: hand control to the scroll scrub. It was kept
+        // disabled until now so a mid-entrance scroll can't leave the
+        // stickers/card stuck invisible.
+        scrollSTRef.current?.enable();
       });
     }, root);
     return () => {
@@ -471,6 +479,9 @@ export default function Hero() {
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
+        // No overwrite here: the scroll scrub is disabled until this
+        // entrance completes (see below), so the two never fight over
+        // the stickers/card and nothing gets stuck invisible.
         defaults: { ease: "none" },
         scrollTrigger: {
           trigger: root,
@@ -501,10 +512,18 @@ export default function Hero() {
         mStickers.forEach((el, i) => {
           // Vertical scatter (no horizontal push): the wrapped row is
           // tight, so sideways vectors would collide mid-flight.
+          // From-state is complete (scale/rotation) so a mid-entrance
+          // scroll normalizes instead of freezing the pop-in mid-way.
           const dir = i % 2 === 0 ? -1 : 1;
           tl.fromTo(
             el,
-            { x: 0, y: 0, rotation: 0, autoAlpha: 1 },
+            {
+              x: 0,
+              y: 0,
+              scale: 1,
+              rotation: parseFloat(el.dataset.rot || "0"),
+              autoAlpha: 1,
+            },
             {
               x: 0,
               y: -(44 + (i % 3) * 22),
@@ -544,7 +563,13 @@ export default function Hero() {
           const dir = el.dataset.side === "l" ? -1 : 1;
           tl.fromTo(
             el,
-            { x: 0, y: 0, rotation: 0, autoAlpha: 1 },
+            {
+              x: 0,
+              y: 0,
+              scale: 1,
+              rotation: parseFloat(el.dataset.rot || "0"),
+              autoAlpha: 1,
+            },
             {
               x: dir * (90 + (i % 3) * 30), // ±90..150, outward
               y: -(70 + (i % 4) * 24), // -70..-142, upward
@@ -594,7 +619,13 @@ export default function Hero() {
           const dir = el.dataset.side === "l" ? -1 : 1;
           tl.fromTo(
             el,
-            { x: 0, y: 0, rotation: 0, autoAlpha: 1 },
+            {
+              x: 0,
+              y: 0,
+              scale: 1,
+              rotation: parseFloat(el.dataset.rot || "0"),
+              autoAlpha: 1,
+            },
             {
               x: dir * (110 + i * 24),
               y: -(90 + i * 30),
@@ -631,6 +662,14 @@ export default function Hero() {
 
       // The ruler stays visible through the explode — it only leaves
       // naturally as the hero scrolls away. (No opacity fade.)
+
+      // Keep the scrub disabled until the entrance completes (the
+      // entrance timeline enables it via scrollSTRef). Prevents a
+      // mid-entrance scroll from leaving stickers/card stuck invisible.
+      if (tl.scrollTrigger) {
+        tl.scrollTrigger.disable();
+        scrollSTRef.current = tl.scrollTrigger;
+      }
     }, root);
 
     // Ruler shift: the canvas slides under the ruler as you scroll.
