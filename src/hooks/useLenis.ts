@@ -19,7 +19,7 @@ export function useLenis() {
     ).matches;
     if (reduced) return;
 
-    const lenis = new Lenis({ lerp: 0.1, wheelMultiplier: 1 });
+    const lenis = new Lenis({ lerp: 0.07, wheelMultiplier: 0.85 });
     lenisRef.current = lenis;
 
     lenis.on("scroll", ScrollTrigger.update);
