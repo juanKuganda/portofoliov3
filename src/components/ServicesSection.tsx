@@ -4,7 +4,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import WebDevVisual from "./WebDevVisual";
 import DesignVisual from "./DesignVisual";
-import BackendVisual from "./BackendVisual";
+import AgentVisual from "./AgentVisual";
 import CommunityVisual from "./CommunityVisual";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -28,15 +28,15 @@ const services: ServiceData[] = [
     num: "02",
     name: "UI / UX Design",
     description:
-      "Layouts and user flows people understand at a glance. From wireframes to design systems.",
-    tags: "Figma · Design Systems · Micro-interactions",
+      "Layouts, flows, and visuals people understand at a glance - from wireframes to design systems and graphics.",
+    tags: "Figma · Design Systems · Graphic Design · Micro-interactions",
   },
   {
     num: "03",
-    name: "Backend Architecture",
+    name: "AI Agent Workflows",
     description:
-      "RESTful APIs, authentication systems, and database structures built to scale reliably.",
-    tags: "Node.js · Laravel · PostgreSQL · REST APIs",
+      "Prompt-driven development with AI agents. Prototypes in hours, not days - planned, coded, and tested with a human directing every step.",
+    tags: "AI Agents · Prompt Engineering · Rapid Prototyping · Automation",
   },
   {
     num: "04",
@@ -232,7 +232,7 @@ export default function ServicesSection() {
       case 1:
         return <DesignVisual active={playing && active === 1} />;
       case 2:
-        return <BackendVisual active={playing && active === 2} />;
+        return <AgentVisual active={playing && active === 2} />;
       default:
         return <CommunityVisual active={playing && active === 3} />;
     }
