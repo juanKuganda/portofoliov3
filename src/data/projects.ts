@@ -4,7 +4,7 @@ export interface ProjectTile {
   cap: string;
 }
 
-export interface ProjectMeta {
+interface ProjectMeta {
   label: string;
   value: string;
 }
@@ -94,8 +94,116 @@ export const projects: Project[] = [
     ],
   },
   {
-    id: "proj-hmti",
+    id: "proj-fundtogether",
     idx: "/ 03",
+    title: "FundTogether",
+    year: "Web3 · 2025",
+    ariaLabel: "FundTogether details",
+    description:
+      "<strong>Crowdfunding, rebuilt for verifiable trust.</strong> FundTogether pairs a familiar <em>Midtrans</em> payment flow for fiat donors with blockchain-backed funding mechanisms, so campaigns raise money through normal checkout while funding records stay independently checkable. A practical step into Web3 product engineering - accountable fundraising infrastructure, not speculation.",
+    meta: [
+      { label: "Role", value: "Product · Full-stack" },
+      { label: "Stack", value: "AdonisJS · Tailwind · Midtrans" },
+      { label: "Focus", value: "Crowdfunding · Web3" },
+    ],
+    tiles: [
+      {
+        seed: "fundtogether-campaign",
+        big: "Campaigns people can actually verify.",
+        cap: "FUNDTOGETHER / CAMPAIGN.TXT",
+      },
+      {
+        seed: "fundtogether-payments",
+        big: "Fiat in, without the friction.",
+        cap: "FUNDTOGETHER / PAYMENTS.TXT",
+      },
+      {
+        seed: "fundtogether-chain",
+        big: "Funding events anchored on-chain.",
+        cap: "FUNDTOGETHER / CHAIN.TXT",
+      },
+      {
+        seed: "fundtogether-trust",
+        big: "Trust designed into every pledge.",
+        cap: "FUNDTOGETHER / TRUST.TXT",
+      },
+    ],
+  },
+  {
+    id: "proj-csirt",
+    idx: "/ 04",
+    title: "CSIRT Bank Sulteng",
+    year: "Security · 2025",
+    ariaLabel: "CSIRT Bank Sulteng details",
+    description:
+      "<strong>Security work is mostly evidence.</strong> At Bank Sulteng the focus was auditability: tamper-evident logging for asset transactions, anchored to an <em>Ethereum testnet</em> so changes leave a trail that is hard to quietly rewrite. The emphasis is accountability - who changed what, when, and whether the record still matches.",
+    meta: [
+      { label: "Role", value: "Security · Audit" },
+      { label: "Stack", value: "Ethereum Testnet · Hardhat · Audit Logs" },
+      { label: "Org", value: "PT Bank Sulteng" },
+    ],
+    tiles: [
+      {
+        seed: "csirt-audit-trail",
+        big: "Every change leaves evidence.",
+        cap: "BANK SULTENG / AUDIT.TXT",
+      },
+      {
+        seed: "csirt-testnet",
+        big: "Logs anchored beyond the database.",
+        cap: "BANK SULTENG / TESTNET.TXT",
+      },
+      {
+        seed: "csirt-integrity",
+        big: "Tampering should be obvious.",
+        cap: "BANK SULTENG / INTEGRITY.TXT",
+      },
+      {
+        seed: "csirt-accountability",
+        big: "Who changed what, and when.",
+        cap: "BANK SULTENG / LEDGER.TXT",
+      },
+    ],
+  },
+  {
+    id: "proj-pt-admin",
+    idx: "/ 05",
+    title: "Tadulako Admin Dashboard",
+    year: "UI/UX · 2025",
+    ariaLabel: "Tadulako Admin Dashboard details",
+    description:
+      "<strong>An admin interface designed before it was built.</strong> I mapped Programming Tadulako\u2019s operational workflow in <em>Figma</em> first - navigation, dense data views, repeat actions - then translated the layouts into reusable React and Tailwind components. Community operations, treated like a product: consistent, scannable, ready to extend.",
+    meta: [
+      { label: "Role", value: "UI/UX · Front-end" },
+      { label: "Stack", value: "Figma · React · Tailwind" },
+      { label: "Org", value: "Programming Tadulako" },
+    ],
+    tiles: [
+      {
+        seed: "pt-admin-system",
+        big: "Operations, organized like a product.",
+        cap: "ADMIN / SYSTEM.TXT",
+      },
+      {
+        seed: "pt-admin-figma",
+        big: "Every screen resolved in Figma first.",
+        cap: "ADMIN / FIGMA.TXT",
+      },
+      {
+        seed: "pt-admin-components",
+        big: "Layouts became reusable components.",
+        cap: "ADMIN / COMPONENTS.TXT",
+      },
+      {
+        seed: "pt-admin-usability",
+        big: "Dense data, made scannable.",
+        cap: "ADMIN / USABILITY.TXT",
+      },
+    ],
+  },
+  {
+    id: "proj-hmti",
+    idx: "/ 06",
     title: "HMTI Website",
     year: "Ongoing · 2024 – Present",
     ariaLabel: "HMTI website details",
@@ -126,42 +234,6 @@ export const projects: Project[] = [
         seed: "hmti-scope",
         big: "Events, announcements, profiles.",
         cap: "HMTI / SCOPE.TXT",
-      },
-    ],
-  },
-  {
-    id: "proj-mentor",
-    idx: "/ 04",
-    title: "Web Mentorship",
-    year: "Ongoing · 2025 – Present",
-    ariaLabel: "Mentorship details",
-    description:
-      "<strong>Weekly web development mentoring</strong> for two Palu communities: Programming Tadulako and HammerCode. Sessions run from HTML/CSS/JS fundamentals up to building and shipping real projects.",
-    meta: [
-      { label: "Role", value: "Mentor" },
-      { label: "Communities", value: "Programming Tadulako · HammerCode" },
-      { label: "Since", value: "Jan 2025" },
-    ],
-    tiles: [
-      {
-        seed: "mentor-format",
-        big: "Teaching the web, weekly.",
-        cap: "MENTOR / FORMAT.TXT",
-      },
-      {
-        seed: "mentor-reach",
-        big: "Programming Tadulako · HammerCode.",
-        cap: "MENTOR / REACH.TXT",
-      },
-      {
-        seed: "mentor-topics",
-        big: "HTML · CSS · JavaScript · React",
-        cap: "MENTOR / TOPICS.TXT",
-      },
-      {
-        seed: "mentor-method",
-        big: "Fundamentals → real projects.",
-        cap: "MENTOR / METHOD.TXT",
       },
     ],
   },

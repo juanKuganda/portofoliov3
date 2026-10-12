@@ -68,14 +68,14 @@ export default function AboutSection() {
   }, []);
 
   const stackItems = [
+    "JavaScript",
     "TypeScript",
     "React",
     "Next.js",
     "Tailwind CSS",
     "Figma",
-    "Node.js",
-    "Laravel",
-    "Framer",
+    "Canva",
+    "CapCut",
   ];
 
   return (
@@ -100,22 +100,27 @@ export default function AboutSection() {
       <div className="about-grid">
         <div className="rv rv-left">
           <p>
-            I&rsquo;m <strong>Juan Kuganda</strong>, an informatics undergrad at{" "}
-            <strong>Universitas Tadulako</strong> (class of 2027, GPA 3.89)
-            working at the intersection of development and design. I build
-            interfaces people understand at a glance — engineered clean,
-            designed with intent.
+            I&rsquo;m <strong>Juan Kuganda</strong>, an informatics undergrad
+            at <strong>Universitas Tadulako</strong> (class of 2027, GPA 3.89)
+            and a <strong>front-end developer</strong> who also designs.{" "}
+            <strong>JavaScript</strong> is my home language - React, Next.js,
+            and Tailwind on top of it. Three years of UI/UX and graphic design
+            run underneath every build. Right now I&rsquo;m going deep on{" "}
+            <strong>Web3</strong>: my thesis verifies diplomas on-chain.
           </p>
           <p>
-            Outside of code, I mentor web development across Palu&rsquo;s dev
-            communities and chair Palu Dev. I care about software that is
-            legible — in its interface, its architecture, and its intent.
+            I teach as much as I build: <strong>web mentor</strong> at
+            Programming Tadulako and HammerCode,{" "}
+            <strong>teaching assistant</strong> at UNTAD, speaker at student
+            tech events, and chairman of <strong>Palu Dev</strong>. Day to day
+            I work through AI agents - the prompting is mine, the typing is
+            shared - which is how I ship faster than most solo developers.
           </p>
         </div>
         <div className="rv rv-right rv-d1">
           <p>
-            Based in <strong>Palu, Indonesia</strong> (WITA) - happy on-site or
-            hybrid locally, remote anywhere.
+            Based in <strong>Palu, Indonesia</strong> (WITA) - on-site or
+            hybrid locally, remote anywhere else.
           </p>
           <div className="about-stack-wrap">
             <span className="stack-heading">Core Stack &amp; Tools:</span>
@@ -155,12 +160,28 @@ export default function AboutSection() {
           </div>
           <div className="resume-row">
             <div>
+              <div className="r-title">Teaching Assistant</div>
+              <div className="r-sub">
+                Universitas Tadulako &middot; Logika Matematika, API, IMK
+              </div>
+            </div>
+            <div className="r-date">2026 &ndash;</div>
+          </div>
+          <div className="resume-row">
+            <div>
               <div className="r-title">Web Mentor</div>
               <div className="r-sub">
                 Programming Tadulako &middot; HammerCode
               </div>
             </div>
             <div className="r-date">Jan 2025 &ndash;</div>
+          </div>
+          <div className="resume-row">
+            <div>
+              <div className="r-title">Chairman</div>
+              <div className="r-sub">Palu Dev &middot; developer community</div>
+            </div>
+            <div className="r-date">2025 &ndash;</div>
           </div>
           <div className="resume-row">
             <div>

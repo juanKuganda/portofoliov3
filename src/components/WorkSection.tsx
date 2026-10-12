@@ -20,7 +20,9 @@ export default function WorkSection() {
       </h2>
       <div className="sec-sub rv">
         <span>Index of projects</span>
-        <span>2024 – 2026 · 04</span>
+        <span>
+          2024 – 2026 · {String(projects.length).padStart(2, "0")}
+        </span>
       </div>
 
       {projects.map((proj) => (
