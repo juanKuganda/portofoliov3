@@ -428,658 +428,212 @@ a {
 }
 
 /* ============================================================
-   HERO — THE REEL v5 (clean & personal)
-   Scene 1: faint static grid on paper; "Hai, I'm Juan" mask
-   reveal; 3:4 portrait card dropped from above; five glossy 3D
-   doodle icons + one status pill floating around the card.
-   Interaction: magnetic parallax (rAF + quickSetter, lerped) on
-   dedicated wrappers (.par-hi, .par-card, .sticker-par) — never
-   fights the entrance or scroll-explode timelines.
-   Scroll: NO PIN — card/headline drift out, stickers EXPLODE
-   outward + upward and fade (scrub, ends "bottom 70%").
+   HERO — Swiss specimen.
+   Concept: the portfolio as a technical document. 12-column hairline
+   grid, one grotesque (Inter Tight), index numbers, meta strip, info
+   table, portrait filed as FIG.01. No stickers, no parallax — quiet
+   mask-reveal entrance, natural scroll. Static under reduced motion.
    ============================================================ */
-.hero-reel {
+.hero-swiss {
   position: relative;
-  height: 100svh;
-  min-height: 560px;
-  overflow: hidden;
+  min-height: 100svh;
   background: var(--paper);
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
+  color: var(--ink);
+  padding: clamp(20px, 3vh, 36px) var(--pad) clamp(28px, 5vh, 56px);
+  overflow: hidden;
 }
-/* Faint blueprint grid — static. */
-.hero-reel::before {
-  content: "";
+/* 12-column hairline skeleton. */
+.sw-grid {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  padding: 0 var(--pad);
   pointer-events: none;
-  background-image:
-    linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 76px 76px;
-  opacity: 0.55;
-  -webkit-mask-image: radial-gradient(ellipse 95% 85% at 50% 45%, black 25%, transparent 78%);
-  mask-image: radial-gradient(ellipse 95% 85% at 50% 45%, black 25%, transparent 78%);
 }
-/* Whisper of amber behind the card — static. */
-.hero-reel::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  pointer-events: none;
-  width: min(680px, 90vw);
-  aspect-ratio: 1;
-  left: 50%;
-  top: 48%;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.13), transparent 62%);
+.sw-grid span {
+  border-left: 1px solid rgba(10, 10, 10, 0.055);
 }
-
-/* Top row: kicker left, role ticker right — ink on paper. */
-.reel-top {
+.sw-grid span:last-child {
+  border-right: 1px solid rgba(10, 10, 10, 0.055);
+}
+/* Meta strip: three indexed cells on a hairline. */
+.sw-meta {
+  position: relative;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 22px var(--pad) 0;
-  color: var(--ink);
+  gap: 12px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid rgba(10, 10, 10, 0.18);
+  padding: 10px 0;
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  position: relative;
-  z-index: 3;
 }
-.reel-kicker {
-  margin: 0;
-  display: flex;
+.sw-meta-status {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 8px;
 }
-.reel-kicker .dot {
+.sw-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--signal);
+  background: var(--pop-green);
   flex: none;
-  animation: pulse 2.4s ease-in-out infinite;
 }
-.reel-kicker .sep {
-  opacity: 0.5;
+/* Main: headline (8 cols) + FIG.01 (4 cols). */
+.sw-main {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+  margin-top: clamp(28px, 6vh, 72px);
+  align-items: end;
 }
-/* Role ticker: [ Engineer ] → [ Design ] → [ People ] */
-.role-ticker {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.sw-head {
+  grid-column: 1 / 9;
+}
+.sw-kicker {
+  margin: 0 0 18px;
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  color: var(--ink);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #555;
 }
-.tick-bracket {
-  font-weight: 700;
-  opacity: 0.55;
-}
-.tick-word {
-  display: inline-block;
-  font-weight: 600;
-  min-width: 92px;
-  animation: tick-in 0.45s cubic-bezier(0.2, 0.8, 0.3, 1);
-}
-@keyframes tick-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-}
-
-/* Center stage: greeting, portrait card, caption row. */
-.reel-center {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(12px, 2.2vh, 24px);
-  padding: clamp(10px, 2vh, 20px) var(--pad);
-  /* keep the caption row clear of the viewport bottom in normal flow,
-     where the hero starts below the sticky nav */
-  padding-bottom: calc(clamp(10px, 2vh, 20px) + var(--nav-h, 60px));
-  position: relative;
-  z-index: 2;
-}
-.reel-hi-mask {
-  overflow: hidden;
-  /* breathing room so the magnetic parallax never clips the text,
-     and the figma-select box (inset -10px -18px, handles +5px out)
-     stays fully visible: 20px bottom clears the 15px the box needs */
-  padding: 14px 24px 20px;
-  margin: -14px -24px -20px;
-  /* paint above the card so the selection box's bottom edge + handles
-     draw over the card top like a real Figma selection */
-  position: relative;
-  z-index: 3;
-  /* jangan sampai menyusut saat kolom flex overflow di mobile —
-     mask yang terjepit memotong headline (hanya sliver terlihat) */
-  flex-shrink: 0;
-}
-.reel-hi {
+.sw-title {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  font-size: clamp(40px, 6.4vw, 96px);
-  color: var(--ink);
-  text-align: center;
-  white-space: nowrap;
+  font-size: clamp(4rem, 11.6vw, 10.75rem);
+  line-height: 0.86;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
 }
-/* Parallax wrappers: the ONLY elements the magnetic loop touches
-   (via gsap.quickSetter), so it never fights the entrance or
-   scroll timelines. No permanent will-change — the loop writes
-   transforms directly only while the pointer moves. */
-.par-card {
-  position: relative;
-}
-/* Hover glow crossfades via opacity (compositor-only) instead of
-   animating box-shadow, which would repaint every frame. */
-.par-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  box-shadow:
-    0 38px 90px rgba(0, 0, 0, 0.28),
-    0 0 0 2px var(--signal);
-  opacity: 0;
-  transition: opacity 0.5s var(--ease);
-  pointer-events: none;
-}
-/* Hover glow only where hover truly exists — on touch screens a tap
-   would leave the amber ring stuck on the card. */
-@media (hover: hover) {
-  .par-card:hover::after {
-    opacity: 1;
-  }
-}
-
-/* The card: 3:4 portrait, border + soft shadow. */
-.reel-card {
-  position: relative;
-  width: min(350px, 74vw);
-  aspect-ratio: 3 / 4;
-  margin: 0;
+.sw-line {
+  display: block;
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background: #101010;
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.18);
 }
-.reel-card .card-photo {
-  position: absolute;
-  inset: 0;
+.sw-line > span {
+  display: inline-block;
+  will-change: transform;
+}
+.sw-sub {
+  margin: 22px 0 0;
+  max-width: 34ch;
+  font-size: 17px;
+  line-height: 1.5;
+  color: #333;
+}
+/* FIG.01 — the portrait as a filed document. */
+.sw-fig {
+  grid-column: 9 / 13;
+  margin: 0;
+}
+.sw-photo {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border: 1px solid var(--ink);
+  background: #111;
+}
+.sw-photo img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* 3:4 source, bias upward so the face clears the frame. */
-  object-position: 50% 20%;
-  display: block;
 }
-.reel-card .photo-gray {
-  filter: grayscale(1) contrast(1.03);
+.sw-photo-gray {
+  position: absolute;
+  inset: 0;
+  filter: grayscale(1) contrast(1.04);
 }
-
-.reel-bottom-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  width: min(350px, 74vw);
-  color: var(--ink);
+.sw-cap {
+  margin-top: 10px;
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: #555;
 }
-.reel-cap {
+/* Info table: Swiss rows on hairlines. */
+.sw-table {
+  position: relative;
+  margin: clamp(36px, 7vh, 80px) 0 0;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 0 24px;
+}
+.sw-row {
+  grid-column: span 3;
+  border-top: 1px solid var(--ink);
+  padding: 12px 0 4px;
   margin: 0;
-  opacity: 0.6;
+  display: block;
 }
-.reel-scroll {
+.sw-row dt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 8px;
+}
+.sw-row dd {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+.sw-links {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.sw-links a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.sw-links a:hover {
+  text-decoration-thickness: 2px;
+}
+/* Scroll cue, bottom-right. */
+.sw-scroll {
+  position: absolute;
+  right: var(--pad);
+  bottom: clamp(20px, 3.5vh, 36px);
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--ink);
   text-decoration: none;
-  white-space: nowrap;
-  transition: transform 0.3s var(--ease);
-  cursor: pointer;
 }
-.reel-scroll:hover {
-  transform: translateY(2px);
+.sw-scroll:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
-.reel-scroll .arrow {
-  display: inline-block;
-  color: var(--signal);
-  animation: cue-bob 1.8s ease-in-out infinite;
+@media (max-width: 900px) {
+  .sw-head { grid-column: 1 / -1; }
+  .sw-fig { grid-column: 1 / -1; max-width: 420px; }
+  .sw-row { grid-column: span 6; margin-bottom: 18px; }
 }
-@keyframes cue-bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(5px);
-  }
-}
-
-/* ---- Figma-select: the headline wrapped in a Figma-style selection.
-   The blue box + 8 handles stay as a designer signature after the
-   one-time cursor sweep. Lives inside .par-hi so it follows the
-   magnetic parallax and the scroll explode with the text. ---- */
-.hi-select {
-  position: relative;
-  display: inline-block;
-}
-.hi-box {
-  position: absolute;
-  inset: -10px -18px;
-  border: 1.5px solid #0d99ff;
-  border-radius: 3px;
-  pointer-events: none;
-}
-.hi-handle {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  background: #ffffff;
-  border: 1.5px solid #0d99ff;
-  border-radius: 1.5px;
-}
-.hi-handle.h-nw { top: -5px; left: -5px; }
-.hi-handle.h-n  { top: -5px; left: calc(50% - 4px); }
-.hi-handle.h-ne { top: -5px; right: -5px; }
-.hi-handle.h-w  { top: calc(50% - 4px); left: -5px; }
-.hi-handle.h-e  { top: calc(50% - 4px); right: -5px; }
-.hi-handle.h-sw { bottom: -5px; left: -5px; }
-.hi-handle.h-s  { bottom: -5px; left: calc(50% - 4px); }
-.hi-handle.h-se { bottom: -5px; right: -5px; }
-.hi-cursor {
-  position: absolute;
-  left: -6px;
-  top: 52%;
-  pointer-events: none;
-  filter: drop-shadow(0 2px 4px rgba(10, 10, 10, 0.25));
-}
-/* ---- Sticker field: five precision doodles + one status pill, floating around
-   the card (anchored to .reel-center, the card's own stage) ---- */
-.reel-stickers {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-}
-.sticker {
-  position: absolute;
-  display: block;
-}
-/* Transform layers: outer `.sticker` = entrance pop + scroll explode;
-   inner `.sticker-par` = magnetic parallax. Hover only lifts stacking
-   order (no shadow animation — would repaint). */
-.sticker:hover {
-  z-index: 10;
-}
-.sticker-par {
-  display: block;
-}
-/* Doodle: centered on the `at` point. */
-.doodle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  transform: translate(-50%, -50%);
-}
-/* Apple-precision vector doodles: geometric, crisp, subtle depth via
-   internal gradients. Height-driven so the icons stay balanced. */
-.doodle-svg {
-  height: 76px;
-  width: auto;
-  display: block;
-}
-.doodle-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink);
-  white-space: nowrap;
-}
-/* The one kept pill: status, with a pulsing amber dot. */
-.doodle-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--paper);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  transform: translate(-50%, -50%);
-}
-.doodle-pill .sdot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--signal);
-  flex: none;
-  animation: dot-pulse 2.2s ease-in-out infinite;
-}
-/* ---- Floating cursors, reference-style: colored arrow + rotated
-   sticker pill (black outline) + mini bubble. Outer .cursor-float =
-   entrance + explode; .cursor-par = magnetic; .cursor-inner = idle
-   bob (transform-only). Desktop only. */
-.reel-floaters {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-}
-.cursor-float {
-  position: absolute;
-  display: block;
-}
-.cursor-par {
-  display: block;
-}
-.cursor-inner {
-  display: flex;
-  align-items: flex-start;
-  transform: translate(-50%, -50%);
-  animation: cursor-bob 3.4s ease-in-out infinite;
-}
-.cursor-mini {
-  order: -1;
-  flex: none;
-  margin: 32px 8px 0 0;
-  background: var(--ink);
-  color: #fff;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  padding: 7px 11px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-.cursor-arrow {
-  flex: none;
-  filter: drop-shadow(0 3px 6px rgba(10, 10, 10, 0.25));
-}
-.cursor-pill-tag {
-  flex: none;
-  margin: 18px 0 0 -4px;
-  color: #fff;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 14px;
-  letter-spacing: 0.05em;
-  padding: 11px 18px;
-  border-radius: 999px;
-  border: 2.5px solid var(--ink);
-  white-space: nowrap;
-  transform: rotate(var(--pill-rot, -8deg));
-  box-shadow: 0 8px 20px rgba(10, 10, 10, 0.18);
-}
-@keyframes cursor-bob {
-  0%,
-  100% {
-    transform: translate(-50%, -50%) translateY(-6px);
-  }
-  50% {
-    transform: translate(-50%, -50%) translateY(6px);
-  }
-}
-@media (max-width: 768px) {
-  .reel-floaters {
-    display: none;
-  }
+@media (max-width: 640px) {
+  .sw-title { font-size: clamp(3.4rem, 19vw, 5.5rem); }
+  .sw-meta { font-size: 10px; flex-wrap: wrap; row-gap: 6px; }
+  .sw-meta > span { white-space: nowrap; }
+  .sw-row { grid-column: 1 / -1; }
+  .sw-table { margin-top: 40px; }
+  .sw-scroll { position: static; display: inline-flex; margin-top: 28px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cursor-inner {
-    animation: none;
-  }
-}
-@keyframes dot-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.5);
-    opacity: 0.55;
-  }
-}
-/* ---- Edge furniture: vertical labels + corner crop-marks fill the
-   far canvas (desktop only). translate/rotate are CSS properties so
-   the GSAP explode can own `transform` freely. ---- */
-.reel-edge {
-  position: absolute;
-  top: 50%;
-  translate: 0 -50%;
-  writing-mode: vertical-rl;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: var(--muted);
-  z-index: 1;
-  pointer-events: none;
-  white-space: nowrap;
-}
-.reel-edge-l {
-  left: 26px;
-  rotate: 180deg;
-}
-.reel-edge-r {
-  right: 26px;
-}
-.reel-corner {
-  position: absolute;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--muted);
-  z-index: 1;
-  pointer-events: none;
-  line-height: 1;
-}
-.rc-tl { top: 78px; left: 22px; }
-.rc-tr { top: 78px; right: 22px; }
-.rc-bl { bottom: 44px; left: 22px; }
-.rc-br { bottom: 44px; right: 22px; }
-@media (max-width: 768px) {
-  .reel-edge,
-  .reel-corner {
-    display: none;
-  }
-}
-/* ---- Figma-like ruler pinned to the hero bottom. The track slides
-   (scrub) as you scroll — like the canvas moving under the ruler — */
-.reel-ruler {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 46px;
-  z-index: 4;
-  overflow: hidden;
-  background: var(--paper);
-  border-top: 1px solid var(--line);
-  pointer-events: none;
-}
-.ruler-track {
-  display: flex;
-  width: max-content;
-  height: 100%;
-  /* minor ticks every 10px, major ticks every 100px (with the numbers),
-     drawn at the bottom so they travel WITH the numbers */
-  background-image:
-    repeating-linear-gradient(90deg, var(--faint) 0 1px, transparent 1px 10px),
-    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 100px);
-  background-size:
-    100% 16px,
-    100% 28px;
-  background-position:
-    left bottom,
-    left bottom;
-  background-repeat: repeat-x;
-  will-change: transform;
-}
-.ruler-copy {
-  display: flex;
-}
-.rnum {
-  flex: none;
-  width: 100px;
-  padding: 6px 0 0 6px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  user-select: none;
-}
-/* Reduced motion: one static frame — color card, greeting, stickers,
-   selection box shown, ruler static, no cursor sweep. */
-@media (prefers-reduced-motion: reduce) {
-  .reel-card .photo-gray {
-    display: none;
-  }
-  .tick-word,
-  .reel-kicker .dot,
-  .doodle-pill .sdot,
-  .reel-scroll .arrow {
-    animation: none;
-  }
-  .hi-cursor {
-    display: none;
-  }
-  .ruler-track {
-    will-change: auto;
-  }
-}
-
-@media (max-width: 768px) {
-  .reel-top {
-    padding: 18px var(--pad) 0;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-  /* Mobile hero flows naturally instead of forcing 100svh: the stacked
-     kicker + headline + card + doodles exceed small viewports, and
-     overflow:hidden would clip them. min-height keeps the full-screen
-     feel on tall screens. */
-  .hero-reel {
-    height: auto;
-    min-height: 100svh;
-  }
-  /* Clear the role ticker from the select box: give the headline
-     breathing room above instead of the -14px pull-up. */
-  .reel-hi-mask {
-    margin: 6px -24px -20px;
-  }
-  /* Unstack the center column: more air between headline, card,
-     caption row and doodles. */
-  .reel-center {
-    gap: clamp(20px, 3.4vh, 34px);
-  }
-  .reel-kicker .sep,
-  .reel-kicker span:nth-child(n + 4) {
-    display: none;
-  }
-  .reel-hi {
-    font-size: clamp(36px, 10.5vw, 60px);
-  }
-  .reel-bottom-row {
-    width: min(350px, 74vw);
-  }
-  .hero-reel::before {
-    background-size: 52px 52px;
-  }
-  /* Mobile: stickers go back to floating OVER the card like stickers
-     on a photo (absolute), instead of a row below it. Positions are
-     tuned per-sticker below. */
-  .reel-stickers {
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    pointer-events: none;
-  }
-  .sticker {
-    position: absolute !important;
-  }
-  .doodle,
-  .doodle-pill {
-    transform: translate(-50%, -50%);
-  }
-  .doodle-svg {
-    height: 52px;
-  }
-  .doodle-label {
-    font-size: 8px;
-    letter-spacing: 0.06em;
-    /* Labels sit on the dark photo on mobile — light text + shadow. */
-    color: var(--paper);
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.65);
-  }
-  .doodle-pill {
-    font-size: 10px;
-    padding: 8px 14px;
-  }
-  /* Sticker positions tuned for the mobile card (hero-relative).
-     All six sit on the portrait like stickers on a photo. */
-  .reel-stickers .sticker:nth-child(1) { top: 30% !important; left: 14% !important; } /* folder */
-  .reel-stickers .sticker:nth-child(2) { top: 62% !important; left: 12% !important; } /* pencil */
-  .reel-stickers .sticker:nth-child(3) { top: 29% !important; left: 60% !important; } /* cap */
-  .reel-stickers .sticker:nth-child(4) { top: 31% !important; left: 87% !important; } /* pin */
-  .reel-stickers .sticker:nth-child(5) { top: 58% !important; left: 88% !important; } /* code */
-  .reel-stickers .sticker:nth-child(6) { top: 74% !important; left: 50% !important; } /* pill */
-  /* Ruler stays, slimmer, above the caption row. */
-  .reel-ruler {
-    height: 34px;
-  }
-  .rnum {
-    font-size: 10px;
-    padding-top: 4px;
-  }
-  .ruler-track {
-    background-size:
-      100% 11px,
-      100% 19px;
-  }
-  /* Figma-select box hugs the smaller headline automatically
-     (inset-relative), cursor scales with it. */
-  .hi-box {
-    inset: -7px -12px;
-  }
-  .hi-cursor {
-    width: 18px;
-    height: 18px;
-  }
+  .sw-line > span { transform: none !important; }
 }
 
 /* ================= STATEMENT ================= */
@@ -1533,6 +1087,86 @@ section.block {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.65);
+}
+
+/* ---- Work toolbar: audience filter + GitHub link ---- */
+.work-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: clamp(18px, 3vh, 28px) 0 clamp(20px, 3.5vh, 32px);
+}
+.work-filter {
+  display: inline-flex;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.wf-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+.wf-btn + .wf-btn {
+  border-left: 1px solid var(--ink);
+}
+.wf-btn:hover {
+  background: rgba(10, 10, 10, 0.06);
+}
+.wf-btn.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+.wf-count {
+  font-size: 10px;
+  opacity: 0.55;
+}
+.work-gh {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  padding: 10px 4px;
+}
+.work-gh:hover {
+  text-decoration-thickness: 2px;
+}
+@media (max-width: 640px) {
+  .work-tools {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .work-filter {
+    display: flex;
+  }
+  .wf-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 8px;
+  }
+  .work-gh {
+    justify-content: center;
+  }
 }
 
 /* ============================================================
@@ -2839,6 +2473,7 @@ footer.site {
 .foot-row.orange::before { background: var(--pop-orange); }
 .foot-row.blue::before { background: var(--pop-blue); }
 .foot-row.purple::before { background: var(--pop-purple); }
+.foot-row.green::before { background: var(--pop-green); }
 .foot-row:hover::before,
 .foot-row:focus-visible::before {
   transform: scaleY(1);
