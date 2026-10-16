@@ -218,17 +218,21 @@ type StickerSpec = {
   aria?: string;
 };
 
-/* Tidy columns: left stickers share one x, right stickers share one x,
-   even vertical rhythm, clear of the corner text blocks and the card. */
+/* Wave flow: the eight stickers ride a sine wave left → right, the
+   portrait nestled in the wave's peak. Left of the card the wave
+   rises (68% → 46%), right of it falls (46% → 68%) — symmetric, tidy.
+   The squiggle sits left of the card so its arrow points up-right
+   toward the portrait. Stickers paint BEHIND the card (container
+   z-index 1), so the wave tucks behind the photo = depth. */
 const STICKERS: StickerSpec[] = [
-  { kind: "folder", label: "projects", at: { top: "36%", left: "9%" }, rot: -8, side: "l", href: "#work", aria: "Go to selected work" },
-  { kind: "pencil", label: "design", at: { top: "52%", left: "9%" }, rot: 7, side: "l", href: "#services", aria: "Go to services" },
-  { kind: "cap", label: "untad ’27", at: { top: "68%", left: "9%" }, rot: -5, side: "l", href: "#about", aria: "Go to about" },
-  { kind: "pin", label: "palu, id", at: { top: "32%", left: "91%" }, rot: 8, side: "r", href: "#contact", aria: "Go to contact" },
-  { kind: "code", label: "code", at: { top: "50%", left: "91%" }, rot: -7, side: "r", href: "https://github.com/juanKuganda", aria: "Open GitHub profile" },
+  { kind: "folder", label: "projects", at: { top: "68%", left: "5%" }, rot: -8, side: "l", href: "#work", aria: "Go to selected work" },
+  { kind: "pencil", label: "design", at: { top: "60%", left: "15%" }, rot: 7, side: "l", href: "#services", aria: "Go to services" },
+  { kind: "cap", label: "untad ’27", at: { top: "52%", left: "25%" }, rot: -5, side: "l", href: "#about", aria: "Go to about" },
+  { kind: "squiggle", label: "this way", at: { top: "46%", left: "33%" }, rot: -10, side: "l" },
+  { kind: "spark", label: "ship it", at: { top: "46%", left: "67%" }, rot: 10, side: "r" },
+  { kind: "pin", label: "palu, id", at: { top: "52%", left: "75%" }, rot: 8, side: "r", href: "#contact", aria: "Go to contact" },
+  { kind: "code", label: "code", at: { top: "60%", left: "85%" }, rot: -7, side: "r", href: "https://github.com/juanKuganda", aria: "Open GitHub profile" },
   { kind: "pill", label: "open to work", at: { top: "68%", left: "91%" }, rot: 5, side: "r", href: "#contact", aria: "Go to contact" },
-  { kind: "spark", label: "ship it", at: { top: "10%", left: "50%" }, rot: 10, side: "r" },
-  { kind: "squiggle", label: "this way", at: { top: "87%", left: "50%" }, rot: -10, side: "l" },
 ];
 
 /* Floating cursors, reference-style: a colored arrow cursor + a
@@ -997,9 +1001,9 @@ export default function Hero() {
 
       {/* Sticker field: the six main stickers are real navigation
           links (meaningful shortcuts, not just decoration); spark +
-          squiggle stay pure decoration. Art-directed into tidy mid
-          columns and gutters — the corners belong to the text, nothing
-          overlaps the card.
+          squiggle stay pure decoration. They ride a sine wave left →
+          right with the portrait nestled in its peak, painting behind
+          the card for depth.
           Outer .sticker = entrance pop + scroll explode; inner
           .sticker-par = magnetic parallax.
           Desktop absolute, mobile on the photo. */}
