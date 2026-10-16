@@ -684,31 +684,6 @@ a {
 .reel-card .photo-gray {
   filter: grayscale(1) contrast(1.03);
 }
-/* Washi tape on the card's top corners — the portrait is a photo
-   pinned to the canvas. Paints above both photo layers. */
-.tape {
-  position: absolute;
-  top: 10px;
-  width: 92px;
-  height: 26px;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 182, 46, 0.92),
-    rgba(232, 147, 12, 0.92)
-  );
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-  opacity: 0.9;
-  z-index: 3;
-  pointer-events: none;
-}
-.tape-tl {
-  left: 12px;
-  transform: rotate(-8deg);
-}
-.tape-tr {
-  right: 12px;
-  transform: rotate(8deg);
-}
 
 .reel-cap {
   margin: 0;
@@ -838,6 +813,19 @@ a {
   65% {
     transform: translate(-50%, -50%) rotate(7deg) scale(1.06);
   }
+}
+/* Sticker links: real navigation shortcuts. Pointer cursor +
+   visible keyboard focus; color inherits the playful doodle. */
+a.sticker {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+a.sticker:focus-visible .doodle,
+a.sticker:focus-visible .doodle-pill {
+  outline: 2px solid #0d99ff;
+  outline-offset: 6px;
+  border-radius: 12px;
 }
 .doodle-svg {
   height: 76px;
@@ -1135,18 +1123,6 @@ a {
   .reel-stickers .sticker:nth-child(6) { top: 84% !important; left: 50% !important; } /* pill */
   .reel-stickers .sticker:nth-child(7) { top: 48% !important; left: 64% !important; } /* spark */
   .reel-stickers .sticker:nth-child(8) { top: 60% !important; left: 26% !important; } /* squiggle */
-  /* Tape scales down with the narrower mobile card. */
-  .tape {
-    width: 58px;
-    height: 18px;
-    top: 8px;
-  }
-  .tape-tl {
-    left: 8px;
-  }
-  .tape-tr {
-    right: 8px;
-  }
   /* Ruler stays, slimmer, above the caption row. */
   .reel-ruler {
     height: 34px;
