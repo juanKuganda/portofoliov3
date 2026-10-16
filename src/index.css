@@ -587,6 +587,11 @@ a {
 .reel-hi-line {
   display: block;
 }
+/* Kinetic headline: each letter is an inline-block the pointer-repel
+   loop can push around (transform-only). */
+.hi-letter {
+  display: inline-block;
+}
 .reel-sub {
   margin: 20px 0 0;
   max-width: 36ch;
@@ -659,6 +664,31 @@ a {
 }
 .reel-card .photo-gray {
   filter: grayscale(1) contrast(1.03);
+}
+/* Washi tape on the card's top corners — the portrait is a photo
+   pinned to the canvas. Paints above both photo layers. */
+.tape {
+  position: absolute;
+  top: 10px;
+  width: 92px;
+  height: 26px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 182, 46, 0.92),
+    rgba(232, 147, 12, 0.92)
+  );
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  opacity: 0.9;
+  z-index: 3;
+  pointer-events: none;
+}
+.tape-tl {
+  left: 12px;
+  transform: rotate(-8deg);
+}
+.tape-tr {
+  right: 12px;
+  transform: rotate(8deg);
 }
 
 .reel-bottom-row {
@@ -773,8 +803,31 @@ a {
   gap: 8px;
   transform: translate(-50%, -50%);
 }
-/* Apple-precision vector doodles: geometric, crisp, subtle depth via
-   internal gradients. Height-driven so the icons stay balanced. */
+/* Sticker playfulness: on hover-capable desktop, stickers wiggle when
+   touched by the cursor. Keyframes preserve the -50% centering
+   translate. Applied to .doodle/.doodle-pill — no JS writes there,
+   so this never fights the parallax or explode timelines. */
+@media (hover: hover) and (min-width: 769px) {
+  .sticker {
+    pointer-events: auto;
+  }
+  .sticker:hover .doodle,
+  .sticker:hover .doodle-pill {
+    animation: sticker-wiggle 0.55s ease;
+  }
+}
+@keyframes sticker-wiggle {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  30% {
+    transform: translate(-50%, -50%) rotate(-10deg) scale(1.1);
+  }
+  65% {
+    transform: translate(-50%, -50%) rotate(7deg) scale(1.06);
+  }
+}
 .doodle-svg {
   height: 76px;
   width: auto;
@@ -1107,6 +1160,20 @@ a {
   .reel-stickers .sticker:nth-child(4) { top: 45% !important; left: 87% !important; } /* pin */
   .reel-stickers .sticker:nth-child(5) { top: 68% !important; left: 88% !important; } /* code */
   .reel-stickers .sticker:nth-child(6) { top: 84% !important; left: 50% !important; } /* pill */
+  .reel-stickers .sticker:nth-child(7) { top: 48% !important; left: 64% !important; } /* spark */
+  .reel-stickers .sticker:nth-child(8) { top: 60% !important; left: 26% !important; } /* squiggle */
+  /* Tape scales down with the narrower mobile card. */
+  .tape {
+    width: 58px;
+    height: 18px;
+    top: 8px;
+  }
+  .tape-tl {
+    left: 8px;
+  }
+  .tape-tr {
+    right: 8px;
+  }
   /* Ruler stays, slimmer, above the caption row. */
   .reel-ruler {
     height: 34px;
