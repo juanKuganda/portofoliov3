@@ -9,9 +9,12 @@ interface ProjectMeta {
   value: string;
 }
 
+export type Audience = "dev" | "design";
+
 export interface Project {
   id: string;
   idx: string;
+  audience: Audience;
   title: string;
   year: string;
   ariaLabel: string;
@@ -24,6 +27,7 @@ export const projects: Project[] = [
   {
     id: "proj-sijaga",
     idx: "/ 01",
+    audience: "dev",
     title: "SIJAGA",
     year: "Thesis · 2025 – 2026",
     ariaLabel: "SIJAGA details",
@@ -60,6 +64,7 @@ export const projects: Project[] = [
   {
     id: "proj-siasti",
     idx: "/ 02",
+    audience: "dev",
     title: "SIASTI",
     year: "Internship · 2025",
     ariaLabel: "SIASTI details",
@@ -96,6 +101,7 @@ export const projects: Project[] = [
   {
     id: "proj-fundtogether",
     idx: "/ 03",
+    audience: "dev",
     title: "FundTogether",
     year: "Web3 · 2025",
     ariaLabel: "FundTogether details",
@@ -132,6 +138,7 @@ export const projects: Project[] = [
   {
     id: "proj-csirt",
     idx: "/ 04",
+    audience: "dev",
     title: "CSIRT Bank Sulteng",
     year: "Security · 2025",
     ariaLabel: "CSIRT Bank Sulteng details",
@@ -168,6 +175,7 @@ export const projects: Project[] = [
   {
     id: "proj-pt-admin",
     idx: "/ 05",
+    audience: "design",
     title: "Tadulako Admin Dashboard",
     year: "UI/UX · 2025",
     ariaLabel: "Tadulako Admin Dashboard details",
@@ -204,6 +212,7 @@ export const projects: Project[] = [
   {
     id: "proj-hmti",
     idx: "/ 06",
+    audience: "design",
     title: "HMTI Website",
     year: "Ongoing · 2024 – Present",
     ariaLabel: "HMTI website details",

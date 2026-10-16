@@ -8,7 +8,7 @@ gsap.registerPlugin(ScrollTrigger);
 interface Row {
   label: string;
   href: string;
-  cls: "pink" | "orange" | "blue" | "purple";
+  cls: "pink" | "orange" | "blue" | "purple" | "green";
   external: boolean;
 }
 
@@ -17,6 +17,7 @@ const ROWS: Row[] = [
   { label: "GitHub", href: "https://github.com/juanKuganda", cls: "orange", external: true },
   { label: "LinkedIn", href: "https://www.linkedin.com/in/juann04", cls: "blue", external: true },
   { label: "Instagram", href: "https://www.instagram.com/juann04", cls: "purple", external: true },
+  { label: "Dribbble", href: "https://dribbble.com/jjuuaannnnnn", cls: "green", external: true },
 ];
 
 /**
