@@ -212,17 +212,23 @@ type StickerSpec = {
   at: React.CSSProperties;
   rot: number;
   side: "l" | "r";
+  /** When set, the sticker is a real navigation link — stickers are
+      meaningful shortcuts, not just decoration. */
+  href?: string;
+  aria?: string;
 };
 
+/* Tidy columns: left stickers share one x, right stickers share one x,
+   even vertical rhythm, clear of the corner text blocks and the card. */
 const STICKERS: StickerSpec[] = [
-  { kind: "folder", label: "projects", at: { top: "36%", left: "8%" }, rot: -8, side: "l" },
-  { kind: "pencil", label: "design", at: { top: "54%", left: "6%" }, rot: 7, side: "l" },
-  { kind: "cap", label: "untad ’27", at: { top: "68%", left: "11%" }, rot: -5, side: "l" },
-  { kind: "pin", label: "palu, id", at: { top: "32%", left: "90%" }, rot: 8, side: "r" },
-  { kind: "code", label: "code", at: { top: "52%", left: "92%" }, rot: -7, side: "r" },
-  { kind: "pill", label: "open to work", at: { top: "68%", left: "88%" }, rot: 5, side: "r" },
+  { kind: "folder", label: "projects", at: { top: "36%", left: "9%" }, rot: -8, side: "l", href: "#work", aria: "Go to selected work" },
+  { kind: "pencil", label: "design", at: { top: "52%", left: "9%" }, rot: 7, side: "l", href: "#services", aria: "Go to services" },
+  { kind: "cap", label: "untad ’27", at: { top: "68%", left: "9%" }, rot: -5, side: "l", href: "#about", aria: "Go to about" },
+  { kind: "pin", label: "palu, id", at: { top: "32%", left: "91%" }, rot: 8, side: "r", href: "#contact", aria: "Go to contact" },
+  { kind: "code", label: "code", at: { top: "50%", left: "91%" }, rot: -7, side: "r", href: "https://github.com/juanKuganda", aria: "Open GitHub profile" },
+  { kind: "pill", label: "open to work", at: { top: "68%", left: "91%" }, rot: 5, side: "r", href: "#contact", aria: "Go to contact" },
   { kind: "spark", label: "ship it", at: { top: "10%", left: "50%" }, rot: 10, side: "r" },
-  { kind: "squiggle", label: "this way", at: { top: "84%", left: "50%" }, rot: -10, side: "l" },
+  { kind: "squiggle", label: "this way", at: { top: "87%", left: "50%" }, rot: -10, side: "l" },
 ];
 
 /* Floating cursors, reference-style: a colored arrow cursor + a
@@ -985,27 +991,21 @@ export default function Hero() {
               width={925}
               height={1233}
             />
-            <span className="tape tape-tl" aria-hidden="true" />
-            <span className="tape tape-tr" aria-hidden="true" />
           </figure>
         </div>
       </div>
 
-      {/* Sticker field: five Apple-precision vector doodles + one
-          status pill + spark + squiggle, art-directed into the mid
-          columns and gutters — the corners belong to the text.
+      {/* Sticker field: the six main stickers are real navigation
+          links (meaningful shortcuts, not just decoration); spark +
+          squiggle stay pure decoration. Art-directed into tidy mid
+          columns and gutters — the corners belong to the text, nothing
+          overlaps the card.
           Outer .sticker = entrance pop + scroll explode; inner
           .sticker-par = magnetic parallax.
           Desktop absolute, mobile on the photo. */}
-      <div className="reel-stickers" aria-hidden="true">
-        {STICKERS.map((s) => (
-          <span
-            key={s.label}
-            className="sticker"
-            style={s.at}
-            data-rot={s.rot}
-            data-side={s.side}
-          >
+      <div className="reel-stickers">
+        {STICKERS.map((s) => {
+          const inner = (
             <span className="sticker-par">
               {s.kind === "pill" ? (
                 <span className="doodle-pill">
@@ -1019,8 +1019,32 @@ export default function Hero() {
                 </span>
               )}
             </span>
-          </span>
-        ))}
+          );
+          return s.href ? (
+            <a
+              key={s.label}
+              className="sticker sticker-link"
+              style={s.at}
+              data-rot={s.rot}
+              data-side={s.side}
+              href={s.href}
+              aria-label={s.aria || s.label}
+            >
+              {inner}
+            </a>
+          ) : (
+            <span
+              key={s.label}
+              className="sticker"
+              style={s.at}
+              data-rot={s.rot}
+              data-side={s.side}
+              aria-hidden="true"
+            >
+              {inner}
+            </span>
+          );
+        })}
       </div>
 
       {/* Floating cursors, reference-style: colored arrow + rotated
