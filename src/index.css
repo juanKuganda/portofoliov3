@@ -539,54 +539,79 @@ a {
 }
 
 /* Center stage: greeting, portrait card, caption row. */
+/* v6 — monumental composition: the headline commands the left two
+   thirds, the portrait card overlaps its right edge at a slight tilt.
+   .reel-center is a positioning context, not a flex column. */
 .reel-center {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(12px, 2.2vh, 24px);
+  position: relative;
+  z-index: 2;
   padding: clamp(10px, 2vh, 20px) var(--pad);
   /* keep the caption row clear of the viewport bottom in normal flow,
      where the hero starts below the sticky nav */
   padding-bottom: calc(clamp(10px, 2vh, 20px) + var(--nav-h, 60px));
-  position: relative;
-  z-index: 2;
+}
+.reel-hello {
+  margin: 0 0 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #555;
 }
 .reel-hi-mask {
   overflow: hidden;
   /* breathing room so the magnetic parallax never clips the text,
-     and the figma-select box (inset -10px -18px, handles +5px out)
-     stays fully visible: 20px bottom clears the 15px the box needs */
-  padding: 14px 24px 20px;
-  margin: -14px -24px -20px;
+     and the figma-select box (inset -14px -22px, handles +5px out)
+     stays fully visible */
+  padding: 16px 28px 22px;
+  margin: -16px -28px -22px;
   /* paint above the card so the selection box's bottom edge + handles
      draw over the card top like a real Figma selection */
   position: relative;
   z-index: 3;
-  /* jangan sampai menyusut saat kolom flex overflow di mobile —
-     mask yang terjepit memotong headline (hanya sliver terlihat) */
-  flex-shrink: 0;
+  max-width: 76%;
 }
 .reel-hi {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: -0.04em;
-  line-height: 1;
-  font-size: clamp(40px, 6.4vw, 96px);
+  line-height: 0.88;
+  font-size: clamp(76px, 14.5vw, 212px);
   color: var(--ink);
-  text-align: center;
-  white-space: nowrap;
+  text-align: left;
+  text-transform: uppercase;
+}
+.reel-hi-line {
+  display: block;
+}
+.reel-sub {
+  margin: 20px 0 0;
+  max-width: 36ch;
+  font-size: 17px;
+  line-height: 1.5;
+  color: #333;
+}
+/* The card overlaps the headline's right edge, tilted -2deg. Absolute
+   on desktop (parallax writes x/y/rotation to .par-card, never
+   touching this positioning); in normal flow on mobile. */
+.par-card {
+  position: absolute;
+  right: calc(var(--pad) + 1vw);
+  top: 12%;
+  width: min(320px, 27vw);
+  z-index: 2;
+}
+.reel-card {
+  transform: rotate(-2deg);
 }
 /* Parallax wrappers: the ONLY elements the magnetic loop touches
    (via gsap.quickSetter), so it never fights the entrance or
    scroll timelines. No permanent will-change — the loop writes
-   transforms directly only while the pointer moves. */
-.par-card {
-  position: relative;
-}
+   transforms directly only while the pointer moves. (Positioning
+   lives on the v6 rule above.) */
 /* Hover glow crossfades via opacity (compositor-only) instead of
    animating box-shadow, which would repaint every frame. */
 .par-card::after {
@@ -609,10 +634,11 @@ a {
   }
 }
 
-/* The card: 3:4 portrait, border + soft shadow. */
+/* The card: 3:4 portrait, border + soft shadow. Width comes from the
+   .par-card wrapper (absolute on desktop, flow on mobile). */
 .reel-card {
   position: relative;
-  width: min(350px, 74vw);
+  width: 100%;
   aspect-ratio: 3 / 4;
   margin: 0;
   overflow: hidden;
@@ -640,7 +666,8 @@ a {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  width: min(350px, 74vw);
+  width: 100%;
+  margin-top: clamp(24px, 5vh, 56px);
   color: var(--ink);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -689,7 +716,7 @@ a {
 }
 .hi-box {
   position: absolute;
-  inset: -10px -18px;
+  inset: -14px -22px;
   border: 1.5px solid #0d99ff;
   border-radius: 3px;
   pointer-events: none;
@@ -997,25 +1024,47 @@ a {
     height: auto;
     min-height: 100svh;
   }
-  /* Clear the role ticker from the select box: give the headline
-     breathing room above instead of the -14px pull-up. */
+  /* v6 mobile: headline stacks on top, card in normal flow below it,
+     stickers sit on the photo. */
+  .reel-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
   .reel-hi-mask {
     margin: 6px -24px -20px;
+    max-width: 100%;
   }
-  /* Unstack the center column: more air between headline, card,
-     caption row and doodles. */
-  .reel-center {
-    gap: clamp(20px, 3.4vh, 34px);
+  .reel-hello,
+  .reel-sub {
+    text-align: center;
+  }
+  .reel-sub {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .par-card {
+    position: relative;
+    right: auto;
+    top: auto;
+    width: min(350px, 78vw);
+    margin: clamp(10px, 2.4vh, 24px) auto 0;
+    z-index: 2;
+  }
+  .reel-card {
+    transform: none;
   }
   .reel-kicker .sep,
   .reel-kicker span:nth-child(n + 4) {
     display: none;
   }
   .reel-hi {
-    font-size: clamp(36px, 10.5vw, 60px);
+    font-size: clamp(48px, 15vw, 100px);
+    text-align: center;
   }
   .reel-bottom-row {
-    width: min(350px, 74vw);
+    width: min(350px, 78vw);
+    margin-top: 22px;
   }
   .hero-reel::before {
     background-size: 52px 52px;
@@ -1052,12 +1101,12 @@ a {
   }
   /* Sticker positions tuned for the mobile card (hero-relative).
      All six sit on the portrait like stickers on a photo. */
-  .reel-stickers .sticker:nth-child(1) { top: 30% !important; left: 14% !important; } /* folder */
-  .reel-stickers .sticker:nth-child(2) { top: 62% !important; left: 12% !important; } /* pencil */
-  .reel-stickers .sticker:nth-child(3) { top: 29% !important; left: 60% !important; } /* cap */
-  .reel-stickers .sticker:nth-child(4) { top: 31% !important; left: 87% !important; } /* pin */
-  .reel-stickers .sticker:nth-child(5) { top: 58% !important; left: 88% !important; } /* code */
-  .reel-stickers .sticker:nth-child(6) { top: 74% !important; left: 50% !important; } /* pill */
+  .reel-stickers .sticker:nth-child(1) { top: 44% !important; left: 14% !important; } /* folder */
+  .reel-stickers .sticker:nth-child(2) { top: 72% !important; left: 12% !important; } /* pencil */
+  .reel-stickers .sticker:nth-child(3) { top: 43% !important; left: 62% !important; } /* cap */
+  .reel-stickers .sticker:nth-child(4) { top: 45% !important; left: 87% !important; } /* pin */
+  .reel-stickers .sticker:nth-child(5) { top: 68% !important; left: 88% !important; } /* code */
+  .reel-stickers .sticker:nth-child(6) { top: 84% !important; left: 50% !important; } /* pill */
   /* Ruler stays, slimmer, above the caption row. */
   .reel-ruler {
     height: 34px;
