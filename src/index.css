@@ -529,6 +529,7 @@ a {
   top: clamp(8px, 2.5vh, 24px);
   left: var(--pad);
   text-align: left;
+  max-width: 360px;
 }
 .corner-tr {
   top: clamp(8px, 2.5vh, 24px);
@@ -570,15 +571,6 @@ a {
   display: inline-block;
   animation: dot-pulse 2.2s ease-in-out infinite;
 }
-.reel-hello {
-  margin: 0 0 8px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #555;
-  text-align: left;
-}
 .reel-hi-mask {
   overflow: hidden;
   /* breathing room so the magnetic parallax never clips the text,
@@ -589,18 +581,18 @@ a {
   z-index: 3;
   text-align: left;
 }
-/* v9: the name lives in the top-left corner — strong but not
-   monumental; the portrait is the star now. */
+/* v12: the greeting is simply "Hi, I'm Juan" — sentence case,
+   friendly, one line. */
 .reel-hi {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 0.92;
-  font-size: clamp(40px, 4.6vw, 66px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-size: clamp(34px, 3.8vw, 54px);
   color: var(--ink);
   text-align: left;
-  text-transform: uppercase;
+  white-space: nowrap;
 }
 .reel-hi-line {
   display: block;
@@ -1051,7 +1043,6 @@ a.sticker:focus-visible .doodle-pill {
     margin: 6px -24px -20px;
     max-width: 100%;
   }
-  .reel-hello,
   .reel-hi,
   .reel-sub {
     text-align: center;
