@@ -478,48 +478,18 @@ a {
 }
 
 /* Top row: kicker left, role ticker right — ink on paper. */
-.reel-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 22px var(--pad) 0;
-  color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  position: relative;
-  z-index: 3;
-}
-.reel-kicker {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.reel-kicker .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--signal);
-  flex: none;
-  animation: pulse 2.4s ease-in-out infinite;
-}
-.reel-kicker .sep {
-  opacity: 0.5;
-}
-/* Role ticker: [ Engineer ] → [ Design ] → [ People ] */
+/* Role ticker: [ Engineer ] → [ Design ] → [ People ], lives in the
+   top-right corner. */
 .role-ticker {
-  margin: 0;
+  margin: 0 0 6px;
   display: flex;
   align-items: center;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   color: var(--ink);
+  justify-content: flex-end;
 }
 .tick-bracket {
   font-weight: 700;
@@ -539,50 +509,97 @@ a {
 }
 
 /* Center stage: greeting, portrait card, caption row. */
-/* v6 — monumental composition: the headline commands the left two
-   thirds, the portrait card overlaps its right edge at a slight tilt.
-   .reel-center is a positioning context, not a flex column. */
+/* v9 — the centered portrait: the card is the star, centered on the
+   canvas; the four corners hold the text like fixed UI chrome.
+   .reel-center is a positioning context. */
 .reel-center {
   flex: 1;
   min-height: 0;
   position: relative;
   z-index: 2;
-  padding: clamp(10px, 2vh, 20px) var(--pad);
-  /* keep the caption row clear of the viewport bottom in normal flow,
-     where the hero starts below the sticky nav */
-  padding-bottom: calc(clamp(10px, 2vh, 20px) + var(--nav-h, 60px));
+}
+/* Corner text blocks: pinned to the four corners, like Figma UI
+   chrome around the canvas. */
+.corner {
+  position: absolute;
+  z-index: 3;
+  max-width: 320px;
+}
+.corner-tl {
+  top: clamp(8px, 2.5vh, 24px);
+  left: var(--pad);
+  text-align: left;
+}
+.corner-tr {
+  top: clamp(8px, 2.5vh, 24px);
+  right: var(--pad);
+  text-align: right;
+}
+.corner-bl {
+  bottom: calc(clamp(8px, 2.5vh, 24px) + 46px); /* clear the ruler */
+  left: var(--pad);
+  text-align: left;
+}
+.corner-br {
+  bottom: calc(clamp(8px, 2.5vh, 24px) + 46px); /* clear the ruler */
+  right: var(--pad);
+  text-align: right;
+}
+.corner-line {
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.corner-tr .corner-line {
+  justify-content: flex-end;
+}
+.corner-line.dim {
+  opacity: 0.55;
+}
+.corner-line .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--signal);
+  display: inline-block;
+  animation: dot-pulse 2.2s ease-in-out infinite;
 }
 .reel-hello {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #555;
-  text-align: center;
+  text-align: left;
 }
 .reel-hi-mask {
   overflow: hidden;
   /* breathing room so the magnetic parallax never clips the text,
-     and the figma-select box (inset -14px -22px, handles +5px out)
-     stays fully visible */
-  padding: 16px 28px 22px;
-  margin: -16px -28px -22px;
-  /* paint above the card so the selection box's bottom edge + handles
-     draw over the card top like a real Figma selection */
+     and the figma-select box stays fully visible */
+  padding: 12px 20px 16px;
+  margin: -12px -20px -16px;
   position: relative;
   z-index: 3;
-  text-align: center;
+  text-align: left;
 }
+/* v9: the name lives in the top-left corner — strong but not
+   monumental; the portrait is the star now. */
 .reel-hi {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: -0.04em;
-  line-height: 0.88;
-  font-size: clamp(64px, 12.5vw, 190px);
+  line-height: 0.92;
+  font-size: clamp(40px, 4.6vw, 66px);
   color: var(--ink);
-  text-align: center;
+  text-align: left;
   text-transform: uppercase;
 }
 .reel-hi-line {
@@ -594,23 +611,22 @@ a {
   display: inline-block;
 }
 .reel-sub {
-  margin: 20px auto 0;
-  max-width: 36ch;
-  font-size: 17px;
-  line-height: 1.5;
+  margin: 0 0 12px;
+  max-width: 30ch;
+  font-size: 14px;
+  line-height: 1.55;
   color: #333;
-  text-align: center;
+  text-align: left;
 }
-/* The card sits BETWEEN the two headline lines in normal flow,
-   pulled over both by negative margins — JUAN above, KUGANDA below,
-   the portrait interrupting the name. z-index above the headline.
-   In flow, the sub + bottom row always clear it (no absolute
-   overlap bugs), and mobile stacks naturally. */
+/* v9: the portrait star — centered on the canvas via calc (no
+   transform), so the parallax (owns .par-card x/y) and
+   entrance/explode (own .reel-card) never fight it. */
 .par-card {
-  position: relative;
-  width: min(280px, 72vw);
-  margin: -80px auto 20px;
-  z-index: 4;
+  position: absolute;
+  left: calc(50% - min(340px, 62vw) / 2);
+  top: calc(50% - min(340px, 62vw) * 2 / 3);
+  width: min(340px, 62vw);
+  z-index: 2;
 }
 .reel-card {
   transform: rotate(-2deg);
@@ -694,22 +710,14 @@ a {
   transform: rotate(8deg);
 }
 
-.reel-bottom-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  margin-top: clamp(16px, 3vh, 32px);
-  color: var(--ink);
+.reel-cap {
+  margin: 0;
+  opacity: 0.6;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-.reel-cap {
-  margin: 0;
-  opacity: 0.6;
+  color: var(--ink);
 }
 .reel-scroll {
   display: inline-flex;
@@ -956,50 +964,6 @@ a {
     opacity: 0.55;
   }
 }
-/* ---- Edge furniture: vertical labels + corner crop-marks fill the
-   far canvas (desktop only). translate/rotate are CSS properties so
-   the GSAP explode can own `transform` freely. ---- */
-.reel-edge {
-  position: absolute;
-  top: 50%;
-  translate: 0 -50%;
-  writing-mode: vertical-rl;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: var(--muted);
-  z-index: 1;
-  pointer-events: none;
-  white-space: nowrap;
-}
-.reel-edge-l {
-  left: 26px;
-  rotate: 180deg;
-}
-.reel-edge-r {
-  right: 26px;
-}
-.reel-corner {
-  position: absolute;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--muted);
-  z-index: 1;
-  pointer-events: none;
-  line-height: 1;
-}
-.rc-tl { top: 78px; left: 22px; }
-.rc-tr { top: 78px; right: 22px; }
-.rc-bl { bottom: 44px; left: 22px; }
-.rc-br { bottom: 44px; right: 22px; }
-@media (max-width: 768px) {
-  .reel-edge,
-  .reel-corner {
-    display: none;
-  }
-}
 /* ---- Figma-like ruler pinned to the hero bottom. The track slides
    (scrub) as you scroll — like the canvas moving under the ruler — */
 .reel-ruler {
@@ -1066,62 +1030,67 @@ a {
 }
 
 @media (max-width: 768px) {
-  .reel-top {
-    padding: 18px var(--pad) 0;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
   /* Mobile hero flows naturally instead of forcing 100svh: the stacked
-     kicker + headline + card + doodles exceed small viewports, and
+     corners + card + doodles exceed small viewports, and
      overflow:hidden would clip them. min-height keeps the full-screen
      feel on tall screens. */
   .hero-reel {
     height: auto;
     min-height: 100svh;
   }
-  /* v6 mobile: headline stacks on top, card in normal flow below it,
-     stickers sit on the photo. */
+  /* v9 mobile: corners stack in flow around the card — name on top,
+     card, description, then ticker + scroll side by side. */
   .reel-center {
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: calc(var(--nav-h, 60px) + 12px) var(--pad) 24px;
+    gap: 18px;
   }
+  .corner {
+    position: static;
+    max-width: 100%;
+    text-align: center;
+  }
+  .corner-tl { order: 1; }
+  .par-card { order: 2; }
+  .corner-bl { order: 3; }
+  .corner-tr { order: 4; }
+  .corner-br { order: 5; }
   .reel-hi-mask {
     margin: 6px -24px -20px;
     max-width: 100%;
   }
   .reel-hello,
+  .reel-hi,
   .reel-sub {
     text-align: center;
   }
   .reel-sub {
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0 auto;
+  }
+  .par-hi {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .role-ticker,
+  .corner-tr .corner-line {
+    justify-content: center;
   }
   .par-card {
     position: relative;
     left: auto;
-    right: auto;
     top: auto;
-    width: min(350px, 78vw);
-    margin: clamp(10px, 2.4vh, 24px) auto 0;
+    width: min(300px, 72vw);
+    margin: 0 auto;
     z-index: 2;
   }
   .reel-card {
     transform: none;
   }
-  .reel-kicker .sep,
-  .reel-kicker span:nth-child(n + 4) {
-    display: none;
-  }
   .reel-hi {
-    font-size: clamp(48px, 15vw, 100px);
-    text-align: center;
-  }
-  .reel-bottom-row {
-    width: min(350px, 78vw);
-    margin-top: 22px;
+    font-size: clamp(44px, 14vw, 72px);
   }
   .hero-reel::before {
     background-size: 52px 52px;
