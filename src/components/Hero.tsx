@@ -5,10 +5,13 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 const ROLES = ["Engineer", "Design", "People"];
+const SCRAMBLE_CHARS = "!<>-_\\/[]{}=+*^?#";
 
-/** Kicker role ticker: [ Engineer ] → [ Design ] → [ People ], every 2.5s. */
+/** Kicker role ticker: [ Engineer ] → [ Design ] → [ People ], with a
+    text-scramble transition on every change. */
 function RoleTicker() {
   const [idx, setIdx] = useState(0);
+  const [text, setText] = useState(ROLES[0]);
   const reduced = useMemo(
     () =>
       typeof window !== "undefined" &&
@@ -17,19 +20,41 @@ function RoleTicker() {
   );
 
   useEffect(() => {
-    if (reduced) return;
     const id = window.setInterval(
       () => setIdx((i) => (i + 1) % ROLES.length),
-      2500
+      2800
     );
     return () => window.clearInterval(id);
-  }, [reduced]);
+  }, []);
+
+  useEffect(() => {
+    const target = ROLES[idx];
+    if (reduced) {
+      setText(target);
+      return;
+    }
+    let frame = 0;
+    const total = 16;
+    const id = window.setInterval(() => {
+      frame += 1;
+      const reveal = Math.floor((frame / total) * target.length);
+      let out = target.slice(0, reveal);
+      for (let i = reveal; i < target.length; i++)
+        out += SCRAMBLE_CHARS[(Math.random() * SCRAMBLE_CHARS.length) | 0];
+      setText(out);
+      if (frame >= total) {
+        window.clearInterval(id);
+        setText(target);
+      }
+    }, 28);
+    return () => window.clearInterval(id);
+  }, [idx, reduced]);
 
   return (
     <p className="role-ticker" aria-hidden="true">
       <span className="tick-bracket" aria-hidden="true">[</span>
       <span className="tick-word" key={idx}>
-        {ROLES[idx]}
+        {text}
       </span>
       <span className="tick-bracket" aria-hidden="true">]</span>
     </p>
@@ -85,7 +110,41 @@ function DoodleDefs() {
 
 /* Apple-precision vector doodles: geometric, crisp, subtle depth via
    gradients + one soft highlight each. Ink + amber only. */
-function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "cap" }) {
+function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "cap" | "spark" | "squiggle" }) {
+  if (kind === "spark")
+    return (
+      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
+        <path
+          d="M32 4 C34.5 22 38 28 60 32 C38 36 34.5 42 32 60 C29.5 42 26 36 4 32 C26 28 29.5 22 32 4 Z"
+          fill="url(#dz-amber)"
+        />
+        <path
+          d="M32 13 C33.4 24 35.5 28.5 47 32 C35.5 35.5 33.4 40 32 51 C30.6 40 28.5 35.5 17 32 C28.5 28.5 30.6 24 32 13 Z"
+          fill="#ffffff"
+          opacity="0.35"
+        />
+      </svg>
+    );
+  if (kind === "squiggle")
+    return (
+      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
+        <path
+          d="M10 52 C22 50 30 42 34 30 C37 20 44 13 55 13"
+          stroke="url(#dz-pink)"
+          strokeWidth="5"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d="M45 8 L57 13 L49 23"
+          stroke="url(#dz-pink)"
+          strokeWidth="5"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
   if (kind === "folder")
     return (
       <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
@@ -148,7 +207,7 @@ function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "ca
  * scroll explode; inner `.sticker-par` = magnetic parallax.
  */
 type StickerSpec = {
-  kind: "folder" | "pencil" | "code" | "pin" | "cap" | "pill";
+  kind: "folder" | "pencil" | "code" | "pin" | "cap" | "spark" | "squiggle" | "pill";
   label: string;
   at: React.CSSProperties;
   rot: number;
@@ -162,6 +221,8 @@ const STICKERS: StickerSpec[] = [
   { kind: "pin", label: "palu, id", at: { top: "9%", left: "76%" }, rot: 8, side: "r" },
   { kind: "code", label: "code", at: { top: "83%", left: "72%" }, rot: -7, side: "r" },
   { kind: "pill", label: "open to work", at: { top: "87%", left: "46%" }, rot: 5, side: "r" },
+  { kind: "spark", label: "ship it", at: { top: "24%", left: "56%" }, rot: 10, side: "r" },
+  { kind: "squiggle", label: "this way", at: { top: "52%", left: "64%" }, rot: -10, side: "r" },
 ];
 
 /* Floating cursors, reference-style: a colored arrow cursor + a
@@ -346,6 +407,139 @@ export default function Hero() {
       root.removeEventListener("pointerleave", onLeave);
       if (raf) cancelAnimationFrame(raf);
       gsap.set([parHi, parCard, ...stickerEls], { clearProps: "transform" });
+    };
+  }, []);
+
+  // Kinetic headline: every letter of the monumental headline is
+  // gently repelled by the pointer (magnetic push, lerped back to
+  // rest), and the whole headline skews with scroll velocity. One
+  // rAF loop, transform-only, quickSetter per letter. Letters live
+  // inside .reel-hi — untouched by the entrance (owns .reel-hi-line)
+  // and explode (owns .reel-hi-mask) timelines, so nothing fights.
+  // Desktop + no reduced motion only; sleeps when settled/off-view.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const desktopMq = window.matchMedia("(min-width: 769px)");
+    if (!desktopMq.matches) return;
+
+    const letters = Array.from(
+      root.querySelectorAll<HTMLElement>(".hi-letter")
+    );
+    const hi = root.querySelector<HTMLElement>(".reel-hi");
+    if (letters.length === 0 || !hi) return;
+
+    const L = letters.map((el) => ({
+      box: () => el.getBoundingClientRect(),
+      sx: gsap.quickSetter(el, "x", "px"),
+      sy: gsap.quickSetter(el, "y", "px"),
+      cx: 0,
+      cy: 0,
+    }));
+    const setSkew = gsap.quickSetter(hi, "skewX", "deg");
+
+    const RADIUS = 160;
+    const PUSH = 30;
+    let px = -9999;
+    let py = -9999;
+    let skewTarget = 0;
+    let skewCur = 0;
+    let raf = 0;
+    let inView = true;
+    let disposed = false;
+
+    const tick = () => {
+      raf = 0;
+      if (disposed || !inView || !desktopMq.matches) return;
+      let active = false;
+      for (const s of L) {
+        const b = s.box();
+        const dx = b.left + b.width / 2 - px;
+        const dy = b.top + b.height / 2 - py;
+        const d = Math.hypot(dx, dy);
+        let tx = 0;
+        let ty = 0;
+        if (d < RADIUS && d > 1) {
+          const f = 1 - d / RADIUS;
+          tx = (dx / d) * PUSH * f * f;
+          ty = (dy / d) * PUSH * f * f;
+        }
+        s.cx += (tx - s.cx) * 0.14;
+        s.cy += (ty - s.cy) * 0.14;
+        if (Math.abs(s.cx) > 0.05 || Math.abs(s.cy) > 0.05) active = true;
+        s.sx(s.cx);
+        s.sy(s.cy);
+      }
+      skewCur += (skewTarget - skewCur) * 0.12;
+      skewTarget *= 0.92;
+      if (Math.abs(skewCur) < 0.03 && Math.abs(skewTarget) < 0.03) {
+        skewCur = 0;
+        skewTarget = 0;
+      } else {
+        active = true;
+      }
+      setSkew(skewCur);
+      if (active) raf = requestAnimationFrame(tick);
+    };
+    const kick = () => {
+      if (!raf && !disposed && inView && desktopMq.matches)
+        raf = requestAnimationFrame(tick);
+    };
+
+    const onMove = (e: PointerEvent) => {
+      px = e.clientX;
+      py = e.clientY;
+      kick();
+    };
+    const onLeave = () => {
+      px = -9999;
+      py = -9999;
+      kick();
+    };
+    const velST = ScrollTrigger.create({
+      trigger: root,
+      start: "top bottom",
+      end: "bottom top",
+      onUpdate: (self) => {
+        const v = self.getVelocity();
+        skewTarget = Math.max(-7, Math.min(7, v / -350));
+        kick();
+      },
+    });
+    const io = new IntersectionObserver(
+      (entries) => {
+        inView = entries[0]?.isIntersecting ?? true;
+        if (!inView && raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        } else if (inView) {
+          kick();
+        }
+      },
+      { threshold: 0 }
+    );
+    const onMq = () => {
+      if (!desktopMq.matches && raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+
+    io.observe(root);
+    desktopMq.addEventListener("change", onMq);
+    root.addEventListener("pointermove", onMove);
+    root.addEventListener("pointerleave", onLeave);
+
+    return () => {
+      disposed = true;
+      io.disconnect();
+      velST.kill();
+      desktopMq.removeEventListener("change", onMq);
+      root.removeEventListener("pointermove", onMove);
+      root.removeEventListener("pointerleave", onLeave);
+      if (raf) cancelAnimationFrame(raf);
+      gsap.set([...letters, hi], { clearProps: "transform" });
     };
   }, []);
 
@@ -731,9 +925,19 @@ export default function Hero() {
                 selection wrapper — the blue box + handles stay as a
                 designer signature after the one-time cursor sweep. */}
             <span className="hi-select">
-              <h1 className="reel-hi">
-                <span className="reel-hi-line">Juan</span>
-                <span className="reel-hi-line">Kuganda</span>
+              {/* The headline is split into letters for the kinetic
+                  pointer-repel effect; screen readers get the plain
+                  name via aria-label. */}
+              <h1 className="reel-hi" aria-label="Juan Kuganda">
+                {["Juan", "Kuganda"].map((word) => (
+                  <span className="reel-hi-line" key={word} aria-hidden="true">
+                    {word.split("").map((ch, i) => (
+                      <span className="hi-letter" key={i}>
+                        {ch}
+                      </span>
+                    ))}
+                  </span>
+                ))}
               </h1>
               <span className="hi-box" aria-hidden="true">
                 <span className="hi-handle h-nw" />
@@ -786,6 +990,10 @@ export default function Hero() {
               width={925}
               height={1233}
             />
+            {/* Washi tape on the top corners — the card is a photo
+                pinned to the canvas. */}
+            <span className="tape tape-tl" aria-hidden="true" />
+            <span className="tape tape-tr" aria-hidden="true" />
           </figure>
         </div>
 
