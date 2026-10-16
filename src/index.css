@@ -559,6 +559,7 @@ a {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #555;
+  text-align: center;
 }
 .reel-hi-mask {
   overflow: hidden;
@@ -571,7 +572,7 @@ a {
      draw over the card top like a real Figma selection */
   position: relative;
   z-index: 3;
-  max-width: 76%;
+  text-align: center;
 }
 .reel-hi {
   margin: 0;
@@ -579,9 +580,9 @@ a {
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 0.88;
-  font-size: clamp(76px, 14.5vw, 212px);
+  font-size: clamp(64px, 12.5vw, 190px);
   color: var(--ink);
-  text-align: left;
+  text-align: center;
   text-transform: uppercase;
 }
 .reel-hi-line {
@@ -593,21 +594,23 @@ a {
   display: inline-block;
 }
 .reel-sub {
-  margin: 20px 0 0;
+  margin: 20px auto 0;
   max-width: 36ch;
   font-size: 17px;
   line-height: 1.5;
   color: #333;
+  text-align: center;
 }
-/* The card overlaps the headline's right edge, tilted -2deg. Absolute
-   on desktop (parallax writes x/y/rotation to .par-card, never
-   touching this positioning); in normal flow on mobile. */
+/* The card sits BETWEEN the two headline lines in normal flow,
+   pulled over both by negative margins — JUAN above, KUGANDA below,
+   the portrait interrupting the name. z-index above the headline.
+   In flow, the sub + bottom row always clear it (no absolute
+   overlap bugs), and mobile stacks naturally. */
 .par-card {
-  position: absolute;
-  right: calc(var(--pad) + 1vw);
-  top: 12%;
-  width: min(320px, 27vw);
-  z-index: 2;
+  position: relative;
+  width: min(280px, 72vw);
+  margin: -80px auto 20px;
+  z-index: 4;
 }
 .reel-card {
   transform: rotate(-2deg);
@@ -697,7 +700,7 @@ a {
   align-items: center;
   gap: 16px;
   width: 100%;
-  margin-top: clamp(24px, 5vh, 56px);
+  margin-top: clamp(16px, 3vh, 32px);
   color: var(--ink);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -1098,6 +1101,7 @@ a {
   }
   .par-card {
     position: relative;
+    left: auto;
     right: auto;
     top: auto;
     width: min(350px, 78vw);
