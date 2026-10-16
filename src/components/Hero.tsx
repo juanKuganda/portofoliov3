@@ -141,11 +141,11 @@ function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "ca
 
 /**
  * Doodle stickers: five Apple-precision vector icons + one status
- * pill. `at` — desktop absolute position, percent of the full hero
- * canvas, art-directed scatter (not flanking the card); `rot` —
- * resting tilt in degrees; `side` — scroll-explode direction.
- * Transform layers: outer `.sticker` = entrance pop + scroll explode;
- * inner `.sticker-par` = magnetic parallax. They never fight.
+ * pill, art-directed around the monumental headline + overlapping
+ * portrait. `at` — desktop absolute position, percent of the full hero
+ * canvas; `rot` — resting tilt in degrees; `side` — scroll-explode
+ * direction. Transform layers: outer `.sticker` = entrance pop +
+ * scroll explode; inner `.sticker-par` = magnetic parallax.
  */
 type StickerSpec = {
   kind: "folder" | "pencil" | "code" | "pin" | "cap" | "pill";
@@ -156,12 +156,12 @@ type StickerSpec = {
 };
 
 const STICKERS: StickerSpec[] = [
-  { kind: "folder", label: "projects", at: { top: "30%", left: "7%" }, rot: -8, side: "l" },
-  { kind: "pencil", label: "design", at: { top: "63%", left: "13%" }, rot: 7, side: "l" },
-  { kind: "cap", label: "untad ’27", at: { top: "79%", left: "30%" }, rot: -5, side: "l" },
-  { kind: "pin", label: "palu, id", at: { top: "22%", left: "86%" }, rot: 8, side: "r" },
-  { kind: "code", label: "code", at: { top: "57%", left: "80%" }, rot: -7, side: "r" },
-  { kind: "pill", label: "open to work", at: { top: "81%", left: "67%" }, rot: 5, side: "r" },
+  { kind: "folder", label: "projects", at: { top: "15%", left: "3%" }, rot: -8, side: "l" },
+  { kind: "pencil", label: "design", at: { top: "64%", left: "4%" }, rot: 7, side: "l" },
+  { kind: "cap", label: "untad ’27", at: { top: "85%", left: "27%" }, rot: -5, side: "l" },
+  { kind: "pin", label: "palu, id", at: { top: "9%", left: "76%" }, rot: 8, side: "r" },
+  { kind: "code", label: "code", at: { top: "83%", left: "72%" }, rot: -7, side: "r" },
+  { kind: "pill", label: "open to work", at: { top: "87%", left: "46%" }, rot: 5, side: "r" },
 ];
 
 /* Floating cursors, reference-style: a colored arrow cursor + a
@@ -171,11 +171,11 @@ const STICKERS: StickerSpec[] = [
    magnetic parallax; .cursor-inner = idle bob. */
 const CURSORS = [
   {
-    at: { top: "36%", left: "15%" }, rot: -6, side: "l",
+    at: { top: "42%", left: "6%" }, rot: -6, side: "l",
     color: "var(--pop-pink)", pill: "PALU, ID", pillRot: -8, mini: "YOU",
   },
   {
-    at: { top: "32%", left: "72%" }, rot: 8, side: "r",
+    at: { top: "11%", left: "56%" }, rot: 8, side: "r",
     color: "var(--pop-blue)", pill: "OPEN TO WORK", pillRot: 7, mini: null,
   },
 ];
@@ -184,22 +184,22 @@ const CURSORS = [
 const RULER_NUMS: number[] = Array.from({ length: 15 }, (_, i) => i * 100);
 
 /**
- * THE REEL v5 — clean & personal.
+ * THE REEL v6 — monumental & personal.
  *
- * Scene 1: faint static grid on paper; "Hai, I'm Juan" mask reveal +
- * a one-time Figma-style selection choreography (cursor sweeps, blue
- * selection box + handles stay as a design element); a 3:4 portrait
- * card DROPPED FROM ABOVE; five Apple-precision vector doodles +
- * one status pill floating around the card at a medium distance.
- * Bottom: a Figma-like ruler that shifts as you scroll.
+ * Concept: a designer's playground scaled up. A monumental grotesque
+ * "JUAN KUGANDA" (Figma-selected, cursor sweep keeps the signature)
+ * collides with the 3:4 portrait card overlapping its right edge;
+ * five Apple-precision vector doodles + one status pill + two floating
+ * cursors orbit the composition on a faint grid, with the Figma-like
+ * ruler pinned to the bottom.
  * Interaction: magnetic parallax — one rAF loop, quickSetter per
  * element, lerped, writing to inner wrappers. Paused on
  * reduced-motion, mobile, or off-viewport.
  * Scroll: NO PIN — the card JOINS the stickers in the explode
  * (card flies up + shrinks + fades, headline drifts, stickers burst
  * outward + upward), scrubbed, finished at "bottom 70%".
- * Mobile: no parallax, mini explode (small vectors). Reduced motion: one
- * static frame (selection box shown, ruler static).
+ * Mobile: headline stacks, card in flow, stickers sit on the photo.
+ * Reduced motion: one static frame (selection box shown, ruler static).
  */
 export default function Hero() {
   const rootRef = useRef<HTMLElement>(null);
@@ -349,8 +349,8 @@ export default function Hero() {
     };
   }, []);
 
-  // Entrance (<1.2s): card drops from above, headline reveals, stickers
-  // pop in with stagger, then THE BLOOM (grayscale → color, once).
+  // Entrance (<1.2s): card drops from above, headline lines reveal with
+  // stagger, stickers pop in, then THE BLOOM (grayscale → color, once).
   // transform/opacity only. After ~1.6s: the Figma-select choreography
   // — a cursor sweeps across the headline, drawing the blue selection
   // box + handles, which stay as a design element.
@@ -378,8 +378,9 @@ export default function Hero() {
       );
 
       gsap.set(".reel-card", { y: -170, opacity: 0, scale: 0.98 });
-      gsap.set(".reel-hi", { yPercent: 112 });
+      gsap.set(".reel-hi-line", { yPercent: 112 });
       gsap.set(".reel-top > *", { y: 12, opacity: 0 });
+      gsap.set(".reel-hello, .reel-sub", { y: 14, opacity: 0 });
       gsap.set(stickers, { scale: 0, opacity: 0 });
       gsap.set(floaters, { scale: 0, opacity: 0 });
 
@@ -389,7 +390,16 @@ export default function Hero() {
         { y: 0, opacity: 1, scale: 1, duration: 1.0, ease: "expo.out" },
         0.05
       )
-        .to(".reel-hi", { yPercent: 0, duration: 0.7, ease: "power4.out" }, 0.35)
+        .to(
+          ".reel-hi-line",
+          { yPercent: 0, duration: 0.7, ease: "power4.out", stagger: 0.1 },
+          0.35
+        )
+        .to(
+          ".reel-hello, .reel-sub",
+          { y: 0, opacity: 1, duration: 0.5, stagger: 0.08 },
+          0.7
+        )
         .to(
           stickers,
           { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.8)", stagger: 0.055 },
@@ -447,8 +457,12 @@ export default function Hero() {
 
       tl.eventCallback("onComplete", () => {
         gsap.set(".reel-top > *", { clearProps: "all" });
-        gsap.set(".reel-hi", { clearProps: "transform" });
-        gsap.set(".reel-card", { clearProps: "transform,opacity" });
+        gsap.set(".reel-hi-line", { clearProps: "transform" });
+        gsap.set(".reel-hello, .reel-sub", { clearProps: "transform,opacity" });
+        // Keep the card's resting tilt: clear opacity only, so the
+        // stylesheet rotate(-2deg) survives (GSAP preserved it through
+        // the y/scale tween via matrix decomposition).
+        gsap.set(".reel-card", { clearProps: "opacity" });
         gsap.set(stickers, { clearProps: "transform,opacity" });
         gsap.set(floaters, { clearProps: "transform,opacity" });
         // Entrance done: hand control to the scroll scrub. It was kept
@@ -541,14 +555,15 @@ export default function Hero() {
           0.12
         );
       } else {
-        // Card joins the explosion: up, shrink, tilt, fade.
+        // Card joins the explosion: up, shrink, tilt, fade. Resting
+        // tilt is -2deg (stylesheet); the burst adds to it.
         tl.fromTo(
           ".reel-card",
-          { y: 0, scale: 1, rotation: 0, autoAlpha: 1 },
+          { y: 0, scale: 1, rotation: -2, autoAlpha: 1 },
           {
             y: -130,
             scale: 0.92,
-            rotation: -2,
+            rotation: -8,
             autoAlpha: 0,
             duration: 1,
             immediateRender: false,
@@ -711,11 +726,15 @@ export default function Hero() {
       <div className="reel-center">
         <div className="reel-hi-mask">
           <div className="par-hi">
-            {/* Figma-select: the headline lives inside a selection
-                wrapper — the blue box + handles stay as a designer
-                signature after the one-time cursor sweep. */}
+            <p className="reel-hello">Hai, I&rsquo;m —</p>
+            {/* Figma-select: the monumental headline lives inside a
+                selection wrapper — the blue box + handles stay as a
+                designer signature after the one-time cursor sweep. */}
             <span className="hi-select">
-              <h1 className="reel-hi">Hai, I&rsquo;m Juan</h1>
+              <h1 className="reel-hi">
+                <span className="reel-hi-line">Juan</span>
+                <span className="reel-hi-line">Kuganda</span>
+              </h1>
               <span className="hi-box" aria-hidden="true">
                 <span className="hi-handle h-nw" />
                 <span className="hi-handle h-n" />
@@ -742,6 +761,10 @@ export default function Hero() {
                 />
               </svg>
             </span>
+            <p className="reel-sub">
+              Software developer &amp; designer — interfaces people
+              understand at a glance.
+            </p>
           </div>
         </div>
 
@@ -777,11 +800,11 @@ export default function Hero() {
       </div>
 
       {/* Sticker field: five Apple-precision vector doodles + one
-          status pill, scattered across the full hero canvas (percent
-          positions, art-directed — not flanking the card). Anchored to
-          the hero so they can roam the edges. Outer .sticker = entrance
-          pop + scroll explode; inner .sticker-par = magnetic parallax.
-          Desktop absolute, mobile wrapped row. */}
+          status pill, art-directed around the monumental headline and
+          the overlapping portrait. Anchored to the hero so they can
+          roam the edges. Outer .sticker = entrance pop + scroll
+          explode; inner .sticker-par = magnetic parallax.
+          Desktop absolute, mobile on the photo. */}
       <div className="reel-stickers" aria-hidden="true">
           {STICKERS.map((s) => (
             <span
@@ -872,7 +895,7 @@ export default function Hero() {
       ))}
 
       {/* Figma-like ruler pinned to the hero bottom: the canvas slides
-          under it as you scroll. Stays visible through the explode. */}
+          under it as the hero scrolls away. Stays visible through the explode. */}
       <div className="reel-ruler" aria-hidden="true">
         <div className="ruler-track">
           {[0, 1, 2].map((copy) => (
