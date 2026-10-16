@@ -765,7 +765,9 @@ a {
 .reel-stickers {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  /* Behind the card (z 2) and corners (z 3): the wave tucks behind
+     the portrait = depth. Mobile re-raises it onto the photo. */
+  z-index: 1;
   pointer-events: none;
 }
 .sticker {
@@ -1114,15 +1116,17 @@ a.sticker:focus-visible .doodle-pill {
     padding: 8px 14px;
   }
   /* Sticker positions tuned for the mobile card (hero-relative).
-     All six sit on the portrait like stickers on a photo. */
+     Order follows the wave array: folder, pencil, cap, squiggle,
+     spark, pin, code, pill. All eight sit on the portrait like
+     stickers on a photo. */
   .reel-stickers .sticker:nth-child(1) { top: 44% !important; left: 14% !important; } /* folder */
   .reel-stickers .sticker:nth-child(2) { top: 72% !important; left: 12% !important; } /* pencil */
   .reel-stickers .sticker:nth-child(3) { top: 43% !important; left: 62% !important; } /* cap */
-  .reel-stickers .sticker:nth-child(4) { top: 45% !important; left: 87% !important; } /* pin */
-  .reel-stickers .sticker:nth-child(5) { top: 68% !important; left: 88% !important; } /* code */
-  .reel-stickers .sticker:nth-child(6) { top: 84% !important; left: 50% !important; } /* pill */
-  .reel-stickers .sticker:nth-child(7) { top: 48% !important; left: 64% !important; } /* spark */
-  .reel-stickers .sticker:nth-child(8) { top: 60% !important; left: 26% !important; } /* squiggle */
+  .reel-stickers .sticker:nth-child(4) { top: 60% !important; left: 26% !important; } /* squiggle */
+  .reel-stickers .sticker:nth-child(5) { top: 48% !important; left: 64% !important; } /* spark */
+  .reel-stickers .sticker:nth-child(6) { top: 45% !important; left: 87% !important; } /* pin */
+  .reel-stickers .sticker:nth-child(7) { top: 68% !important; left: 88% !important; } /* code */
+  .reel-stickers .sticker:nth-child(8) { top: 84% !important; left: 50% !important; } /* pill */
   /* Ruler stays, slimmer, above the caption row. */
   .reel-ruler {
     height: 34px;
