@@ -231,8 +231,8 @@ const STICKERS: StickerSpec[] = [
   { kind: "squiggle", label: "this way", at: { top: "46%", left: "33%" }, rot: -10, side: "l" },
   { kind: "spark", label: "ship it", at: { top: "46%", left: "67%" }, rot: 10, side: "r" },
   { kind: "pin", label: "palu, id", at: { top: "52%", left: "75%" }, rot: 8, side: "r", href: "#contact", aria: "Go to contact" },
-  { kind: "code", label: "code", at: { top: "60%", left: "85%" }, rot: -7, side: "r", href: "https://github.com/juanKuganda", aria: "Open GitHub profile" },
-  { kind: "pill", label: "open to work", at: { top: "68%", left: "91%" }, rot: 5, side: "r", href: "#contact", aria: "Go to contact" },
+  { kind: "code", label: "code", at: { top: "56%", left: "85%" }, rot: -7, side: "r", href: "https://github.com/juanKuganda", aria: "Open GitHub profile" },
+  { kind: "pill", label: "open to work", at: { top: "70%", left: "91%" }, rot: 5, side: "r", href: "#contact", aria: "Go to contact" },
 ];
 
 /* Floating cursors, reference-style: a colored arrow cursor + a
@@ -586,7 +586,7 @@ export default function Hero() {
 
       gsap.set(".reel-card", { y: -170, opacity: 0, scale: 0.98 });
       gsap.set(".reel-hi-line", { yPercent: 112 });
-      gsap.set(".reel-hello, .reel-sub", { y: 14, opacity: 0 });
+      gsap.set(".reel-sub", { y: 14, opacity: 0 });
       gsap.set(".corner-tl", { x: -26, y: -18, opacity: 0 });
       gsap.set(".corner-tr", { x: 26, y: -18, opacity: 0 });
       gsap.set(".corner-bl", { x: -26, y: 18, opacity: 0 });
@@ -611,7 +611,7 @@ export default function Hero() {
           0.5
         )
         .to(
-          ".reel-hello, .reel-sub",
+          ".reel-sub",
           { y: 0, opacity: 1, duration: 0.5, stagger: 0.08 },
           0.7
         )
@@ -670,7 +670,7 @@ export default function Hero() {
       }
 
       tl.eventCallback("onComplete", () => {
-        gsap.set(".reel-hello, .reel-sub", { clearProps: "transform,opacity" });
+        gsap.set(".reel-sub", { clearProps: "transform,opacity" });
         gsap.set(".reel-hi-line", { clearProps: "transform" });
         // Keep the card's resting tilt: clear opacity only, so the
         // stylesheet rotate(-2deg) survives (GSAP preserved it through
@@ -902,22 +902,19 @@ export default function Hero() {
       <DoodleDefs />
 
       <div className="reel-center">
-        {/* TOP-LEFT: greeting + name, Figma-selected like a designer
+        {/* TOP-LEFT: the greeting, Figma-selected like a designer
             signature. Kinetic letters repel the pointer. */}
         <div className="corner corner-tl">
           <div className="par-hi">
-            <p className="reel-hello">Hai, I&rsquo;m —</p>
             <span className="hi-select">
-              <h1 className="reel-hi" aria-label="Juan Kuganda">
-                {["Juan", "Kuganda"].map((word) => (
-                  <span className="reel-hi-line" key={word} aria-hidden="true">
-                    {word.split("").map((ch, i) => (
-                      <span className="hi-letter" key={i}>
-                        {ch}
-                      </span>
-                    ))}
-                  </span>
-                ))}
+              <h1 className="reel-hi" aria-label="Hi, I'm Juan">
+                <span className="reel-hi-line" aria-hidden="true">
+                  {"Hi, I'm Juan".split("").map((ch, i) => (
+                    <span className="hi-letter" key={i}>
+                      {ch === " " ? " " : ch}
+                    </span>
+                  ))}
+                </span>
               </h1>
               <span className="hi-box" aria-hidden="true">
                 <span className="hi-handle h-nw" />
