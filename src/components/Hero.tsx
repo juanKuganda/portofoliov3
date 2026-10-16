@@ -220,9 +220,9 @@ const STICKERS: StickerSpec[] = [
   { kind: "cap", label: "untad ’27", at: { top: "85%", left: "27%" }, rot: -5, side: "l" },
   { kind: "pin", label: "palu, id", at: { top: "9%", left: "76%" }, rot: 8, side: "r" },
   { kind: "code", label: "code", at: { top: "83%", left: "72%" }, rot: -7, side: "r" },
-  { kind: "pill", label: "open to work", at: { top: "87%", left: "46%" }, rot: 5, side: "r" },
+  { kind: "pill", label: "open to work", at: { top: "78%", left: "88%" }, rot: 5, side: "r" },
   { kind: "spark", label: "ship it", at: { top: "24%", left: "56%" }, rot: 10, side: "r" },
-  { kind: "squiggle", label: "this way", at: { top: "52%", left: "64%" }, rot: -10, side: "r" },
+  { kind: "squiggle", label: "this way", at: { top: "52%", left: "28%" }, rot: -10, side: "l" },
 ];
 
 /* Floating cursors, reference-style: a colored arrow cursor + a
@@ -965,13 +965,12 @@ export default function Hero() {
                 />
               </svg>
             </span>
-            <p className="reel-sub">
-              Software developer &amp; designer — interfaces people
-              understand at a glance.
-            </p>
           </div>
         </div>
 
+        {/* The card interrupts the headline in normal flow — pulled up
+            over KUGANDA's lower half by negative margin. The sub and
+            bottom row always clear it. */}
         <div className="par-card">
           <figure className="reel-card">
             <img
@@ -996,6 +995,11 @@ export default function Hero() {
             <span className="tape tape-tr" aria-hidden="true" />
           </figure>
         </div>
+
+        <p className="reel-sub">
+          Software developer &amp; designer — interfaces people understand
+          at a glance.
+        </p>
 
         <div className="reel-bottom-row">
           <p className="reel-cap">FIG.01 — JUAN, PALU · 2026</p>
