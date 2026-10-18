@@ -39,9 +39,6 @@ export default function Footer() {
     if (reduced) return;
     const root = rootRef.current;
     if (!root) return;
-    // Entrance via IntersectionObserver (not gsap.from + once): IO fires
-    // reliably even on mid-page reload, where ScrollTrigger once-triggers
-    // can leave elements stuck invisible.
     const rows = root.querySelectorAll<HTMLElement>(".foot-row");
     gsap.set(rows, { y: 48, opacity: 0 });
     const io = new IntersectionObserver(

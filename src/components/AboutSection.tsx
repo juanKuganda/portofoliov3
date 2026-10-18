@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useFitText } from "../hooks/useFitText";
 import MagneticText from "./MagneticText";
+import SkillMatrix from "./SkillMatrix";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -67,17 +68,6 @@ export default function AboutSection() {
     };
   }, []);
 
-  const stackItems = [
-    "JavaScript",
-    "TypeScript",
-    "React",
-    "Next.js",
-    "Tailwind CSS",
-    "Figma",
-    "Canva",
-    "CapCut",
-  ];
-
   return (
     <section className="block theme-dark" id="about" aria-label="About">
       <MagneticText
@@ -95,7 +85,7 @@ export default function AboutSection() {
       <p className="about-statement" ref={statementRef}>
         <span className="cw-pink">Engineer,</span>{" "}
         <span className="cw-blue">design,</span> <span className="cw-green">people</span>{" "}
-        — <span className="dim">in that order, most days.</span>
+        <span className="dim">in that order, most days.</span>
       </p>
       <div className="about-grid">
         <div className="rv rv-left">
@@ -123,14 +113,8 @@ export default function AboutSection() {
             hybrid locally, remote anywhere else.
           </p>
           <div className="about-stack-wrap">
-            <span className="stack-heading">Core Stack &amp; Tools:</span>
-            <div className="stack-pills">
-              {stackItems.map((item, i) => (
-                <MagneticText key={item} intensity={0.2}>
-                  <span className={`stack-pill sp-${i % 4}`}>{item}</span>
-                </MagneticText>
-              ))}
-            </div>
+            <span className="stack-heading">Tech Stack</span>
+            <SkillMatrix />
           </div>
         </div>
       </div>

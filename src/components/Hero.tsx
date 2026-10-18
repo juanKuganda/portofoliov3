@@ -198,14 +198,6 @@ function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "ca
   );
 }
 
-/**
- * Doodle stickers: art-directed into the left/right mid columns and
- * the top/bottom center gutters — the four corners belong to the
- * text blocks. `at` — desktop absolute position, percent of the full
- * hero canvas; `rot` — resting tilt in degrees; `side` — scroll-explode
- * direction. Transform layers: outer `.sticker` = entrance pop +
- * scroll explode; inner `.sticker-par` = magnetic parallax.
- */
 type StickerSpec = {
   kind: "folder" | "pencil" | "code" | "pin" | "cap" | "spark" | "squiggle" | "pill";
   label: string;
@@ -218,70 +210,47 @@ type StickerSpec = {
   aria?: string;
 };
 
-/* Wave flow: the eight stickers ride a sine wave left → right, the
-   portrait nestled in the wave's peak. Left of the card the wave
-   rises (68% → 46%), right of it falls (46% → 68%) — symmetric, tidy.
-   The squiggle sits left of the card so its arrow points up-right
-   toward the portrait. Stickers paint BEHIND the card (container
-   z-index 1), so the wave tucks behind the photo = depth. */
 const STICKERS: StickerSpec[] = [
   { kind: "folder", label: "projects", at: { top: "68%", left: "5%" }, rot: -8, side: "l", href: "#work", aria: "Go to selected work" },
-  { kind: "pencil", label: "design", at: { top: "60%", left: "15%" }, rot: 7, side: "l", href: "#services", aria: "Go to services" },
-  { kind: "cap", label: "untad ’27", at: { top: "52%", left: "25%" }, rot: -5, side: "l", href: "#about", aria: "Go to about" },
-  { kind: "squiggle", label: "this way", at: { top: "46%", left: "33%" }, rot: -10, side: "l" },
-  { kind: "spark", label: "ship it", at: { top: "46%", left: "67%" }, rot: 10, side: "r" },
-  { kind: "pin", label: "palu, id", at: { top: "52%", left: "75%" }, rot: 8, side: "r", href: "#contact", aria: "Go to contact" },
-  { kind: "code", label: "code", at: { top: "56%", left: "85%" }, rot: -7, side: "r", href: "https://github.com/juanKuganda", aria: "Open GitHub profile" },
-  { kind: "pill", label: "open to work", at: { top: "70%", left: "91%" }, rot: 5, side: "r", href: "#contact", aria: "Go to contact" },
+  { kind: "pencil", label: "design", at: { top: "50%", left: "14%" }, rot: 8, side: "l", href: "#services", aria: "Go to services" },
+  { kind: "cap", label: "untad ’27", at: { top: "65%", left: "23%" }, rot: -6, side: "l", href: "#about", aria: "Go to about" },
+  { kind: "squiggle", label: "this way", at: { top: "44%", left: "33%" }, rot: -10, side: "l" },
+  { kind: "spark", label: "ship it", at: { top: "44%", left: "67%" }, rot: 10, side: "r" },
+  { kind: "pin", label: "palu, id", at: { top: "65%", left: "77%" }, rot: -6, side: "r", href: "#contact", aria: "Go to contact" },
+  { kind: "code", label: "code", at: { top: "50%", left: "86%" }, rot: 7, side: "r", href: "https://github.com/juanKuganda", aria: "Open GitHub profile" },
+  { kind: "pill", label: "let's talk ↗", at: { top: "68%", left: "93%" }, rot: -5, side: "r", href: "#contact", aria: "Go to contact" },
 ];
 
-/* Floating cursors, reference-style: a colored arrow cursor + a
-   rotated sticker pill (black outline, like the reference) + an
-   optional mini "YOU" bubble. Decorative (aria-hidden).
-   Outer .cursor-float = entrance + explode; .cursor-par =
-   magnetic parallax; .cursor-inner = idle bob. */
 const CURSORS = [
   {
-    at: { top: "40%", left: "20%" }, rot: -6, side: "l",
-    color: "var(--pop-pink)", pill: "PALU, ID", pillRot: -8, mini: "YOU",
+    at: { top: "28%", left: "20%" }, rot: -6, side: "l",
+    color: "var(--pop-pink)", pill: "YOU (VISITOR)", pillRot: -7, mini: "YOU",
   },
   {
-    at: { top: "13%", left: "58%" }, rot: 8, side: "r",
-    color: "var(--pop-blue)", pill: "OPEN TO WORK", pillRot: 7, mini: null,
+    at: { top: "14%", left: "62%" }, rot: 8, side: "r",
+    color: "var(--pop-blue)", pill: "JUAN · CREATOR", pillRot: 6, mini: null,
   },
 ];
 
-/* Ruler numbers: 0–1400 in steps of 100, tripled for a seamless loop. */
+
 const RULER_NUMS: number[] = Array.from({ length: 15 }, (_, i) => i * 100);
 
-/**
- * THE REEL v9 — the centered portrait.
- *
- * Concept: the portrait is the star, centered on the canvas; the four
- * corners hold the text like fixed UI chrome — top-left: greeting +
- * name (Figma-selected, kinetic letters, cursor sweep); top-right:
- * role ticker + availability; bottom-left: description + FIG.01
- * caption; bottom-right: scroll cue. Stickers orbit the mid columns
- * and gutters. Everything playful survives: magnetic parallax,
- * kinetic headline, scramble ticker, sticker hover, scroll explode,
- * THE BLOOM, ruler.
- * Interaction: magnetic parallax — one rAF loop, quickSetter per
- * element, lerped, writing to inner wrappers. Paused on
- * reduced-motion, mobile, or off-viewport.
- * Scroll: NO PIN — the card joins the stickers in the explode
- * (card flies up + shrinks + fades, corners burst outward + upward),
- * scrubbed, finished at "bottom 70%".
- * Mobile: corners stack in flow around the card; stickers sit on the
- * photo. Reduced motion: one static frame.
- */
 export default function Hero() {
   const rootRef = useRef<HTMLElement>(null);
-  // The scroll-scrub timeline stays disabled until the entrance completes,
-  // so the two never fight over the stickers/card (which left elements
-  // stuck invisible when users scrolled mid-entrance).
-  const scrollSTRef = useRef<{ enable(): void } | null>(null);
 
-  // Measure the sticky nav so scene-1 content can pad clear of it.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 768 : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile((prev) => (prev !== mobile ? mobile : prev));
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -289,26 +258,16 @@ export default function Hero() {
       const nav = document.querySelector(".nav");
       const navH = nav ? Math.round(nav.getBoundingClientRect().height) : 60;
       root.style.setProperty("--nav-h", `${navH}px`);
-      ScrollTrigger.refresh();
     };
     setH();
     window.addEventListener("resize", setH);
     return () => window.removeEventListener("resize", setH);
   }, []);
 
-  // Magnetic parallax: ONE rAF loop, gsap.quickSetter per element,
-  // lerped toward the pointer. Transform-only. The loop runs only
-  // while the pointer moves (stops when settled), only on desktop,
-  // never with reduced motion, and pauses when the hero leaves the
-  // viewport. Parallax writes to dedicated wrappers (`.par-hi`,
-  // `.par-card`, `.sticker-par`) so it never fights the entrance
-  // or the scroll-explode timeline, which own the outer elements.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const desktopMq = window.matchMedia("(min-width: 769px)");
-    if (!desktopMq.matches) return;
+    if (isMobile) return;
 
     const parHi = root.querySelector<HTMLElement>(".par-hi");
     const parCard = root.querySelector<HTMLElement>(".par-card");
@@ -359,7 +318,7 @@ export default function Hero() {
 
     const loop = () => {
       raf = 0;
-      if (disposed || !inView || !desktopMq.matches) return;
+      if (disposed || !inView) return;
       cx += (tx - cx) * 0.08;
       cy += (ty - cy) * 0.08;
       if (Math.abs(tx - cx) < 0.005 && Math.abs(ty - cy) < 0.005) {
@@ -372,7 +331,7 @@ export default function Hero() {
       raf = requestAnimationFrame(loop);
     };
     const kick = () => {
-      if (!raf && !disposed && inView && desktopMq.matches) {
+      if (!raf && !disposed && inView) {
         raf = requestAnimationFrame(loop);
       }
     };
@@ -399,42 +358,25 @@ export default function Hero() {
       },
       { threshold: 0 }
     );
-    const onMq = () => {
-      if (!desktopMq.matches && raf) {
-        cancelAnimationFrame(raf);
-        raf = 0;
-      }
-    };
 
     io.observe(root);
-    desktopMq.addEventListener("change", onMq);
     root.addEventListener("pointermove", onMove);
     root.addEventListener("pointerleave", onLeave);
 
     return () => {
       disposed = true;
-      io.disconnect();
-      desktopMq.removeEventListener("change", onMq);
-      root.removeEventListener("pointermove", onMove);
+      io.disconnect();      root.removeEventListener("pointermove", onMove);
       root.removeEventListener("pointerleave", onLeave);
       if (raf) cancelAnimationFrame(raf);
       gsap.set([parHi, parCard, ...stickerEls], { clearProps: "transform" });
     };
-  }, []);
+  }, [isMobile]);
 
-  // Kinetic headline: every letter of the name is gently repelled by
-  // the pointer (magnetic push, lerped back to rest), and the name
-  // skews with scroll velocity. One rAF loop, transform-only,
-  // quickSetter per letter. Letters live inside .reel-hi — untouched
-  // by the entrance (owns .reel-hi-line) and explode (owns the
-  // corners) timelines, so nothing fights. Desktop + no reduced
-  // motion only; sleeps when settled/off-view.
+
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const desktopMq = window.matchMedia("(min-width: 769px)");
-    if (!desktopMq.matches) return;
+    if (isMobile) return;
 
     const letters = Array.from(
       root.querySelectorAll<HTMLElement>(".hi-letter")
@@ -463,7 +405,7 @@ export default function Hero() {
 
     const tick = () => {
       raf = 0;
-      if (disposed || !inView || !desktopMq.matches) return;
+      if (disposed || !inView) return;
       let active = false;
       for (const s of L) {
         const b = s.box();
@@ -495,7 +437,7 @@ export default function Hero() {
       if (active) raf = requestAnimationFrame(tick);
     };
     const kick = () => {
-      if (!raf && !disposed && inView && desktopMq.matches)
+      if (!raf && !disposed && inView)
         raf = requestAnimationFrame(tick);
     };
 
@@ -531,15 +473,8 @@ export default function Hero() {
       },
       { threshold: 0 }
     );
-    const onMq = () => {
-      if (!desktopMq.matches && raf) {
-        cancelAnimationFrame(raf);
-        raf = 0;
-      }
-    };
 
     io.observe(root);
-    desktopMq.addEventListener("change", onMq);
     root.addEventListener("pointermove", onMove);
     root.addEventListener("pointerleave", onLeave);
 
@@ -547,20 +482,13 @@ export default function Hero() {
       disposed = true;
       io.disconnect();
       velST.kill();
-      desktopMq.removeEventListener("change", onMq);
       root.removeEventListener("pointermove", onMove);
       root.removeEventListener("pointerleave", onLeave);
       if (raf) cancelAnimationFrame(raf);
       gsap.set([...letters, hi], { clearProps: "transform" });
     };
-  }, []);
+  }, [isMobile]);
 
-  // Entrance (<1.2s): card drops from above, name lines reveal, the
-  // four corners slide in from their corners, stickers pop in, then
-  // THE BLOOM (grayscale → color, once). transform/opacity only.
-  // After ~1.6s: the Figma-select choreography — a cursor sweeps
-  // across the name, drawing the blue selection box + handles, which
-  // stay as a design element.
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -584,146 +512,126 @@ export default function Hero() {
         gsap.set(el, { rotation: parseFloat(el.dataset.rot || "0") })
       );
 
-      gsap.set(".reel-card", { y: -170, opacity: 0, scale: 0.98 });
-      gsap.set(".reel-hi-line", { yPercent: 112 });
-      gsap.set(".reel-sub", { y: 14, opacity: 0 });
-      gsap.set(".corner-tl", { x: -26, y: -18, opacity: 0 });
-      gsap.set(".corner-tr", { x: 26, y: -18, opacity: 0 });
-      gsap.set(".corner-bl", { x: -26, y: 18, opacity: 0 });
-      gsap.set(".corner-br", { x: 26, y: 18, opacity: 0 });
-      gsap.set(stickers, { scale: 0, opacity: 0 });
-      gsap.set(floaters, { scale: 0, opacity: 0 });
+      gsap.set(".reel-card", { y: -45, opacity: 0, scale: 0.985 });
+      gsap.set(".reel-hi-line", { yPercent: 100 });
+      gsap.set(".reel-hi-sub", { y: 10, opacity: 0 });
+      gsap.set(".reel-sub", { y: 10, opacity: 0 });
+      gsap.set(".corner-tl", { x: -16, y: -12, opacity: 0 });
+      gsap.set(".corner-tr", { x: 16, y: -12, opacity: 0 });
+      gsap.set(".corner-bl", { x: -16, y: 12, opacity: 0 });
+      gsap.set(".corner-br", { x: 16, y: 12, opacity: 0 });
+      gsap.set(stickers, { scale: 0.8, opacity: 0 });
+      gsap.set(floaters, { scale: 0.8, opacity: 0 });
 
+      // Silky smooth entrance timeline — buttery ease, zero stutter, zero snap
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       tl.to(
         ".reel-card",
-        { y: 0, opacity: 1, scale: 1, duration: 1.0, ease: "expo.out" },
-        0.05
+        { y: 0, opacity: 1, scale: 1, duration: 0.95, ease: "power3.out" },
+        0
       )
         .to(
           ".reel-hi-line",
-          { yPercent: 0, duration: 0.7, ease: "power4.out", stagger: 0.1 },
-          0.35
+          { yPercent: 0, duration: 0.7, ease: "power3.out", stagger: 0.05 },
+          0.05
+        )
+        .to(
+          ".reel-hi-sub",
+          { y: 0, opacity: 1, duration: 0.55, ease: "power2.out" },
+          0.15
         )
         .to(
           ".corner-tl, .corner-tr, .corner-bl, .corner-br",
-          { x: 0, y: 0, opacity: 1, duration: 0.6, stagger: 0.08 },
-          0.5
+          { x: 0, y: 0, opacity: 1, duration: 0.6, stagger: 0.04, ease: "power2.out" },
+          0.12
         )
         .to(
           ".reel-sub",
-          { y: 0, opacity: 1, duration: 0.5, stagger: 0.08 },
-          0.7
+          { y: 0, opacity: 1, duration: 0.5, stagger: 0.04, ease: "power2.out" },
+          0.2
         )
         .to(
           stickers,
-          { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.8)", stagger: 0.055 },
-          0.5
+          { scale: 1, opacity: 1, duration: 0.55, ease: "back.out(1.4)", stagger: 0.03 },
+          0.18
         )
         .to(
           floaters,
-          { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.8)", stagger: 0.09 },
-          0.85
+          { scale: 1, opacity: 1, duration: 0.55, ease: "back.out(1.4)", stagger: 0.04 },
+          0.25
         )
-        // THE BLOOM: the grayscale layer fades once — the blazer turns
-        // blue as the single color moment. opacity-only, compositor-cheap.
         .to(
           ".reel-card .photo-gray",
-          { opacity: 0, duration: 1.2, ease: "power2.inOut" },
-          1.5
+          { opacity: 0, duration: 0.9, ease: "power2.inOut" },
+          0.45
         );
 
-      // FIGMA-SELECT: cursor sweeps left→right across the name,
-      // drawing the blue selection box; handles pop in; cursor leaves.
-      // The box + handles stay — a personal designer signature.
       const box = root.querySelector<HTMLElement>(".hi-box");
       const cursor = root.querySelector<HTMLElement>(".hi-cursor");
       const handles = gsap.utils.toArray<HTMLElement>(".hi-handle");
+      const tag = root.querySelector<HTMLElement>(".figma-tag");
+      const dim = root.querySelector<HTMLElement>(".hi-dimension");
       if (box && cursor && handles.length > 0) {
         gsap.set(box, { scaleX: 0, opacity: 0, transformOrigin: "left center" });
         gsap.set(cursor, { opacity: 0, x: 0 });
         gsap.set(handles, { scale: 0, transformOrigin: "center" });
+        if (tag) gsap.set(tag, { scale: 0, opacity: 0, transformOrigin: "bottom left" });
+        if (dim) gsap.set(dim, { scale: 0, opacity: 0, transformOrigin: "top right" });
 
-        const sel = gsap.timeline({ delay: 1.6 });
+        const sel = gsap.timeline({ delay: 0.15 });
         sel
-          .to(cursor, { opacity: 1, duration: 0.22 }, 0)
+          .to(cursor, { opacity: 1, duration: 0.2 }, 0)
           .to(
             cursor,
             {
               x: () => box.offsetWidth + 6,
-              duration: 0.9,
+              duration: 0.65,
               ease: "power2.inOut",
             },
-            0.22
+            0.1
           )
           .to(
             box,
-            { opacity: 1, scaleX: 1, duration: 0.9, ease: "power2.inOut" },
-            0.22
+            { opacity: 1, scaleX: 1, duration: 0.65, ease: "power2.inOut" },
+            0.1
           )
           .to(
             handles,
-            { scale: 1, duration: 0.28, ease: "back.out(2.2)", stagger: 0.04 },
-            0.95
+            { scale: 1, duration: 0.25, ease: "back.out(1.8)", stagger: 0.02 },
+            0.6
           )
-          .to(cursor, { opacity: 0, duration: 0.3 }, 1.3);
+          .to(
+            [tag, dim].filter(Boolean),
+            { scale: 1, opacity: 1, duration: 0.25, ease: "back.out(1.8)", stagger: 0.04 },
+            0.68
+          )
+          .to(cursor, { opacity: 0, duration: 0.25 }, 0.95);
       }
-
-      tl.eventCallback("onComplete", () => {
-        gsap.set(".reel-sub", { clearProps: "transform,opacity" });
-        gsap.set(".reel-hi-line", { clearProps: "transform" });
-        // Keep the card's resting tilt: clear opacity only, so the
-        // stylesheet rotate(-2deg) survives (GSAP preserved it through
-        // the y/scale tween via matrix decomposition).
-        gsap.set(".reel-card", { clearProps: "opacity" });
-        gsap.set(".corner-tl, .corner-tr, .corner-bl, .corner-br", {
-          clearProps: "transform,opacity",
-        });
-        gsap.set(stickers, { clearProps: "transform,opacity" });
-        gsap.set(floaters, { clearProps: "transform,opacity" });
-        // Entrance done: hand control to the scroll scrub. It was kept
-        // disabled until now so a mid-entrance scroll can't leave the
-        // stickers/card stuck invisible.
-        scrollSTRef.current?.enable();
-      });
     }, root);
     return () => {
       ctx.revert();
     };
   }, []);
 
-  // Scroll explode: NO PIN. The CARD joins the stickers — it flies up,
-  // shrinks slightly and fades; the four CORNERS burst outward +
-  // upward and fade; stickers burst outward + upward. Finished before
-  // the statement fully arrives (end "bottom 70%").
-  // Deterministic per-index vectors (no random per render).
-  // transform/opacity only, ease none, scrubbed. fromTo +
-  // immediateRender:false keeps the resting state exact no matter
-  // when the entrance finished. Desktop only for the burst;
-  // reduced-motion skips everything.
+
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
-        // No overwrite here: the scroll scrub is disabled until this
-        // entrance completes (see below), so the two never fight over
-        // the stickers/card and nothing gets stuck invisible.
         defaults: { ease: "none" },
         scrollTrigger: {
           trigger: root,
           start: "top top",
           end: "bottom 70%",
-          scrub: true,
+          scrub: 0.6,
         },
       });
 
       if (isMobile) {
-        // Mini explode on mobile: everything joins the burst, but with
-        // smaller vectors than desktop — no pin, no parallax here.
+
         tl.fromTo(
           ".reel-card",
           { y: 0, scale: 1, autoAlpha: 1 },
@@ -746,10 +654,7 @@ export default function Hero() {
           ".reel-stickers .sticker"
         );
         mStickers.forEach((el, i) => {
-          // Vertical scatter (no horizontal push): the wrapped row is
-          // tight, so sideways vectors would collide mid-flight.
-          // From-state is complete (scale/rotation) so a mid-entrance
-          // scroll normalizes instead of freezing the pop-in mid-way.
+
           const dir = i % 2 === 0 ? -1 : 1;
           tl.fromTo(
             el,
@@ -864,23 +769,14 @@ export default function Hero() {
         });
       }
 
-      // The ruler stays visible through the explode — it only leaves
-      // naturally as the hero scrolls away. (No opacity fade.)
-
-      // Keep the scrub disabled until the entrance completes (the
-      // entrance timeline enables it via scrollSTRef). Prevents a
-      // mid-entrance scroll from leaving stickers/card stuck invisible.
-      if (tl.scrollTrigger) {
-        tl.scrollTrigger.disable();
-        scrollSTRef.current = tl.scrollTrigger;
-      }
     }, root);
 
-    // Ruler shift: the canvas slides under the ruler as you scroll.
-    // Transform-only scrub; static under reduced motion.
+    // Ruler shift & blue meter caliper animation:
+    // Pure x transform scrub — silky 120 FPS, zero layout reflow or delay.
     const rulerCtx = gsap.context(() => {
+      // 1. Ruler track scrub
       gsap.to(".ruler-track", {
-        x: -260,
+        x: -360,
         ease: "none",
         scrollTrigger: {
           trigger: root,
@@ -889,13 +785,43 @@ export default function Hero() {
           scrub: true,
         },
       });
+
+      // 2. Animated blue meter block (pure GPU transform, zero layout thrashing)
+      const meterBlock = root.querySelector(".ruler-meter-block");
+      const meterVal = root.querySelector(".meter-value");
+
+      if (meterBlock && meterVal) {
+        gsap.to(meterBlock, {
+          x: 260,
+          ease: "none",
+          scrollTrigger: {
+            trigger: root,
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+            onUpdate: (self) => {
+              const meters = (0.48 + self.progress * 0.96).toFixed(2);
+              meterVal.textContent = meters;
+            },
+          },
+        });
+
+        // Subtle autonomous breathing pulse for CAD precision feel
+        gsap.to(meterBlock, {
+          boxShadow: "0 0 24px rgba(0, 102, 255, 0.45), inset 0 0 14px rgba(0, 102, 255, 0.16)",
+          repeat: -1,
+          yoyo: true,
+          duration: 1.8,
+          ease: "sine.inOut",
+        });
+      }
     }, root);
 
     return () => {
       ctx.revert();
       rulerCtx.revert();
     };
-  }, []);
+  }, [isMobile]);
 
   return (
     <header className="hero-reel" id="top" ref={rootRef}>
@@ -907,7 +833,21 @@ export default function Hero() {
         <div className="corner corner-tl">
           <div className="par-hi">
             <span className="hi-select">
-              <h1 className="reel-hi" aria-label="Hi, I'm Juan">
+              <span className="figma-tag" aria-hidden="true">
+                <svg
+                  className="figma-tag-icon"
+                  viewBox="0 0 16 16"
+                  width="11"
+                  height="11"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M8 1L2 7L8 13L14 7L8 1Z" />
+                </svg>
+                <span>❖ Juan · 100% Human</span>
+              </span>
+
+              <h1 className="reel-hi" aria-label="Hi, I'm Juan — making pixels behave & code do tricks">
                 <span className="reel-hi-line" aria-hidden="true">
                   {"Hi, I'm Juan".split("").map((ch, i) => (
                     <span className="hi-letter" key={i}>
@@ -915,7 +855,11 @@ export default function Hero() {
                     </span>
                   ))}
                 </span>
+                <span className="reel-hi-sub" aria-hidden="true">
+                  making pixels behave &amp; code do tricks
+                </span>
               </h1>
+
               <span className="hi-box" aria-hidden="true">
                 <span className="hi-handle h-nw" />
                 <span className="hi-handle h-n" />
@@ -926,6 +870,11 @@ export default function Hero() {
                 <span className="hi-handle h-s" />
                 <span className="hi-handle h-se" />
               </span>
+
+              <span className="hi-dimension" aria-hidden="true">
+                388 × 92
+              </span>
+
               <svg
                 className="hi-cursor"
                 viewBox="0 0 24 24"
@@ -996,29 +945,26 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Sticker field: the six main stickers are real navigation
-          links (meaningful shortcuts, not just decoration); spark +
-          squiggle stay pure decoration. They ride a sine wave left →
-          right with the portrait nestled in its peak, painting behind
-          the card for depth.
-          Outer .sticker = entrance pop + scroll explode; inner
-          .sticker-par = magnetic parallax.
-          Desktop absolute, mobile on the photo. */}
       <div className="reel-stickers">
-        {STICKERS.map((s) => {
+        {STICKERS.map((s, index) => {
           const inner = (
             <span className="sticker-par">
-              {s.kind === "pill" ? (
-                <span className="doodle-pill">
-                  <span className="sdot" />
-                  {s.label}
-                </span>
-              ) : (
-                <span className="doodle">
-                  <DoodleIcon kind={s.kind} />
-                  <span className="doodle-label">{s.label}</span>
-                </span>
-              )}
+              <span
+                className="sticker-wave-inner"
+                style={{ "--wave-delay": `${index * 0.35}s` } as React.CSSProperties}
+              >
+                {s.kind === "pill" ? (
+                  <span className="doodle-pill">
+                    <span className="sdot" />
+                    {s.label}
+                  </span>
+                ) : (
+                  <span className="doodle">
+                    <DoodleIcon kind={s.kind} />
+                    <span className="doodle-label">{s.label}</span>
+                  </span>
+                )}
+              </span>
             </span>
           );
           return s.href ? (
@@ -1048,10 +994,6 @@ export default function Hero() {
         })}
       </div>
 
-      {/* Floating cursors, reference-style: colored arrow + rotated
-          sticker pill + mini bubble. Layers: outer .cursor-float =
-          entrance pop + scroll explode; .cursor-par = magnetic
-          parallax; .cursor-inner = idle bob. Decorative. */}
       <div className="reel-floaters" aria-hidden="true">
         {CURSORS.map((c) => (
           <span
@@ -1097,18 +1039,45 @@ export default function Hero() {
       </div>
 
       {/* Figma-like ruler pinned to the hero bottom: the canvas slides
-          under it as the hero scrolls away. Stays visible through the explode. */}
-      <div className="reel-ruler" aria-hidden="true">
+          under it as the hero scrolls away. Larger height + CAD blue meter indicator. */}
+      <div className="reel-ruler" aria-label="Interactive dimension ruler" role="region">
         <div className="ruler-track">
           {[0, 1, 2].map((copy) => (
             <span className="ruler-copy" key={copy}>
               {RULER_NUMS.map((n) => (
                 <span className="rnum" key={`${copy}-${n}`}>
-                  {n}
+                  <span className="rnum-val">{n}</span>
+                  {n === 0 && <span className="rnum-unit">PX</span>}
                 </span>
               ))}
             </span>
           ))}
+        </div>
+
+        {/* Blueprint / Figma Blue Meter Caliper Block */}
+        <div className="ruler-meter-block" aria-hidden="true">
+          <div className="meter-caliper meter-caliper-left">
+            <span className="caliper-tick" />
+          </div>
+          <div className="meter-body">
+            <div className="meter-hatch" />
+            <div className="meter-badge">
+              <span className="meter-pulse-dot" />
+              <span className="meter-label-text">
+                <span className="meter-value">0.48</span>
+                <span className="meter-unit">m</span>
+              </span>
+              <span className="meter-cad-tag">DIM</span>
+            </div>
+            <div className="meter-dimension-line">
+              <span className="dim-arrow dim-arrow-left" />
+              <span className="dim-line" />
+              <span className="dim-arrow dim-arrow-right" />
+            </div>
+          </div>
+          <div className="meter-caliper meter-caliper-right">
+            <span className="caliper-tick" />
+          </div>
         </div>
       </div>
     </header>

@@ -8,7 +8,7 @@ gsap.registerPlugin(ScrollTrigger);
 /**
  * Initialises Lenis smooth scroll, driven by the GSAP ticker so scroll
  * and scrubbed animations stay in sync (no tearing). Respects
- * prefers-reduced-motion.
+ * prefers-reduced-motion. Recalibrates dynamically on window resize.
  */
 export function useLenis() {
   const lenisRef = useRef<Lenis | null>(null);
@@ -29,7 +29,21 @@ export function useLenis() {
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
 
+    // Debounced resize coordinator to ensure Lenis limits & ScrollTriggers
+    // stay in perfect sync when resizing between mobile and desktop
+    let resizeTimer: number;
+    const handleResize = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        lenis.resize();
+        ScrollTrigger.refresh();
+      }, 150);
+    };
+    window.addEventListener("resize", handleResize);
+
     return () => {
+      window.removeEventListener("resize", handleResize);
+      window.clearTimeout(resizeTimer);
       gsap.ticker.remove(tick);
       lenis.destroy();
       lenisRef.current = null;

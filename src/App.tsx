@@ -8,6 +8,7 @@ import Hero from "./components/Hero";
 import Statement from "./components/Statement";
 import WorkSection from "./components/WorkSection";
 import AboutSection from "./components/AboutSection";
+import PixelTransition from "./components/PixelTransition";
 import BentoSection from "./components/BentoSection";
 import ServicesSection from "./components/ServicesSection";
 import ContactSection from "./components/ContactSection";
@@ -63,11 +64,14 @@ export default function App() {
       <Statement />
       <main>
         <WorkSection />
+        <PixelTransition direction="white-to-black" />
         <AboutSection />
+        <PixelTransition direction="black-to-white" />
         <BentoSection />
         <ServicesSection />
       </main>
       <ContactSection />
+      <PixelTransition direction="white-to-black" />
       <Footer />
       <CursorPill />
     </>
