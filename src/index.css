@@ -1815,6 +1815,16 @@ section.block {
   border-color: var(--pop-green);
   color: var(--ink);
 }
+.proj-meta-link {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+.proj-meta-link:hover {
+  opacity: 0.85;
+}
 .proj-meta-pill.mp-3 {
   background: var(--pop-purple);
   border-color: var(--pop-purple);

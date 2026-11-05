@@ -11,6 +11,11 @@ interface ProjectMeta {
 
 export type Audience = "dev" | "design";
 
+export interface ProjectLink {
+  label: string;
+  href: string;
+}
+
 export interface Project {
   id: string;
   idx: string;
@@ -21,6 +26,9 @@ export interface Project {
   description: string;
   meta: ProjectMeta[];
   tiles: ProjectTile[];
+  /** Outbound links (only where a public URL is verified — the
+      LinkedIn deep-dive found zero outbound links on any project). */
+  links?: ProjectLink[];
 }
 
 export const projects: Project[] = [
@@ -37,6 +45,9 @@ export const projects: Project[] = [
       { label: "Role", value: "Research · Full-stack" },
       { label: "Stack", value: "Next.js · Solidity · Hardhat" },
       { label: "Status", value: "Thesis project" },
+    ],
+    links: [
+      { label: "GitHub Repo", href: "https://github.com/juanKuganda/SIJAGA" },
     ],
     tiles: [
       {
@@ -69,10 +80,10 @@ export const projects: Project[] = [
     year: "Internship · 2025",
     ariaLabel: "SIASTI details",
     description:
-      "<strong>Asset management dashboard</strong> built during my internship at PT Bank Sulteng. A Laravel + React dashboard for tracking company assets, with an audit log anchored to an Ethereum testnet so every change leaves a tamper-evident trail.",
+      "<strong>Asset management dashboard</strong> built during my internship at PT Bank Sulteng. A Laravel + React dashboard for tracking company assets, with an audit log anchored to an Ethereum testnet so every change leaves a tamper-evident trail — and critical actions need two-person Maker-Checker approval.",
     meta: [
       { label: "Role", value: "Front-end · Smart contract" },
-      { label: "Stack", value: "Laravel · React · Hardhat" },
+      { label: "Stack", value: "Laravel · React · TS · Inertia.js" },
       { label: "Org", value: "PT Bank Sulteng" },
     ],
     tiles: [
@@ -88,7 +99,7 @@ export const projects: Project[] = [
       },
       {
         seed: "siasti-stack",
-        big: "Laravel · React · Hardhat",
+        big: "Laravel · React · TS · Inertia.js",
         cap: "SIASTI / STACK.TXT",
       },
       {
@@ -214,10 +225,10 @@ export const projects: Project[] = [
     idx: "/ 06",
     audience: "design",
     title: "HMTI Website",
-    year: "Ongoing · 2024 – Present",
+    year: "UI/UX · Jul – Sep 2024",
     ariaLabel: "HMTI website details",
     description:
-      "<strong>Website for HMTI UNTAD</strong>, the informatics student association. I handle the front-end: structure, styling, and ongoing updates for announcements, events, and organizational profiles.",
+      "<strong>Website for HMTI UNTAD</strong>, the informatics student association. I handle the front-end: structure, styling, and updates for announcements, events, and organizational profiles.",
     meta: [
       { label: "Role", value: "Front-end developer" },
       { label: "Stack", value: "React · Tailwind" },
