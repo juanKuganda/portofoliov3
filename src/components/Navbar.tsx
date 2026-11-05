@@ -101,45 +101,48 @@ export default function Navbar({ isReady = true }: NavbarProps) {
     <>
       <nav ref={navRef} className="nav" aria-label="Primary">
         <a
-          className="nav-name"
+          className="nav-brand"
           href="#top"
+          aria-label="Juan Kuganda — back to top"
           onClick={(e) => {
             e.preventDefault();
             goTop();
           }}
         >
-          JUAN KUGANDA<sup>©</sup>
+          <img src="/favicon.svg" alt="" width="31" height="30" />
         </a>
-        <span className="nav-clock desktop-only" aria-hidden="true">
-          {clockLabel}
-        </span>
-        <div className="nav-links desktop-only">
-          {NAV_ITEMS.map(({ id, label }) => (
-            <a
-              key={id}
-              href={`#${id}`}
-              data-nav={id}
-              className={active === id ? "active" : ""}
-              aria-current={active === id ? "true" : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                goTo(id);
-              }}
-            >
-              {label}
-            </a>
-          ))}
+        <div className="nav-inner">
+          <span className="nav-clock desktop-only" aria-hidden="true">
+            {clockLabel}
+          </span>
+          <div className="nav-links desktop-only">
+            {NAV_ITEMS.map(({ id, label }) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                data-nav={id}
+                className={active === id ? "active" : ""}
+                aria-current={active === id ? "true" : undefined}
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo(id);
+                }}
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+          <button
+            ref={menuBtnRef}
+            type="button"
+            className="nav-menu-btn mobile-only"
+            aria-expanded={menuOpen}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            Menu
+          </button>
         </div>
-        <button
-          ref={menuBtnRef}
-          type="button"
-          className="nav-menu-btn mobile-only"
-          aria-expanded={menuOpen}
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          onClick={() => setMenuOpen((v) => !v)}
-        >
-          Menu
-        </button>
       </nav>
 
       {/* Mobile full-screen menu */}
@@ -152,6 +155,13 @@ export default function Navbar({ isReady = true }: NavbarProps) {
         inert={!menuOpen}
       >
         <div className="mnav-top">
+          <img
+            className="mnav-logo"
+            src="/favicon.svg"
+            alt=""
+            width="27"
+            height="26"
+          />
           <span className="mnav-clock">{clockLabel}</span>
           <button
             ref={closeBtnRef}
