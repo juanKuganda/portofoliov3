@@ -66,6 +66,9 @@ export default function PageLoader({
   const tickerRef = useRef<HTMLDivElement>(null);
   const breatheRef = useRef<gsap.core.Tween | null>(null);
   const logoWrapRef = useRef<HTMLDivElement>(null);
+  /** Cached ticker brackets — paintAccents used to querySelectorAll
+      the whole document on EVERY frame of the color tweens (~2s). */
+  const bracketElsRef = useRef<HTMLElement[]>([]);
 
   const canvasDataRef = useRef<{
     ctx: CanvasRenderingContext2D;
@@ -75,7 +78,14 @@ export default function PageLoader({
     rows: number;
     cellW: number;
     cellH: number;
-    matrix: number[][];
+    /** Cells sorted by the progress value at which they clear, so each
+        frame only touches the cells that newly cross their threshold
+        (see renderDither). Precomputed once at init. */
+    cells: { x: number; y: number; threshold: number }[];
+    /** How many of `cells` have already been cleared. */
+    cleared: number;
+    /** Last progress value rendered (guards the monotonic assumption). */
+    lastP: number;
   } | null>(null);
 
   const triggerHeroReady = useCallback(() => {
@@ -87,44 +97,48 @@ export default function PageLoader({
 
   // Transparent pixel dissolve: punches transparent holes from top to bottom
   // directly revealing the Hero section underneath without any snap or flash!
+  //
+  // PERF: incremental, not re-rendered from scratch. Each cell has a fixed
+  // progress threshold at which it clears (activation >= dither, solved for
+  // p — the tween only moves p 0 → 1, so clearing is monotonic). Cells are
+  // pre-sorted by threshold at init; every frame just advances a pointer
+  // and clears the newly-due cells (~50/frame instead of re-painting the
+  // whole field + ~1300 clearRects/frame). Same cells clear at the same
+  // progress values as the old full-loop version — pixel-identical output.
+  // If p ever regresses (it never does in this tween), fall back to a
+  // full re-render so the canvas can never show a stale frame.
   const renderDither = useCallback((p: number) => {
     const data = canvasDataRef.current;
     if (!data) return;
-    const { ctx, width, height, cols, rows, cellW, cellH, matrix } = data;
+    const { ctx, width, height, cells } = data;
 
     if (p >= 0.999) {
       ctx.clearRect(0, 0, width, height);
+      data.cleared = cells.length;
+      data.lastP = p;
       return;
     }
 
-    // Reset ink background
-    ctx.fillStyle = "#0a0a0a";
-    ctx.fillRect(0, 0, width, height);
-
     if (p <= 0.001) return;
 
-    // Radial pixel bloom: cells clear in an expanding circle from
-    // the LOGO (viewport center) outward — the reveal grows out of
-    // the mark instead of cascading top-to-bottom. Aspect-corrected
-    // so the circle is round on screen, not elliptical.
-    const bias = p * 1.5 - 0.25;
-    const aspect = width / height;
-    const maxDist = Math.hypot(0.5 * aspect, 0.5);
-    for (let c = 0; c < cols; c++) {
-      const x = c * cellW;
-      const dx = ((c + 0.5) / cols - 0.5) * aspect;
-      for (let r = 0; r < rows; r++) {
-        const y = r * cellH;
-        const dy = (r + 0.5) / rows - 0.5;
-        const normDist = Math.hypot(dx, dy) / maxDist;
-        const dither = matrix[c]?.[r] ?? 0.5;
-        // Center pixels clear first, blooming outward from the logo
-        const activation = (1 - normDist) * 0.78 + bias * 0.78;
-        if (activation >= dither) {
-          ctx.clearRect(x, y, cellW + 0.6, cellH + 0.6);
-        }
-      }
+    // p regressed (resize rebuilds state, so this is only a safety net):
+    // repaint the field and re-clear everything due at this progress.
+    if (p < data.lastP) {
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(0, 0, width, height);
+      data.cleared = 0;
     }
+    data.lastP = p;
+
+    const cellW = data.cellW;
+    const cellH = data.cellH;
+    let i = data.cleared;
+    while (i < cells.length && cells[i].threshold <= p) {
+      const c = cells[i];
+      ctx.clearRect(c.x, c.y, cellW + 0.6, cellH + 0.6);
+      i++;
+    }
+    data.cleared = i;
   }, []);
 
   useEffect(() => {
@@ -164,17 +178,44 @@ export default function PageLoader({
           const cellW = w / cols;
           const cellH = h / rows;
 
-          const matrix: number[][] = [];
+          // Radial pixel bloom: cells clear in an expanding circle
+          // from the LOGO (viewport center) outward — the reveal grows
+          // out of the mark instead of cascading top-to-bottom.
+          // Aspect-corrected so the circle is round on screen, not
+          // elliptical. Each cell's clear threshold is solved for p:
+          //   (1 - normDist) * 0.78 + (p * 1.5 - 0.25) * 0.78 >= dither
+          //   ⟺ p >= ((dither - (1 - normDist) * 0.78) / 0.78 + 0.25) / 1.5
+          // Cells are sorted by threshold once, so renderDither can
+          // advance a pointer instead of re-scanning the whole field.
+          const aspect = w / h;
+          const maxDist = Math.hypot(0.5 * aspect, 0.5);
+          const cells: { x: number; y: number; threshold: number }[] = [];
           for (let c = 0; c < cols; c++) {
-            matrix[c] = [];
+            const x = c * cellW;
+            const dx = ((c + 0.5) / cols - 0.5) * aspect;
             for (let r = 0; r < rows; r++) {
+              const y = r * cellH;
+              const dy = (r + 0.5) / rows - 0.5;
+              const normDist = Math.hypot(dx, dy) / maxDist;
               const bayer = BAYER_8X8[r % 8][c % 8] / 64;
-              const jitter = Math.abs(Math.sin(c * 12.9898 + r * 78.233) * 43758.5453) % 1;
-              matrix[c][r] = bayer * 0.65 + jitter * 0.35;
+              const jitter =
+                Math.abs(Math.sin(c * 12.9898 + r * 78.233) * 43758.5453) % 1;
+              const dither = bayer * 0.65 + jitter * 0.35;
+              const threshold =
+                ((dither - (1 - normDist) * 0.78) / 0.78 + 0.25) / 1.5;
+              cells.push({ x, y, threshold });
             }
           }
+          cells.sort((a, b) => a.threshold - b.threshold);
 
-          canvasDataRef.current = { ctx, width: w, height: h, cols, rows, cellW, cellH, matrix };
+          canvasDataRef.current = {
+            ctx, width: w, height: h, cols, rows, cellW, cellH,
+            cells, cleared: 0, lastP: 0,
+          };
+          // Paint the ink field once; renderDither only ever clears
+          // cells from here on (it never repaints the background).
+          ctx.fillStyle = "#0a0a0a";
+          ctx.fillRect(0, 0, w, h);
           renderDither(0);
         };
         initCanvas();
@@ -208,25 +249,40 @@ export default function PageLoader({
         bottom progress hairline and the ticker brackets. The field
         stays ink so the colorful logo never dissolves into its own
         background. (No glow behind the logo anymore: its color
-        cycling read as flicker.) */
+        cycling read as flicker.) Bracket elements are cached once at
+        setup — the old version ran querySelectorAll over the whole
+        document on every animation frame. */
     const paintAccents = () => {
       const c = colorProxy.c;
       if (fillRef.current) fillRef.current.style.backgroundColor = c;
-      tickerRef.current
-        ?.querySelectorAll(".tick-bracket")
-        .forEach((el) => {
-          (el as HTMLElement).style.color = c;
-        });
+      for (const el of bracketElsRef.current) el.style.color = c;
     };
 
+    // Cache the static ticker brackets once (see paintAccents).
+    bracketElsRef.current = Array.from(
+      tickerRef.current?.querySelectorAll<HTMLElement>(".tick-bracket") ?? []
+    );
+
+    let lastCounter = -1;
+    let lastScaleX = -1;
     const updateCounter = () => {
       const v = Math.round(progressProxy.val);
-      if (counterRef.current) {
-        counterRef.current.textContent = String(v).padStart(3, "0");
+      // Skip redundant DOM writes: textContent only when the rounded
+      // value changes, scaleX only when it moved (avoids style churn
+      // on frames where the tween barely advanced).
+      if (v !== lastCounter) {
+        lastCounter = v;
+        if (counterRef.current) {
+          counterRef.current.textContent = String(v).padStart(3, "0");
+        }
       }
       // Bottom progress hairline: transform-only, no layout thrash.
-      if (fillRef.current) {
-        fillRef.current.style.transform = `scaleX(${v / 100})`;
+      const sx = v / 100;
+      if (Math.abs(sx - lastScaleX) > 0.0005) {
+        lastScaleX = sx;
+        if (fillRef.current) {
+          fillRef.current.style.transform = `scaleX(${sx})`;
+        }
       }
 
       // Cycle through [ Engineer ] → [ Design ] → [ People ] with text scramble

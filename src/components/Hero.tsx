@@ -260,6 +260,113 @@ export default function Hero({ isReady = true }: HeroProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  /** Mobile sticker layout — pin stickers to the PORTRAIT, not the
+      hero. The stylesheet positions stickers with hero-relative %
+      (plus `!important` nth-child overrides), which cannot track the
+      card on narrow screens: the card is nearly full-width, so the
+      dark-ink icons land ON the dark photo (invisible / sliced),
+      their paper-white labels fall on the white page (invisible),
+      and the pill lands on the stacked ticker block. Instead, measure
+      the card and anchor each sticker to it:
+        - dark-ink icons (folder, cap, pin, code) live in the white
+          side margins, clear of the photo;
+        - the gold spark sits on the photo's dark right edge;
+        - the pill straddles the card's bottom edge, centred;
+        - the squiggle is decorative-only, so CSS hides it on mobile.
+      Re-measured on resize / font load / layout change (the card
+      moves when the headline reflows). Desktop is untouched: leaving
+      mobile clears the inline positions so the % rules apply again.
+      Transform-only GSAP timelines (entrance pop, scroll explode,
+      wave bob) are unaffected — this only sets left/top. */
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const stickerEls = Array.from(
+      root.querySelectorAll<HTMLElement>(".reel-stickers .sticker")
+    );
+    if (!isMobile) {
+      stickerEls.forEach((el) => {
+        el.style.left = "";
+        el.style.top = "";
+      });
+      return;
+    }
+    const card = root.querySelector<HTMLElement>(".reel-card");
+    if (!card) return;
+
+    // Layout position WITHOUT transforms: getBoundingClientRect
+    // includes GSAP's pre-entrance state (the card rests ~43 px lower
+    // once the staged entrance finishes), and ResizeObserver never
+    // fires for a transform-only move — so a rect measured at mount
+    // goes stale by that offset. offsetTop/offsetWidth are
+    // transform-immune, so the anchors always match the resting card.
+    const docOffset = (el: HTMLElement) => {
+      let top = 0;
+      let left = 0;
+      let node: HTMLElement | null = el;
+      while (node) {
+        top += node.offsetTop;
+        left += node.offsetLeft;
+        node = node.offsetParent as HTMLElement | null;
+      }
+      return { top, left };
+    };
+
+    const position = () => {
+      const cardAbs = docOffset(card);
+      const heroAbs = docOffset(root);
+      const cl = cardAbs.left - heroAbs.left;
+      const ct = cardAbs.top - heroAbs.top;
+      const cw = card.offsetWidth;
+      const ch = card.offsetHeight;
+      const cr = cl + cw;
+      const cb = ct + ch;
+      // Side-margin columns hug the card (26 px out), clamped so the
+      // doodle + label (up to ~53 px wide, plus rotation) never
+      // clip against a viewport edge.
+      const leftX = Math.max(30, cl - 26);
+      const rightX = Math.min(root.offsetWidth - 30, cr + 26);
+      const spots: Record<string, { x: number; y: number }> = {
+        folder: { x: leftX, y: ct + ch * 0.16 },
+        cap: { x: leftX, y: ct + ch * 0.48 },
+        pencil: { x: leftX, y: ct + ch * 0.8 },
+        pin: { x: rightX, y: ct + ch * 0.16 },
+        code: { x: rightX, y: ct + ch * 0.8 },
+        spark: { x: cr - 16, y: ct + ch * 0.48 },
+      };
+      stickerEls.forEach((el) => {
+        const kind = el.dataset.kind || "";
+        if (kind === "pill") {
+          // Anchor = the card's bottom-centre point; the doodle's
+          // -50%/-50% centring straddles the pill across the edge.
+          el.style.left = `${cl + cw / 2}px`;
+          el.style.top = `${cb}px`;
+          return;
+        }
+        if (kind === "squiggle") return; // hidden on mobile via CSS
+        const spot = spots[kind];
+        if (!spot) return;
+        el.style.left = `${spot.x}px`;
+        el.style.top = `${spot.y}px`;
+      });
+    };
+
+    position();
+    const ro = new ResizeObserver(position);
+    ro.observe(card);
+    ro.observe(root);
+    window.addEventListener("resize", position);
+    let cancelled = false;
+    document.fonts.ready.then(() => {
+      if (!cancelled) position();
+    });
+    return () => {
+      cancelled = true;
+      ro.disconnect();
+      window.removeEventListener("resize", position);
+    };
+  }, [isMobile]);
+
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -1012,6 +1119,7 @@ export default function Hero({ isReady = true }: HeroProps) {
               key={s.label}
               className="sticker sticker-link"
               style={s.at}
+              data-kind={s.kind}
               data-rot={s.rot}
               data-side={s.side}
               href={s.href}
@@ -1024,6 +1132,7 @@ export default function Hero({ isReady = true }: HeroProps) {
               key={s.label}
               className="sticker"
               style={s.at}
+              data-kind={s.kind}
               data-rot={s.rot}
               data-side={s.side}
               aria-hidden="true"
