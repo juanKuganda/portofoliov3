@@ -9,6 +9,7 @@ gsap.registerPlugin(ScrollTrigger);
  * Initialises Lenis smooth scroll, driven by the GSAP ticker so scroll
  * and scrubbed animations stay in sync (no tearing). Respects
  * prefers-reduced-motion. Recalibrates dynamically on window resize.
+ * Uses lerp: 0.08 for authentic, luxurious momentum smooth scroll.
  */
 export function useLenis() {
   const lenisRef = useRef<Lenis | null>(null);
@@ -20,16 +21,18 @@ export function useLenis() {
     if (reduced) return;
 
     const lenis = new Lenis({
-      duration: 1.25,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      lerp: 0.08, // Silky smooth inertia gliding
       orientation: "vertical",
       gestureOrientation: "vertical",
       smoothWheel: true,
-      wheelMultiplier: 1.2,
-      touchMultiplier: 1.6,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.5,
       infinite: false,
     });
     lenisRef.current = lenis;
+
+    // Initially stop scroll while preloader is active
+    lenis.stop();
 
     lenis.on("scroll", ScrollTrigger.update);
     const tick = (time: number) => {
@@ -38,8 +41,9 @@ export function useLenis() {
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
 
-    // Debounced resize coordinator to ensure Lenis limits & ScrollTriggers
-    // stay in perfect sync when resizing between mobile and desktop
+    // Expose lenis on window for debugging & coordination
+    (window as unknown as { lenis: Lenis }).lenis = lenis;
+
     let resizeTimer: number;
     const handleResize = () => {
       window.clearTimeout(resizeTimer);

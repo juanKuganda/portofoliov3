@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useLenis } from "./hooks/useLenis";
 import { useScrollReveal } from "./hooks/useScrollReveal";
 import gsap from "gsap";
@@ -15,12 +15,13 @@ import ServicesSection from "./components/ServicesSection";
 import ContactSection from "./components/ContactSection";
 import Footer from "./components/Footer";
 import CursorPill from "./components/CursorPill";
+import PageLoader from "./components/PageLoader";
 
 gsap.registerPlugin(ScrollTrigger, CustomEase);
 CustomEase.create("punch", "0.16, 1, 0.3, 1");
 
 /** Thin amber reading-progress hairline. transform-only, scrubbed. */
-function ScrollProgress() {
+function ScrollProgress({ isVisible = true }: { isVisible?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,18 +52,51 @@ function ScrollProgress() {
     };
   }, []);
 
-  return <div ref={ref} className="scroll-progress" aria-hidden="true" />;
+  return (
+    <div
+      ref={ref}
+      className="scroll-progress"
+      style={{ opacity: isVisible ? 1 : 0, transition: "opacity 0.4s ease" }}
+      aria-hidden="true"
+    />
+  );
 }
 
 export default function App() {
-  useLenis();
+  const lenisRef = useLenis();
   useScrollReveal();
+
+  const [isHeroReady, setIsHeroReady] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Stop Lenis initially until loader finishes
+  useEffect(() => {
+    if (!isLoaded && lenisRef.current) {
+      lenisRef.current.stop();
+    }
+  }, [isLoaded, lenisRef]);
+
+  const handleHeroReady = useCallback(() => {
+    setIsHeroReady(true);
+  }, []);
+
+  const handleLoaderComplete = useCallback(() => {
+    setIsLoaded(true);
+    if (lenisRef.current) {
+      lenisRef.current.start();
+      lenisRef.current.resize();
+    }
+    requestAnimationFrame(() => {
+      ScrollTrigger.refresh();
+    });
+  }, [lenisRef]);
 
   return (
     <>
-      <ScrollProgress />
-      <Navbar />
-      <Hero />
+      <PageLoader onHeroReady={handleHeroReady} onComplete={handleLoaderComplete} />
+      <ScrollProgress isVisible={isHeroReady} />
+      <Navbar isReady={isHeroReady} />
+      <Hero isReady={isHeroReady} />
       <Statement />
       <main>
         <WorkSection />

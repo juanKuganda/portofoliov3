@@ -235,8 +235,13 @@ const CURSORS = [
 
 const RULER_NUMS: number[] = Array.from({ length: 15 }, (_, i) => i * 100);
 
-export default function Hero() {
+interface HeroProps {
+  isReady?: boolean;
+}
+
+export default function Hero({ isReady = true }: HeroProps) {
   const rootRef = useRef<HTMLElement>(null);
+  const hasAnimatedRef = useRef(false);
 
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 768 : false
@@ -497,21 +502,27 @@ export default function Hero() {
     ).matches;
     if (reduced) return;
 
-    const ctx = gsap.context(() => {
-      const stickers = gsap.utils.toArray<HTMLElement>(
-        ".reel-stickers .sticker"
-      );
-      const floaters = gsap.utils.toArray<HTMLElement>(
-        ".reel-floaters .cursor-float"
-      );
-      // Resting tilt per sticker (data-rot), so scale pops keep it.
-      stickers.forEach((el) =>
-        gsap.set(el, { rotation: parseFloat(el.dataset.rot || "0") })
-      );
-      floaters.forEach((el) =>
-        gsap.set(el, { rotation: parseFloat(el.dataset.rot || "0") })
-      );
+    const stickers = gsap.utils.toArray<HTMLElement>(
+      ".reel-stickers .sticker"
+    );
+    const floaters = gsap.utils.toArray<HTMLElement>(
+      ".reel-floaters .cursor-float"
+    );
+    stickers.forEach((el) =>
+      gsap.set(el, { rotation: parseFloat(el.dataset.rot || "0") })
+    );
+    floaters.forEach((el) =>
+      gsap.set(el, { rotation: parseFloat(el.dataset.rot || "0") })
+    );
 
+    const box = root.querySelector<HTMLElement>(".hi-box");
+    const cursor = root.querySelector<HTMLElement>(".hi-cursor");
+    const handles = gsap.utils.toArray<HTMLElement>(".hi-handle");
+    const tag = root.querySelector<HTMLElement>(".figma-tag");
+    const dim = root.querySelector<HTMLElement>(".hi-dimension");
+
+    // When not yet ready, park elements in initial hidden state without running entrance animation
+    if (!isReady && !hasAnimatedRef.current) {
       gsap.set(".reel-card", { y: -45, opacity: 0, scale: 0.985 });
       gsap.set(".reel-hi-line", { yPercent: 100 });
       gsap.set(".reel-hi-sub", { y: 10, opacity: 0 });
@@ -522,7 +533,18 @@ export default function Hero() {
       gsap.set(".corner-br", { x: 16, y: 12, opacity: 0 });
       gsap.set(stickers, { scale: 0.8, opacity: 0 });
       gsap.set(floaters, { scale: 0.8, opacity: 0 });
+      if (box) gsap.set(box, { scaleX: 0, opacity: 0, transformOrigin: "left center" });
+      if (cursor) gsap.set(cursor, { opacity: 0, x: 0 });
+      if (handles.length) gsap.set(handles, { scale: 0, transformOrigin: "center" });
+      if (tag) gsap.set(tag, { scale: 0, opacity: 0, transformOrigin: "bottom left" });
+      if (dim) gsap.set(dim, { scale: 0, opacity: 0, transformOrigin: "top right" });
+      return;
+    }
 
+    if (hasAnimatedRef.current) return;
+    hasAnimatedRef.current = true;
+
+    const ctx = gsap.context(() => {
       // Silky smooth entrance timeline — buttery ease, zero stutter, zero snap
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       tl.to(
@@ -611,7 +633,7 @@ export default function Hero() {
     return () => {
       ctx.revert();
     };
-  }, []);
+  }, [isReady]);
 
 
   useEffect(() => {

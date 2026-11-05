@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
 import { useClock } from "../hooks/useClock";
 
 const NAV_ITEMS = [
@@ -8,18 +9,47 @@ const NAV_ITEMS = [
   { id: "contact", label: "Contact" },
 ];
 
+interface NavbarProps {
+  isReady?: boolean;
+}
+
 /**
  * NAV — flat & transparent, difference-blend.
  * White text + mix-blend-mode: difference = automatic contrast over
  * light AND dark sections, no background fill, no blur, no border.
  * Mobile gets a full-screen paper overlay menu (not blended).
  */
-export default function Navbar() {
+export default function Navbar({ isReady = true }: NavbarProps) {
   const time = useClock();
   const [active, setActive] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const hasAnimatedRef = useRef(false);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    if (!isReady && !hasAnimatedRef.current) {
+      gsap.set(el, { y: -24, opacity: 0 });
+      return;
+    }
+
+    if (hasAnimatedRef.current) return;
+    hasAnimatedRef.current = true;
+
+    gsap.to(el, {
+      y: 0,
+      opacity: 1,
+      duration: 0.8,
+      ease: "power3.out",
+      delay: 0.12,
+    });
+  }, [isReady]);
 
   const clockLabel = time ? `Palu · ${time} WITA` : "Palu · WITA";
 
@@ -69,7 +99,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="nav" aria-label="Primary">
+      <nav ref={navRef} className="nav" aria-label="Primary">
         <a
           className="nav-name"
           href="#top"
