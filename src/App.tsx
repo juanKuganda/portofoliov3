@@ -96,7 +96,10 @@ export default function App() {
       <PageLoader onHeroReady={handleHeroReady} onComplete={handleLoaderComplete} />
       <ScrollProgress isVisible={isHeroReady} />
       <Navbar isReady={isHeroReady} />
-      <Hero isReady={isHeroReady} />
+      {/* Hero waits for isLoaded (loader fully gone), not isHeroReady:
+          the hero must start EMPTY and pop in one by one. Navbar and
+          the progress hairline may appear during the dissolve. */}
+      <Hero isReady={isLoaded} />
       <Statement />
       <main>
         <WorkSection />

@@ -9,7 +9,11 @@ gsap.registerPlugin(ScrollTrigger);
  * Initialises Lenis smooth scroll, driven by the GSAP ticker so scroll
  * and scrubbed animations stay in sync (no tearing). Respects
  * prefers-reduced-motion. Recalibrates dynamically on window resize.
- * Uses lerp: 0.08 for authentic, luxurious momentum smooth scroll.
+ * Tuning (v14): lerp 0.05 — the glide is deliberately long (~1.2 s
+ * settle) so the smooth scroll is actually FELT, not mistaken for
+ * native; wheelMultiplier 1.15 gives each notch more travel to show
+ * the glide; syncTouch smooths touch scrolling too (Lenis 1.3 leaves
+ * touch native by default).
  */
 export function useLenis() {
   const lenisRef = useRef<Lenis | null>(null);
@@ -21,12 +25,14 @@ export function useLenis() {
     if (reduced) return;
 
     const lenis = new Lenis({
-      lerp: 0.08, // Silky smooth inertia gliding
+      lerp: 0.05, // Long, feelable glide (~1.2 s settle) — not native-fast
       orientation: "vertical",
       gestureOrientation: "vertical",
       smoothWheel: true,
-      wheelMultiplier: 1.0,
-      touchMultiplier: 1.5,
+      wheelMultiplier: 1.15,
+      touchMultiplier: 2,
+      syncTouch: true,
+      syncTouchLerp: 0.075,
       infinite: false,
     });
     lenisRef.current = lenis;
