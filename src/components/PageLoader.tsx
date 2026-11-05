@@ -30,12 +30,6 @@ const SCRAMBLE_CHARS = "!<>-_\\/[]{}=+*^?#";
     so a full-field cycle would swallow 1–2 logo shapes per band. */
 const COLOR_BANDS = ["#ff4d6d", "#4dabf7", "#ff922b", "#51cf66", "#9775fa"];
 
-// Whoosh entry, per shape (order: orange dot → purple stem → blue K
-// upper → blue K lower → green pill → pink base). Each shape flies
-// in from the side nearest its final spot and settles with a spin,
-// like fabric floating home. px offsets are computed in the effect
-// (viewport size ÷ svg unit scale) — these are just directions.
-const WHOOSH_SPIN = [-30, 25, -20, 20, -25, 30];
 
 /** The 6 logo shapes, copied verbatim from public/favicon.svg.
     Staggered pop order: orange dot → purple stem → blue K (upper,
@@ -64,8 +58,10 @@ export default function PageLoader({
   const logoRef = useRef<SVGSVGElement>(null);
   const fillRef = useRef<HTMLDivElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
-  const breatheRef = useRef<gsap.core.Tween | null>(null);
   const logoWrapRef = useRef<HTMLDivElement>(null);
+  /** Cached ticker brackets — paintAccents used to querySelectorAll
+      the whole document on EVERY frame of the color tweens (~2s). */
+  const bracketElsRef = useRef<HTMLElement[]>([]);
 
   const canvasDataRef = useRef<{
     ctx: CanvasRenderingContext2D;
@@ -75,7 +71,14 @@ export default function PageLoader({
     rows: number;
     cellW: number;
     cellH: number;
-    matrix: number[][];
+    /** Cells sorted by the progress value at which they clear, so each
+        frame only touches the cells that newly cross their threshold
+        (see renderDither). Precomputed once at init. */
+    cells: { x: number; y: number; threshold: number }[];
+    /** How many of `cells` have already been cleared. */
+    cleared: number;
+    /** Last progress value rendered (guards the monotonic assumption). */
+    lastP: number;
   } | null>(null);
 
   const triggerHeroReady = useCallback(() => {
@@ -87,44 +90,48 @@ export default function PageLoader({
 
   // Transparent pixel dissolve: punches transparent holes from top to bottom
   // directly revealing the Hero section underneath without any snap or flash!
+  //
+  // PERF: incremental, not re-rendered from scratch. Each cell has a fixed
+  // progress threshold at which it clears (activation >= dither, solved for
+  // p — the tween only moves p 0 → 1, so clearing is monotonic). Cells are
+  // pre-sorted by threshold at init; every frame just advances a pointer
+  // and clears the newly-due cells (~50/frame instead of re-painting the
+  // whole field + ~1300 clearRects/frame). Same cells clear at the same
+  // progress values as the old full-loop version — pixel-identical output.
+  // If p ever regresses (it never does in this tween), fall back to a
+  // full re-render so the canvas can never show a stale frame.
   const renderDither = useCallback((p: number) => {
     const data = canvasDataRef.current;
     if (!data) return;
-    const { ctx, width, height, cols, rows, cellW, cellH, matrix } = data;
+    const { ctx, width, height, cells } = data;
 
     if (p >= 0.999) {
       ctx.clearRect(0, 0, width, height);
+      data.cleared = cells.length;
+      data.lastP = p;
       return;
     }
 
-    // Reset ink background
-    ctx.fillStyle = "#0a0a0a";
-    ctx.fillRect(0, 0, width, height);
-
     if (p <= 0.001) return;
 
-    // Radial pixel bloom: cells clear in an expanding circle from
-    // the LOGO (viewport center) outward — the reveal grows out of
-    // the mark instead of cascading top-to-bottom. Aspect-corrected
-    // so the circle is round on screen, not elliptical.
-    const bias = p * 1.5 - 0.25;
-    const aspect = width / height;
-    const maxDist = Math.hypot(0.5 * aspect, 0.5);
-    for (let c = 0; c < cols; c++) {
-      const x = c * cellW;
-      const dx = ((c + 0.5) / cols - 0.5) * aspect;
-      for (let r = 0; r < rows; r++) {
-        const y = r * cellH;
-        const dy = (r + 0.5) / rows - 0.5;
-        const normDist = Math.hypot(dx, dy) / maxDist;
-        const dither = matrix[c]?.[r] ?? 0.5;
-        // Center pixels clear first, blooming outward from the logo
-        const activation = (1 - normDist) * 0.78 + bias * 0.78;
-        if (activation >= dither) {
-          ctx.clearRect(x, y, cellW + 0.6, cellH + 0.6);
-        }
-      }
+    // p regressed (resize rebuilds state, so this is only a safety net):
+    // repaint the field and re-clear everything due at this progress.
+    if (p < data.lastP) {
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(0, 0, width, height);
+      data.cleared = 0;
     }
+    data.lastP = p;
+
+    const cellW = data.cellW;
+    const cellH = data.cellH;
+    let i = data.cleared;
+    while (i < cells.length && cells[i].threshold <= p) {
+      const c = cells[i];
+      ctx.clearRect(c.x, c.y, cellW + 0.6, cellH + 0.6);
+      i++;
+    }
+    data.cleared = i;
   }, []);
 
   useEffect(() => {
@@ -164,17 +171,44 @@ export default function PageLoader({
           const cellW = w / cols;
           const cellH = h / rows;
 
-          const matrix: number[][] = [];
+          // Radial pixel bloom: cells clear in an expanding circle
+          // from the LOGO (viewport center) outward — the reveal grows
+          // out of the mark instead of cascading top-to-bottom.
+          // Aspect-corrected so the circle is round on screen, not
+          // elliptical. Each cell's clear threshold is solved for p:
+          //   (1 - normDist) * 0.78 + (p * 1.5 - 0.25) * 0.78 >= dither
+          //   ⟺ p >= ((dither - (1 - normDist) * 0.78) / 0.78 + 0.25) / 1.5
+          // Cells are sorted by threshold once, so renderDither can
+          // advance a pointer instead of re-scanning the whole field.
+          const aspect = w / h;
+          const maxDist = Math.hypot(0.5 * aspect, 0.5);
+          const cells: { x: number; y: number; threshold: number }[] = [];
           for (let c = 0; c < cols; c++) {
-            matrix[c] = [];
+            const x = c * cellW;
+            const dx = ((c + 0.5) / cols - 0.5) * aspect;
             for (let r = 0; r < rows; r++) {
+              const y = r * cellH;
+              const dy = (r + 0.5) / rows - 0.5;
+              const normDist = Math.hypot(dx, dy) / maxDist;
               const bayer = BAYER_8X8[r % 8][c % 8] / 64;
-              const jitter = Math.abs(Math.sin(c * 12.9898 + r * 78.233) * 43758.5453) % 1;
-              matrix[c][r] = bayer * 0.65 + jitter * 0.35;
+              const jitter =
+                Math.abs(Math.sin(c * 12.9898 + r * 78.233) * 43758.5453) % 1;
+              const dither = bayer * 0.65 + jitter * 0.35;
+              const threshold =
+                ((dither - (1 - normDist) * 0.78) / 0.78 + 0.25) / 1.5;
+              cells.push({ x, y, threshold });
             }
           }
+          cells.sort((a, b) => a.threshold - b.threshold);
 
-          canvasDataRef.current = { ctx, width: w, height: h, cols, rows, cellW, cellH, matrix };
+          canvasDataRef.current = {
+            ctx, width: w, height: h, cols, rows, cellW, cellH,
+            cells, cleared: 0, lastP: 0,
+          };
+          // Paint the ink field once; renderDither only ever clears
+          // cells from here on (it never repaints the background).
+          ctx.fillStyle = "#0a0a0a";
+          ctx.fillRect(0, 0, w, h);
           renderDither(0);
         };
         initCanvas();
@@ -208,25 +242,40 @@ export default function PageLoader({
         bottom progress hairline and the ticker brackets. The field
         stays ink so the colorful logo never dissolves into its own
         background. (No glow behind the logo anymore: its color
-        cycling read as flicker.) */
+        cycling read as flicker.) Bracket elements are cached once at
+        setup — the old version ran querySelectorAll over the whole
+        document on every animation frame. */
     const paintAccents = () => {
       const c = colorProxy.c;
       if (fillRef.current) fillRef.current.style.backgroundColor = c;
-      tickerRef.current
-        ?.querySelectorAll(".tick-bracket")
-        .forEach((el) => {
-          (el as HTMLElement).style.color = c;
-        });
+      for (const el of bracketElsRef.current) el.style.color = c;
     };
 
+    // Cache the static ticker brackets once (see paintAccents).
+    bracketElsRef.current = Array.from(
+      tickerRef.current?.querySelectorAll<HTMLElement>(".tick-bracket") ?? []
+    );
+
+    let lastCounter = -1;
+    let lastScaleX = -1;
     const updateCounter = () => {
       const v = Math.round(progressProxy.val);
-      if (counterRef.current) {
-        counterRef.current.textContent = String(v).padStart(3, "0");
+      // Skip redundant DOM writes: textContent only when the rounded
+      // value changes, scaleX only when it moved (avoids style churn
+      // on frames where the tween barely advanced).
+      if (v !== lastCounter) {
+        lastCounter = v;
+        if (counterRef.current) {
+          counterRef.current.textContent = String(v).padStart(3, "0");
+        }
       }
       // Bottom progress hairline: transform-only, no layout thrash.
-      if (fillRef.current) {
-        fillRef.current.style.transform = `scaleX(${v / 100})`;
+      const sx = v / 100;
+      if (Math.abs(sx - lastScaleX) > 0.0005) {
+        lastScaleX = sx;
+        if (fillRef.current) {
+          fillRef.current.style.transform = `scaleX(${sx})`;
+        }
       }
 
       // Cycle through [ Engineer ] → [ Design ] → [ People ] with text scramble
@@ -260,7 +309,6 @@ export default function PageLoader({
     const masterTl = gsap.timeline({
       paused: true,
       onComplete: () => {
-        breatheRef.current?.kill();
         if (overlay) overlay.style.display = "none";
         document.documentElement.style.overflow = prevHtmlOverflow;
         document.body.style.overflow = prevBodyOverflow;
@@ -269,58 +317,10 @@ export default function PageLoader({
     });
     masterTlRef.current = masterTl;
 
-    // ── STEP 0: Logo WHOOSH — the main animation (0s – ~1.45s) ──
-    // Each of the 6 shapes flies in from OUTSIDE the viewport, from
-    // the side nearest its final spot, fast expo.out entry with a
-    // settling spin — like fabric floating home. Offsets are px from
-    // the (centered) logo, converted to SVG user units via the svg's
-    // on-screen scale. The padded viewBox (-40 -40 597 581) +
-    // overflow visible let the shapes travel outside the SVG frame.
-    const logoEl = logoRef.current;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const unit = logoEl
-      ? logoEl.getBoundingClientRect().width / 597
-      : 0.42;
-    const offX = vw / 2 + 200; // px beyond the left/right edge
-    const offY = vh / 2 + 200; // px beyond the top/bottom edge
-    // [x, y] in px, per shape: dot/top, stem/left, K-upper/top-right,
-    // K-lower/bottom-right, pill/right, base/bottom-left.
-    const WHOOSH_PX: [number, number][] = [
-      [0, -offY],
-      [-offX, 0],
-      [offX * 0.7, -offY * 0.7],
-      [offX * 0.7, offY * 0.7],
-      [offX, 0],
-      [-offX * 0.7, offY * 0.7],
-    ];
-    masterTl.from(
-      ".loader-logo path",
-      {
-        x: (i: number) => WHOOSH_PX[i % WHOOSH_PX.length][0] / unit,
-        y: (i: number) => WHOOSH_PX[i % WHOOSH_PX.length][1] / unit,
-        rotation: (i: number) => WHOOSH_SPIN[i % WHOOSH_SPIN.length],
-        scale: 0.7,
-        transformOrigin: "50% 50%",
-        duration: 1.0,
-        ease: "expo.out",
-        stagger: 0.09,
-      },
-      0
-    );
-    masterTl.call(
-      () => {
-        breatheRef.current = gsap.to(".loader-logo", {
-          scale: 1.03,
-          duration: 1.0,
-          ease: "sine.inOut",
-          yoyo: true,
-          repeat: -1,
-        });
-      },
-      undefined,
-      1.5
-    );
+    // Logo: static at rest during loading — the whoosh entrance
+    // + breathing were removed (Nov 2026, per Juan): the logo sits
+    // still while the counter runs, then flies home at the dissolve.
+    // Counter / bands / ticker / hairline below are untouched.
 
     // ── STEP 1: Counter 000 → 100 in four lived beats (0s – 2.4s) ──
     // Sprint 0→40, cruise 40→75, crawl 75→92, snap 92→100 — the
@@ -405,7 +405,6 @@ export default function PageLoader({
       const brand = document.querySelector(
         ".nav-brand img"
       ) as HTMLElement | null;
-      breatheRef.current?.kill();
       if (!wrap || !brand) {
         gsap.to(".loader-logo-wrap", { opacity: 0, duration: 0.3 });
         return;
@@ -475,7 +474,6 @@ export default function PageLoader({
 
     return () => {
       window.clearTimeout(failsafeId);
-      breatheRef.current?.kill();
       if (scrambleTimer) clearInterval(scrambleTimer);
       masterTl.kill();
       removeResize?.();
@@ -496,19 +494,18 @@ export default function PageLoader({
       {/* Full-screen Bayer dither canvas punching holes to reveal Hero */}
       <canvas ref={canvasRef} className="loader-canvas" aria-hidden="true" />
 
-      {/* The logo is the main animation: big, center stage, in its own
-          absolutely-positioned wrap — independent from the corners and
-          hairline (dual absolute stages, per felich.dev), so fading
-          the chrome can never shift or slice it. No glow behind it
-          anymore — its color cycling read as flicker. */}
+      {/* The logo: big, center stage, static while loading (the
+          whoosh entrance + breathing were removed Nov 2026) — in its
+          own absolutely-positioned wrap, independent from the corners
+          and hairline (dual absolute stages, per felich.dev), so
+          fading the chrome can never shift or slice it. No glow
+          behind it anymore — its color cycling read as flicker. */}
       <div ref={logoWrapRef} className="loader-logo-wrap">
-        {/* Logo mark: the 6 shapes whoosh in one by one from outside
-            the viewport (see STEP 0). Inline SVG (paths from
-            favicon.svg) so each shape can animate on its own — a
-            raster could only fly as one block. Padded viewBox
-            (-40 -40 597 581): the art is 517×501, the extra 40 units
-            per side are the safety margin so the flight can travel
-            outside the SVG frame without clipping. */}
+        {/* Logo mark: static at rest during loading (whoosh removed
+            Nov 2026). Inline SVG (paths from favicon.svg). Padded
+            viewBox (-40 -40 597 581): the art is 517×501, the extra
+            40 units per side are the safety margin so the flight
+            home can travel outside the SVG frame without clipping. */}
         <svg
           ref={logoRef}
           className="loader-logo"

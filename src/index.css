@@ -1339,12 +1339,23 @@ a.sticker:focus-visible .doodle-pill {
     transform: translate(-50%, -50%);
   }
   .doodle-svg {
-    height: 52px;
+    height: 40px;
+  }
+  @media (max-width: 400px) {
+    .doodle-svg {
+      height: 36px;
+    }
   }
   .doodle-label {
     font-size: 8px;
     letter-spacing: 0.06em;
-    /* Labels sit on the dark photo on mobile — light text + shadow. */
+    /* Labels now sit in the white side margins — ink text. Only the
+       gold spark's label stays light (it sits on the photo's dark
+       right edge, see the override below). */
+    color: var(--ink);
+    text-shadow: none;
+  }
+  .reel-stickers .sticker[data-kind="spark"] .doodle-label {
     color: var(--paper);
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.65);
   }
@@ -1352,18 +1363,21 @@ a.sticker:focus-visible .doodle-pill {
     font-size: 10px;
     padding: 8px 14px;
   }
-  /* Sticker positions tuned for the mobile card (hero-relative).
-     Order follows the wave array: folder, pencil, cap, squiggle,
-     spark, pin, code, pill. All eight sit on the portrait like
-     stickers on a photo. */
-  .reel-stickers .sticker:nth-child(1) { top: 44% !important; left: 14% !important; } /* folder */
-  .reel-stickers .sticker:nth-child(2) { top: 72% !important; left: 12% !important; } /* pencil */
-  .reel-stickers .sticker:nth-child(3) { top: 43% !important; left: 62% !important; } /* cap */
-  .reel-stickers .sticker:nth-child(4) { top: 60% !important; left: 26% !important; } /* squiggle */
-  .reel-stickers .sticker:nth-child(5) { top: 48% !important; left: 64% !important; } /* spark */
-  .reel-stickers .sticker:nth-child(6) { top: 45% !important; left: 87% !important; } /* pin */
-  .reel-stickers .sticker:nth-child(7) { top: 68% !important; left: 88% !important; } /* code */
-  .reel-stickers .sticker:nth-child(8) { top: 84% !important; left: 50% !important; } /* pill */
+  /* The squiggle is decoration-only (no link) and there is no free
+     band for it around the card on mobile — hide it; desktop keeps it. */
+  .reel-stickers .sticker[data-kind="squiggle"] {
+    display: none;
+  }
+  /* Sticker links are real navigation shortcuts — make them tappable
+     on touch (the container is pointer-events: none). */
+  .reel-stickers a.sticker {
+    pointer-events: auto;
+  }
+  /* Mobile sticker positions are set by Hero.tsx (JS, measured
+     from the portrait card) — see the mobile layout effect there.
+     The old hero-relative % rules are deleted: they put dark-ink
+     icons on the dark photo, white labels on the white page, and
+     the pill on top of the ticker block. */
   /* Ruler stays, responsive, above the caption row. */
   .reel-ruler {
     height: 48px;
@@ -1385,6 +1399,11 @@ a.sticker:focus-visible .doodle-pill {
   .corner-bl,
   .corner-br {
     bottom: calc(clamp(8px, 2.5vh, 24px) + 48px);
+  }
+  /* The LET'S TALK pill straddles the card's bottom edge — give the
+     description below it room so the two never touch. */
+  .corner-bl {
+    margin-top: 14px;
   }
   /* Figma-select box hugs headline cleanly on mobile */
   .hi-select {

@@ -151,7 +151,14 @@ export default function PixelTransition({
     };
 
     resize();
-    window.addEventListener("resize", resize);
+    // Rebuilds the whole dither matrix (cols × rows of Math.sin) — far
+    // too heavy to run on every resize event during a window drag.
+    let rzT: number | undefined;
+    const onResize = () => {
+      window.clearTimeout(rzT);
+      rzT = window.setTimeout(resize, 150);
+    };
+    window.addEventListener("resize", onResize);
 
     // ScrollTrigger to scrub the pixel dissolve live with the user's scroll position
     st = ScrollTrigger.create({
@@ -165,6 +172,11 @@ export default function PixelTransition({
       },
     });
 
+    // Coalesce mousemove repaints to one per animation frame: a full
+    // canvas repaint (every cell re-evaluated) per mousemove event —
+    // up to 120Hz — is the main jank source here. The scatter only
+    // needs the latest pointer position, once per frame.
+    let mouseRaf = 0;
     const onMouseMove = (e: MouseEvent) => {
       const rect = container.getBoundingClientRect();
       mouseRef.current = {
@@ -172,7 +184,11 @@ export default function PixelTransition({
         y: e.clientY - rect.top,
         active: true,
       };
-      render();
+      if (mouseRaf) return;
+      mouseRaf = requestAnimationFrame(() => {
+        mouseRaf = 0;
+        render();
+      });
     };
 
     const onMouseLeave = () => {
@@ -184,7 +200,9 @@ export default function PixelTransition({
     container.addEventListener("mouseleave", onMouseLeave);
 
     return () => {
-      window.removeEventListener("resize", resize);
+      window.removeEventListener("resize", onResize);
+      window.clearTimeout(rzT);
+      cancelAnimationFrame(mouseRaf);
       container.removeEventListener("mousemove", onMouseMove);
       container.removeEventListener("mouseleave", onMouseLeave);
       st?.kill();
