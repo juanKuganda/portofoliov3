@@ -274,8 +274,9 @@ export default function Hero({ isReady = true }: HeroProps) {
         - the pill straddles the card's bottom edge, centred;
         - the squiggle is decorative-only, so CSS hides it on mobile.
       Re-measured on resize / font load / layout change (the card
-      moves when the headline reflows). Desktop is untouched: leaving
-      mobile clears the inline positions so the % rules apply again.
+      moves when the headline reflows). Leaving mobile restores the
+      % positions from data-at-* (blanking them collapses every
+      sticker to the field origin — v21 regression).
       Transform-only GSAP timelines (entrance pop, scroll explode,
       wave bob) are unaffected — this only sets left/top. */
   useLayoutEffect(() => {
@@ -285,9 +286,15 @@ export default function Hero({ isReady = true }: HeroProps) {
       root.querySelectorAll<HTMLElement>(".reel-stickers .sticker")
     );
     if (!isMobile) {
+      // Restore the % positions React set via style={s.at}
+      // (mirrored in data-at-*): blanking left/top leaves .sticker
+      // with no position at all, so all 8 collapse to the
+      // .reel-stickers origin — the top-left pile (v21 regression).
+      // On first desktop mount this is a no-op; on mobile->desktop
+      // resize it undoes the px positions the mobile branch set.
       stickerEls.forEach((el) => {
-        el.style.left = "";
-        el.style.top = "";
+        if (el.dataset.atLeft) el.style.left = el.dataset.atLeft;
+        if (el.dataset.atTop) el.style.top = el.dataset.atTop;
       });
       return;
     }
@@ -1120,6 +1127,8 @@ export default function Hero({ isReady = true }: HeroProps) {
               className="sticker sticker-link"
               style={s.at}
               data-kind={s.kind}
+              data-at-top={s.at.top}
+              data-at-left={s.at.left}
               data-rot={s.rot}
               data-side={s.side}
               href={s.href}
@@ -1133,6 +1142,8 @@ export default function Hero({ isReady = true }: HeroProps) {
               className="sticker"
               style={s.at}
               data-kind={s.kind}
+              data-at-top={s.at.top}
+              data-at-left={s.at.left}
               data-rot={s.rot}
               data-side={s.side}
               aria-hidden="true"

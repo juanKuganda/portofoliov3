@@ -30,12 +30,6 @@ const SCRAMBLE_CHARS = "!<>-_\\/[]{}=+*^?#";
     so a full-field cycle would swallow 1–2 logo shapes per band. */
 const COLOR_BANDS = ["#ff4d6d", "#4dabf7", "#ff922b", "#51cf66", "#9775fa"];
 
-// Whoosh entry, per shape (order: orange dot → purple stem → blue K
-// upper → blue K lower → green pill → pink base). Each shape flies
-// in from the side nearest its final spot and settles with a spin,
-// like fabric floating home. px offsets are computed in the effect
-// (viewport size ÷ svg unit scale) — these are just directions.
-const WHOOSH_SPIN = [-30, 25, -20, 20, -25, 30];
 
 /** The 6 logo shapes, copied verbatim from public/favicon.svg.
     Staggered pop order: orange dot → purple stem → blue K (upper,
@@ -64,7 +58,6 @@ export default function PageLoader({
   const logoRef = useRef<SVGSVGElement>(null);
   const fillRef = useRef<HTMLDivElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
-  const breatheRef = useRef<gsap.core.Tween | null>(null);
   const logoWrapRef = useRef<HTMLDivElement>(null);
   /** Cached ticker brackets — paintAccents used to querySelectorAll
       the whole document on EVERY frame of the color tweens (~2s). */
@@ -316,7 +309,6 @@ export default function PageLoader({
     const masterTl = gsap.timeline({
       paused: true,
       onComplete: () => {
-        breatheRef.current?.kill();
         if (overlay) overlay.style.display = "none";
         document.documentElement.style.overflow = prevHtmlOverflow;
         document.body.style.overflow = prevBodyOverflow;
@@ -325,58 +317,10 @@ export default function PageLoader({
     });
     masterTlRef.current = masterTl;
 
-    // ── STEP 0: Logo WHOOSH — the main animation (0s – ~1.45s) ──
-    // Each of the 6 shapes flies in from OUTSIDE the viewport, from
-    // the side nearest its final spot, fast expo.out entry with a
-    // settling spin — like fabric floating home. Offsets are px from
-    // the (centered) logo, converted to SVG user units via the svg's
-    // on-screen scale. The padded viewBox (-40 -40 597 581) +
-    // overflow visible let the shapes travel outside the SVG frame.
-    const logoEl = logoRef.current;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const unit = logoEl
-      ? logoEl.getBoundingClientRect().width / 597
-      : 0.42;
-    const offX = vw / 2 + 200; // px beyond the left/right edge
-    const offY = vh / 2 + 200; // px beyond the top/bottom edge
-    // [x, y] in px, per shape: dot/top, stem/left, K-upper/top-right,
-    // K-lower/bottom-right, pill/right, base/bottom-left.
-    const WHOOSH_PX: [number, number][] = [
-      [0, -offY],
-      [-offX, 0],
-      [offX * 0.7, -offY * 0.7],
-      [offX * 0.7, offY * 0.7],
-      [offX, 0],
-      [-offX * 0.7, offY * 0.7],
-    ];
-    masterTl.from(
-      ".loader-logo path",
-      {
-        x: (i: number) => WHOOSH_PX[i % WHOOSH_PX.length][0] / unit,
-        y: (i: number) => WHOOSH_PX[i % WHOOSH_PX.length][1] / unit,
-        rotation: (i: number) => WHOOSH_SPIN[i % WHOOSH_SPIN.length],
-        scale: 0.7,
-        transformOrigin: "50% 50%",
-        duration: 1.0,
-        ease: "expo.out",
-        stagger: 0.09,
-      },
-      0
-    );
-    masterTl.call(
-      () => {
-        breatheRef.current = gsap.to(".loader-logo", {
-          scale: 1.03,
-          duration: 1.0,
-          ease: "sine.inOut",
-          yoyo: true,
-          repeat: -1,
-        });
-      },
-      undefined,
-      1.5
-    );
+    // Logo: static at rest during loading — the whoosh entrance
+    // + breathing were removed (Nov 2026, per Juan): the logo sits
+    // still while the counter runs, then flies home at the dissolve.
+    // Counter / bands / ticker / hairline below are untouched.
 
     // ── STEP 1: Counter 000 → 100 in four lived beats (0s – 2.4s) ──
     // Sprint 0→40, cruise 40→75, crawl 75→92, snap 92→100 — the
@@ -461,7 +405,6 @@ export default function PageLoader({
       const brand = document.querySelector(
         ".nav-brand img"
       ) as HTMLElement | null;
-      breatheRef.current?.kill();
       if (!wrap || !brand) {
         gsap.to(".loader-logo-wrap", { opacity: 0, duration: 0.3 });
         return;
@@ -531,7 +474,6 @@ export default function PageLoader({
 
     return () => {
       window.clearTimeout(failsafeId);
-      breatheRef.current?.kill();
       if (scrambleTimer) clearInterval(scrambleTimer);
       masterTl.kill();
       removeResize?.();
@@ -552,19 +494,18 @@ export default function PageLoader({
       {/* Full-screen Bayer dither canvas punching holes to reveal Hero */}
       <canvas ref={canvasRef} className="loader-canvas" aria-hidden="true" />
 
-      {/* The logo is the main animation: big, center stage, in its own
-          absolutely-positioned wrap — independent from the corners and
-          hairline (dual absolute stages, per felich.dev), so fading
-          the chrome can never shift or slice it. No glow behind it
-          anymore — its color cycling read as flicker. */}
+      {/* The logo: big, center stage, static while loading (the
+          whoosh entrance + breathing were removed Nov 2026) — in its
+          own absolutely-positioned wrap, independent from the corners
+          and hairline (dual absolute stages, per felich.dev), so
+          fading the chrome can never shift or slice it. No glow
+          behind it anymore — its color cycling read as flicker. */}
       <div ref={logoWrapRef} className="loader-logo-wrap">
-        {/* Logo mark: the 6 shapes whoosh in one by one from outside
-            the viewport (see STEP 0). Inline SVG (paths from
-            favicon.svg) so each shape can animate on its own — a
-            raster could only fly as one block. Padded viewBox
-            (-40 -40 597 581): the art is 517×501, the extra 40 units
-            per side are the safety margin so the flight can travel
-            outside the SVG frame without clipping. */}
+        {/* Logo mark: static at rest during loading (whoosh removed
+            Nov 2026). Inline SVG (paths from favicon.svg). Padded
+            viewBox (-40 -40 597 581): the art is 517×501, the extra
+            40 units per side are the safety margin so the flight
+            home can travel outside the SVG frame without clipping. */}
         <svg
           ref={logoRef}
           className="loader-logo"
