@@ -11,6 +11,9 @@ const NAV_ITEMS = [
 
 interface NavbarProps {
   isReady?: boolean;
+  /** True when the loader logo has landed on the brand — the brand
+      then fades in under it (the handoff). */
+  isBrandReady?: boolean;
 }
 
 /**
@@ -19,7 +22,10 @@ interface NavbarProps {
  * light AND dark sections, no background fill, no blur, no border.
  * Mobile gets a full-screen paper overlay menu (not blended).
  */
-export default function Navbar({ isReady = true }: NavbarProps) {
+export default function Navbar({
+  isReady = true,
+  isBrandReady = false,
+}: NavbarProps) {
   const time = useClock();
   const [active, setActive] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -29,23 +35,23 @@ export default function Navbar({ isReady = true }: NavbarProps) {
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
 
+  // Nav bar (clock/links/menu): slides in at isHeroReady (dissolve).
+  const brandAnimatedRef = useRef(false);
   useEffect(() => {
     const el = navRef.current;
-    const brand = brandRef.current;
     if (!el) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) return;
 
-    const targets = [el, brand].filter(Boolean) as HTMLElement[];
     if (!isReady && !hasAnimatedRef.current) {
-      gsap.set(targets, { y: -24, opacity: 0 });
+      gsap.set(el, { y: -24, opacity: 0 });
       return;
     }
 
     if (hasAnimatedRef.current) return;
     hasAnimatedRef.current = true;
 
-    gsap.to(targets, {
+    gsap.to(el, {
       y: 0,
       opacity: 1,
       duration: 0.8,
@@ -53,6 +59,30 @@ export default function Navbar({ isReady = true }: NavbarProps) {
       delay: 0.12,
     });
   }, [isReady]);
+
+  // Brand mark: fades in ONLY when the loader logo lands on it.
+  // Opacity-only park (no y shift) — the loader's flight measures
+  // this element's rect, so the rect must be its final rect.
+  useEffect(() => {
+    const brand = brandRef.current;
+    if (!brand) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    if (!isBrandReady && !brandAnimatedRef.current) {
+      gsap.set(brand, { opacity: 0 });
+      return;
+    }
+
+    if (brandAnimatedRef.current) return;
+    brandAnimatedRef.current = true;
+
+    gsap.to(brand, {
+      opacity: 1,
+      duration: 0.2,
+      ease: "power2.out",
+    });
+  }, [isBrandReady]);
 
   const clockLabel = time ? `Palu · ${time} WITA` : "Palu · WITA";
 
