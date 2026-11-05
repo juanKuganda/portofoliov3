@@ -61,6 +61,17 @@ export default function ProjectAccordion({ project, isOpen, onToggle }: Props) {
                 {m.label} <b>{m.value}</b>
               </span>
             ))}
+            {project.links?.map((l) => (
+              <a
+                key={l.href}
+                className="proj-meta-pill proj-meta-link"
+                href={l.href}
+                target="_blank"
+                rel="noopener"
+              >
+                {l.label} <b aria-hidden="true">↗</b>
+              </a>
+            ))}
           </div>
           <GalleryDensity tiles={project.tiles} />
         </div>
