@@ -56,9 +56,9 @@ export default function AboutSection() {
           ease: "none",
           scrollTrigger: {
             trigger: el,
-            start: "top 82%",
-            end: "top 32%",
-            scrub: 0.5,
+            start: "top 90%",
+            end: "top 48%",
+            scrub: 0.35,
           },
         }
       );

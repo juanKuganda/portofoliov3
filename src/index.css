@@ -10,11 +10,10 @@
   --faint: #b5b5b5;
   --line: #e9e9e9;
   --zebra: #f6f6f6;
-  --signal: #ff922b;
-  /* Playful full-color accents — black & white stay the neutrals. */
+  --signal: #fF9F45;
   --pop-pink: #ff4d6d;
   --pop-blue: #4dabf7;
-  --pop-orange: #ff922b;
+  --pop-orange: #fF9F45;
   --pop-green: #51cf66;
   --pop-purple: #9775fa;
   --warm-1: #fff4e3;
@@ -39,7 +38,7 @@ body {
   overflow-x: clip;
 }
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 body {
   background: var(--paper);
@@ -3442,15 +3441,18 @@ footer.site {
    ============================================================ */
 .rv {
   opacity: 0;
-  transform: translateY(30px);
+  transform: translateY(22px);
+  will-change: opacity, transform;
 }
 .rv.rv-left {
   opacity: 0;
-  transform: translateX(-40px);
+  transform: translateX(-24px);
+  will-change: opacity, transform;
 }
 .rv.rv-right {
   opacity: 0;
-  transform: translateX(40px);
+  transform: translateX(24px);
+  will-change: opacity, transform;
 }
 
 /* ============================================================

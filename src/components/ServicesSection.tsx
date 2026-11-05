@@ -199,7 +199,7 @@ export default function ServicesSection() {
     // reliably even on mid-page reload, where ScrollTrigger once-triggers
     // can leave elements stuck invisible.
     const rows = list.querySelectorAll<HTMLElement>(".svc-index-row");
-    gsap.set(rows, { y: 36, opacity: 0 });
+    gsap.set(rows, { y: 20, opacity: 0 });
     const io = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -207,15 +207,15 @@ export default function ServicesSection() {
           gsap.to(rows, {
             y: 0,
             opacity: 1,
-            duration: 0.7,
-            stagger: 0.08,
-            ease: "power3.out",
+            duration: 0.5,
+            stagger: 0.05,
+            ease: "punch",
             onComplete: () =>
               gsap.set(rows, { clearProps: "transform,opacity" }),
           });
         }
       },
-      { threshold: 0.08 }
+      { threshold: 0, rootMargin: "0px 0px -40px 0px" }
     );
     io.observe(list);
     return () => {

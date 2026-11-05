@@ -3,6 +3,7 @@ import { useLenis } from "./hooks/useLenis";
 import { useScrollReveal } from "./hooks/useScrollReveal";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { CustomEase } from "gsap/CustomEase";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Statement from "./components/Statement";
@@ -15,7 +16,8 @@ import ContactSection from "./components/ContactSection";
 import Footer from "./components/Footer";
 import CursorPill from "./components/CursorPill";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, CustomEase);
+CustomEase.create("punch", "0.16, 1, 0.3, 1");
 
 /** Thin amber reading-progress hairline. transform-only, scrubbed. */
 function ScrollProgress() {

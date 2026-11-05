@@ -109,19 +109,20 @@ export default function BentoSection() {
   useEffect(() => {
     if (reduced) return;
     if (cardsRef.current.length > 0) {
+      const cards = cardsRef.current.filter(Boolean);
       gsap.fromTo(
-        cardsRef.current.filter(Boolean),
-        { y: 60, opacity: 0, scale: 0.95 },
+        cards,
+        { y: 28, opacity: 0, scale: 0.98 },
         {
           y: 0,
           opacity: 1,
           scale: 1,
-          duration: 0.8,
-          stagger: 0.12,
-          ease: "power3.out",
+          duration: 0.55,
+          stagger: 0.06,
+          ease: "punch",
           scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 80%",
+            trigger: cards[0] || sectionRef.current,
+            start: "top 90%",
             once: true,
           },
         }

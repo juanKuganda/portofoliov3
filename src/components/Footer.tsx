@@ -40,7 +40,7 @@ export default function Footer() {
     const root = rootRef.current;
     if (!root) return;
     const rows = root.querySelectorAll<HTMLElement>(".foot-row");
-    gsap.set(rows, { y: 48, opacity: 0 });
+    gsap.set(rows, { y: 24, opacity: 0 });
     const io = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -48,14 +48,14 @@ export default function Footer() {
           gsap.to(rows, {
             y: 0,
             opacity: 1,
-            duration: 0.65,
-            ease: "power3.out",
-            stagger: 0.08,
+            duration: 0.52,
+            ease: "punch",
+            stagger: 0.05,
             clearProps: "transform,opacity",
           });
         }
       },
-      { threshold: 0.08 }
+      { threshold: 0, rootMargin: "0px 0px -40px 0px" }
     );
     io.observe(root);
     return () => io.disconnect();

@@ -19,7 +19,16 @@ export function useLenis() {
     ).matches;
     if (reduced) return;
 
-    const lenis = new Lenis({ lerp: 0.07, wheelMultiplier: 0.85 });
+    const lenis = new Lenis({
+      duration: 1.25,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: "vertical",
+      gestureOrientation: "vertical",
+      smoothWheel: true,
+      wheelMultiplier: 1.2,
+      touchMultiplier: 1.6,
+      infinite: false,
+    });
     lenisRef.current = lenis;
 
     lenis.on("scroll", ScrollTrigger.update);
