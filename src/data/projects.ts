@@ -257,4 +257,78 @@ export const projects: Project[] = [
       },
     ],
   },
+  {
+    id: "proj-mangande",
+    idx: "/ 07",
+    audience: "design",
+    title: "Mangande App",
+    year: "UI/UX · Dec 2024",
+    ariaLabel: "Mangande App details",
+    description:
+      "<strong>Restaurant service, redesigned for the phone.</strong> My final Mobile Development project: a restaurant app covering <em>dine-in, takeaway, and delivery</em> — interactive table menus, quick pick-up ordering, live delivery tracking, plus reservations and digital payment. Intuitive navigation, clear workflows, no learning curve.",
+    meta: [
+      { label: "Role", value: "UI/UX Design" },
+      { label: "Stack", value: "Figma" },
+      { label: "Org", value: "Tadulako University" },
+    ],
+    tiles: [
+      {
+        seed: "mangande-flows",
+        big: "Dine-in, takeaway, delivery — one app.",
+        cap: "MANGANDE / FLOWS.TXT",
+      },
+      {
+        seed: "mangande-orders",
+        big: "Order from the table, track it live.",
+        cap: "MANGANDE / ORDERS.TXT",
+      },
+      {
+        seed: "mangande-booking",
+        big: "Reservations without the phone call.",
+        cap: "MANGANDE / BOOKING.TXT",
+      },
+      {
+        seed: "mangande-ux",
+        big: "Clear workflows, no learning curve.",
+        cap: "MANGANDE / UX.TXT",
+      },
+    ],
+  },
+  {
+    id: "proj-evar",
+    idx: "/ 08",
+    audience: "design",
+    title: "EVAR",
+    year: "UI/UX · Nov 2024",
+    ariaLabel: "EVAR details",
+    description:
+      "<strong>Evacuation, designed for the worst day.</strong> An Artificial Intelligence course project: an intelligent evacuation app for earthquakes — <em>AI-optimized routes</em> to the nearest safe zone, live shelter status, SOS alerts, first-aid locations, real-time quake info, and a preparedness education center. Clarity and accessibility first, because in a disaster there is no time to figure out an interface.",
+    meta: [
+      { label: "Role", value: "UI/UX Design" },
+      { label: "Focus", value: "AI Evacuation · Safety" },
+      { label: "Org", value: "Tadulako University" },
+    ],
+    tiles: [
+      {
+        seed: "evar-routes",
+        big: "AI routes to the nearest safe zone.",
+        cap: "EVAR / ROUTES.TXT",
+      },
+      {
+        seed: "evar-map",
+        big: "Live shelter status on one map.",
+        cap: "EVAR / MAP.TXT",
+      },
+      {
+        seed: "evar-sos",
+        big: "SOS and first aid, one tap away.",
+        cap: "EVAR / SOS.TXT",
+      },
+      {
+        seed: "evar-access",
+        big: "Built for clarity under pressure.",
+        cap: "EVAR / ACCESS.TXT",
+      },
+    ],
+  },
 ];
