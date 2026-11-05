@@ -242,6 +242,10 @@ interface HeroProps {
 export default function Hero({ isReady = true }: HeroProps) {
   const rootRef = useRef<HTMLElement>(null);
   const hasAnimatedRef = useRef(false);
+  /** Scroll-explode ScrollTrigger, gated: disabled on mount, enabled
+      only when the staged entrance finishes — a scroll mid-entrance
+      must not fight the pop-in. */
+  const explodeSTRef = useRef<ScrollTrigger | null>(null);
 
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 768 : false
@@ -545,47 +549,54 @@ export default function Hero({ isReady = true }: HeroProps) {
     hasAnimatedRef.current = true;
 
     const ctx = gsap.context(() => {
-      // Silky smooth entrance timeline — buttery ease, zero stutter, zero snap
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      // Staged pop-out entrance (v14): the hero starts EMPTY — the
+      // loader's dissolve already revealed a blank canvas — and each
+      // element pops in one by one: card → headline → corners →
+      // stickers along the wave → cursors → BLOOM. A 0.35 s empty
+      // beat first so the blank hero actually reads.
+      const tl = gsap.timeline({
+        defaults: { ease: "power3.out" },
+        onComplete: () => explodeSTRef.current?.enable(),
+      });
       tl.to(
         ".reel-card",
-        { y: 0, opacity: 1, scale: 1, duration: 0.95, ease: "power3.out" },
-        0
+        { y: 0, opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.2)" },
+        0.35
       )
         .to(
           ".reel-hi-line",
-          { yPercent: 0, duration: 0.7, ease: "power3.out", stagger: 0.05 },
-          0.05
+          { yPercent: 0, duration: 0.7, ease: "power3.out" },
+          0.85
         )
         .to(
           ".reel-hi-sub",
           { y: 0, opacity: 1, duration: 0.55, ease: "power2.out" },
-          0.15
+          1.0
         )
         .to(
           ".corner-tl, .corner-tr, .corner-bl, .corner-br",
-          { x: 0, y: 0, opacity: 1, duration: 0.6, stagger: 0.04, ease: "power2.out" },
-          0.12
+          { x: 0, y: 0, opacity: 1, duration: 0.5, stagger: 0.12, ease: "back.out(1.7)" },
+          1.15
         )
         .to(
           ".reel-sub",
-          { y: 0, opacity: 1, duration: 0.5, stagger: 0.04, ease: "power2.out" },
-          0.2
+          { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" },
+          1.35
         )
         .to(
           stickers,
-          { scale: 1, opacity: 1, duration: 0.55, ease: "back.out(1.4)", stagger: 0.03 },
-          0.18
+          { scale: 1, opacity: 1, duration: 0.55, ease: "back.out(2)", stagger: 0.06 },
+          1.5
         )
         .to(
           floaters,
-          { scale: 1, opacity: 1, duration: 0.55, ease: "back.out(1.4)", stagger: 0.04 },
-          0.25
+          { scale: 1, opacity: 1, duration: 0.55, ease: "back.out(1.7)", stagger: 0.08 },
+          1.95
         )
         .to(
           ".reel-card .photo-gray",
           { opacity: 0, duration: 0.9, ease: "power2.inOut" },
-          0.45
+          2.1
         );
 
       const box = root.querySelector<HTMLElement>(".hi-box");
@@ -600,7 +611,7 @@ export default function Hero({ isReady = true }: HeroProps) {
         if (tag) gsap.set(tag, { scale: 0, opacity: 0, transformOrigin: "bottom left" });
         if (dim) gsap.set(dim, { scale: 0, opacity: 0, transformOrigin: "top right" });
 
-        const sel = gsap.timeline({ delay: 0.15 });
+        const sel = gsap.timeline({ delay: 1.0 });
         sel
           .to(cursor, { opacity: 1, duration: 0.2 }, 0)
           .to(
@@ -651,6 +662,13 @@ export default function Hero({ isReady = true }: HeroProps) {
           scrub: 0.6,
         },
       });
+
+      // Gated: stays disabled until the staged entrance finishes, so
+      // a scroll mid-entrance can't fight the pop-in. (If the effect
+      // re-runs after the entrance — e.g. a resize crossing the
+      // mobile breakpoint — the new trigger stays enabled.)
+      explodeSTRef.current = tl.scrollTrigger ?? null;
+      if (!hasAnimatedRef.current) tl.scrollTrigger?.disable();
 
       if (isMobile) {
 
