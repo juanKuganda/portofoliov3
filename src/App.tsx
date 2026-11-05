@@ -68,6 +68,7 @@ export default function App() {
 
   const [isHeroReady, setIsHeroReady] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isBrandReady, setIsBrandReady] = useState(false);
 
   // Stop Lenis initially until loader finishes
   useEffect(() => {
@@ -93,9 +94,13 @@ export default function App() {
 
   return (
     <>
-      <PageLoader onHeroReady={handleHeroReady} onComplete={handleLoaderComplete} />
+      <PageLoader
+        onHeroReady={handleHeroReady}
+        onComplete={handleLoaderComplete}
+        onBrandReady={() => setIsBrandReady(true)}
+      />
       <ScrollProgress isVisible={isHeroReady} />
-      <Navbar isReady={isHeroReady} />
+      <Navbar isReady={isHeroReady} isBrandReady={isBrandReady} />
       {/* Hero waits for isLoaded (loader fully gone), not isHeroReady:
           the hero must start EMPTY and pop in one by one. Navbar and
           the progress hairline may appear during the dissolve. */}

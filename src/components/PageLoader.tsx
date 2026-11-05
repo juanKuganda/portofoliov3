@@ -4,6 +4,9 @@ import gsap from "gsap";
 interface PageLoaderProps {
   onHeroReady: () => void;
   onComplete: () => void;
+  /** Fired 0.2s before the overlay hides, so the navbar brand can
+      fade in exactly as the flying logo lands on it. */
+  onBrandReady: () => void;
 }
 
 // Authentic 8x8 Bayer matrix for retro dither pixel propagation
@@ -29,7 +32,7 @@ const COLOR_BANDS = ["#ff4d6d", "#4dabf7", "#ff922b", "#51cf66", "#9775fa"];
 
 /** Assembly spin per logo shape (stagger order: orange dot → purple
     stem → blue K upper → blue K lower → green pill → pink base). */
-const LOGO_SPINS = [-24, 18, -12, 12, -18, 24];
+const LOGO_SPINS = [-10, 8, -6, 6, -8, 10];
 
 /** The 6 logo shapes, copied verbatim from public/favicon.svg.
     Staggered pop order: orange dot → purple stem → blue K (upper,
@@ -43,7 +46,11 @@ const LOGO_PATHS: { d: string; fill: string }[] = [
   { d: "M93.5 314C41.8614 314 0 355.861 0 407.5V447.5C0 477.047 23.9528 501 53.5 501C83.0472 501 107 477.047 107 447.5V314H93.5Z", fill: "#FF4264" },
 ];
 
-export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps) {
+export default function PageLoader({
+  onHeroReady,
+  onComplete,
+  onBrandReady,
+}: PageLoaderProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const counterRef = useRef<HTMLSpanElement>(null);
@@ -55,6 +62,7 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
   const fillRef = useRef<HTMLDivElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
   const breatheRef = useRef<gsap.core.Tween | null>(null);
+  const logoWrapRef = useRef<HTMLDivElement>(null);
 
   const canvasDataRef = useRef<{
     ctx: CanvasRenderingContext2D;
@@ -92,16 +100,23 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
 
     if (p <= 0.001) return;
 
-    // Organic top-to-bottom pixel cascade
+    // Radial pixel bloom: cells clear in an expanding circle from
+    // the LOGO (viewport center) outward — the reveal grows out of
+    // the mark instead of cascading top-to-bottom. Aspect-corrected
+    // so the circle is round on screen, not elliptical.
     const bias = p * 1.5 - 0.25;
+    const aspect = width / height;
+    const maxDist = Math.hypot(0.5 * aspect, 0.5);
     for (let c = 0; c < cols; c++) {
       const x = c * cellW;
+      const dx = ((c + 0.5) / cols - 0.5) * aspect;
       for (let r = 0; r < rows; r++) {
         const y = r * cellH;
-        const normY = r / (rows - 1);
+        const dy = (r + 0.5) / rows - 0.5;
+        const normDist = Math.hypot(dx, dy) / maxDist;
         const dither = matrix[c]?.[r] ?? 0.5;
-        // Top pixels clear first, cascading downwards
-        const activation = (1 - normY) * 0.78 + bias * 0.78;
+        // Center pixels clear first, blooming outward from the logo
+        const activation = (1 - normDist) * 0.78 + bias * 0.78;
         if (activation >= dither) {
           ctx.clearRect(x, y, cellW + 0.6, cellH + 0.6);
         }
@@ -252,21 +267,33 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
     masterTlRef.current = masterTl;
 
     // ── STEP 0: Logo ASSEMBLY — the main animation (0s – ~1.3s) ──
-    // The six shapes fly up from below, each with its own spin, and
-    // pop into place one by one. Then a gentle breathing float keeps
-    // the mark alive while the counter runs.
+    // Choreography rule (from research): big motion lives ONLY on
+    // the wrapper; each path just pops IN PLACE (scale, y ≤ 16,
+    // rotation ≤ 10°) so no shape can swing out of the SVG frame
+    // and get sliced — the v15 "ter-cut". The padded viewBox
+    // (-40 -40 597 581) + overflow visible are the safety nets.
+    masterTl.from(
+      ".loader-logo-wrap",
+      {
+        y: 24,
+        opacity: 0,
+        duration: 0.9,
+        ease: "power3.out",
+      },
+      0
+    );
     masterTl.from(
       ".loader-logo path",
       {
         scale: 0,
+        y: 16,
         rotation: (i: number) => LOGO_SPINS[i % LOGO_SPINS.length],
-        y: 60,
         transformOrigin: "50% 50%",
-        duration: 0.7,
-        ease: "back.out(1.8)",
+        duration: 0.6,
+        ease: "back.out(1.7)",
         stagger: 0.11,
       },
-      0
+      0.1
     );
     masterTl.call(
       () => {
@@ -340,21 +367,66 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
         onUpdate: paintAccents,
       }, 1.92);
 
-    // ── STEP 2: Seamless Pixel Dissolve directly into Hero (2.4s – 3.3s) ──
-    masterTl.addLabel("dissolve", 2.4);
+    // ── STEP 2: Hold, then the logo flies HOME (2.65s – 3.55s) ──
+    // 0.25s hold after the counter hits 100: an exit that starts
+    // with no pause reads as an interruption; the pause makes it
+    // read as a decision. Then ONE continuous exit (no "two deaths"):
+    // the radial dissolve blooms from the logo while the logo itself
+    // flies to the navbar brand and lands on it.
+    masterTl.addLabel("dissolve", 2.65);
 
-    // Fade all loader chrome gently (logo, corners, hairline)
-    masterTl.to(".loader-content, .loader-corner, .loader-progress", {
+    // Small chrome leaves first (corners, hairline, glow) — the LOGO
+    // stays: it is the last thing to leave, and it leaves by flying.
+    masterTl.to(".loader-corner, .loader-progress, .loader-glow", {
       opacity: 0,
-      y: -20,
       duration: 0.3,
       ease: "power2.in",
     }, "dissolve");
 
-    // START Hero entrance IMMEDIATELY as pixel dissolve begins (zero jeda, zero snap)
+    // Logo flight: from center stage to the navbar brand (manual
+    // x/y/scale from rect deltas — visually identical to GSAP Flip,
+    // no plugin/reparenting risk in React). The brand is parked at
+    // opacity 0 only (no y shift), so its rect is its final rect.
+    masterTl.call(() => {
+      const wrap = logoWrapRef.current;
+      const brand = document.querySelector(
+        ".nav-brand img"
+      ) as HTMLElement | null;
+      breatheRef.current?.kill();
+      if (!wrap || !brand) {
+        gsap.to(".loader-logo-wrap", { opacity: 0, duration: 0.3 });
+        return;
+      }
+      const wRect = wrap.getBoundingClientRect();
+      const bRect = brand.getBoundingClientRect();
+      // The art fills 517 of the 597 padded viewBox units.
+      const artW = wRect.width * (517 / 597);
+      const scale = bRect.width / artW;
+      const dx =
+        bRect.left + bRect.width / 2 - (wRect.left + wRect.width / 2);
+      const dy =
+        bRect.top + bRect.height / 2 - (wRect.top + wRect.height / 2);
+      gsap.to(wrap, {
+        x: `+=${dx}`,
+        y: `+=${dy}`,
+        scale,
+        duration: 0.8,
+        ease: "power3.inOut",
+      });
+    }, undefined, "dissolve");
+
+    // Hero entrance starts 0.3s INTO the flight (overlap ≥ 0.3s):
+    // the exit is the first tween of the hero timeline, not a
+    // separate animation before it.
     masterTl.call(() => {
       triggerHeroReady();
-    }, undefined, "dissolve");
+    }, undefined, "dissolve+=0.3");
+
+    // The navbar brand fades in during the last 0.2s of the flight,
+    // so it is fully opaque exactly when the overlay hides.
+    masterTl.call(() => {
+      onBrandReady();
+    }, undefined, "dissolve+=0.7");
 
     // Animate pixel dissolve progress 0 → 1
     // As pixels clear from top to bottom, Hero elements are seen animating through the matrix!
@@ -411,20 +483,25 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
       {/* Full-screen Bayer dither canvas punching holes to reveal Hero */}
       <canvas ref={canvasRef} className="loader-canvas" aria-hidden="true" />
 
-      {/* The logo is the main animation: big, center stage, assembling
-          shape by shape (see STEP 0). A soft band-colored glow sits
-          behind it — color lives in the glow, never in the field, so
-          the logo's own colors stay legible. */}
-      <div className="loader-content">
+      {/* The logo is the main animation: big, center stage, in its own
+          absolutely-positioned wrap — independent from the corners and
+          hairline (dual absolute stages, per felich.dev), so fading
+          the chrome can never shift or slice it. A soft band-colored
+          glow sits behind it — color lives in the glow, never in the
+          field, so the logo's own colors stay legible. */}
+      <div ref={logoWrapRef} className="loader-logo-wrap">
         <div ref={glowRef} className="loader-glow" aria-hidden="true" />
         {/* Logo mark: the 6 shapes assemble one by one (see STEP 0).
             Inline SVG (paths from favicon.svg) so each shape can
-            animate on its own — a raster could only pop as one block. */}
+            animate on its own — a raster could only pop as one block.
+            Padded viewBox (-40 -40 597 581): the art is 517×501, the
+            extra 40 units per side are the safety margin so assembly
+            swings can never reach the SVG's clipping edge. */}
         <svg
           className="loader-logo"
-          viewBox="0 0 517 501"
-          width="200"
-          height="194"
+          viewBox="-40 -40 597 581"
+          width="231"
+          height="225"
           aria-hidden="true"
         >
           {LOGO_PATHS.map((p) => (
