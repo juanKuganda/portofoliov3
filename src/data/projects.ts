@@ -4,26 +4,38 @@ export interface ProjectTile {
   cap: string;
 }
 
-export interface ProjectMeta {
+interface ProjectMeta {
   label: string;
   value: string;
+}
+
+export type Audience = "dev" | "design";
+
+export interface ProjectLink {
+  label: string;
+  href: string;
 }
 
 export interface Project {
   id: string;
   idx: string;
+  audience: Audience;
   title: string;
   year: string;
   ariaLabel: string;
   description: string;
   meta: ProjectMeta[];
   tiles: ProjectTile[];
+  /** Outbound links (only where a public URL is verified — the
+      LinkedIn deep-dive found zero outbound links on any project). */
+  links?: ProjectLink[];
 }
 
 export const projects: Project[] = [
   {
     id: "proj-sijaga",
     idx: "/ 01",
+    audience: "dev",
     title: "SIJAGA",
     year: "Thesis · 2025 – 2026",
     ariaLabel: "SIJAGA details",
@@ -33,6 +45,9 @@ export const projects: Project[] = [
       { label: "Role", value: "Research · Full-stack" },
       { label: "Stack", value: "Next.js · Solidity · Hardhat" },
       { label: "Status", value: "Thesis project" },
+    ],
+    links: [
+      { label: "GitHub Repo", href: "https://github.com/juanKuganda/SIJAGA" },
     ],
     tiles: [
       {
@@ -60,14 +75,15 @@ export const projects: Project[] = [
   {
     id: "proj-siasti",
     idx: "/ 02",
+    audience: "dev",
     title: "SIASTI",
     year: "Internship · 2025",
     ariaLabel: "SIASTI details",
     description:
-      "<strong>Asset management dashboard</strong> built during my internship at PT Bank Sulteng. A Laravel + React dashboard for tracking company assets, with an audit log anchored to an Ethereum testnet so every change leaves a tamper-evident trail.",
+      "<strong>Asset management dashboard</strong> built during my internship at PT Bank Sulteng. A Laravel + React dashboard for tracking company assets, with an audit log anchored to an Ethereum testnet so every change leaves a tamper-evident trail — and critical actions need two-person Maker-Checker approval.",
     meta: [
       { label: "Role", value: "Front-end · Smart contract" },
-      { label: "Stack", value: "Laravel · React · Hardhat" },
+      { label: "Stack", value: "Laravel · React · TS · Inertia.js" },
       { label: "Org", value: "PT Bank Sulteng" },
     ],
     tiles: [
@@ -83,7 +99,7 @@ export const projects: Project[] = [
       },
       {
         seed: "siasti-stack",
-        big: "Laravel · React · Hardhat",
+        big: "Laravel · React · TS · Inertia.js",
         cap: "SIASTI / STACK.TXT",
       },
       {
@@ -94,13 +110,125 @@ export const projects: Project[] = [
     ],
   },
   {
-    id: "proj-hmti",
+    id: "proj-fundtogether",
     idx: "/ 03",
+    audience: "dev",
+    title: "FundTogether",
+    year: "Web3 · 2025",
+    ariaLabel: "FundTogether details",
+    description:
+      "<strong>Crowdfunding, rebuilt for verifiable trust.</strong> FundTogether pairs a familiar <em>Midtrans</em> payment flow for fiat donors with blockchain-backed funding mechanisms, so campaigns raise money through normal checkout while funding records stay independently checkable. A practical step into Web3 product engineering - accountable fundraising infrastructure, not speculation.",
+    meta: [
+      { label: "Role", value: "Product · Full-stack" },
+      { label: "Stack", value: "AdonisJS · Tailwind · Midtrans" },
+      { label: "Focus", value: "Crowdfunding · Web3" },
+    ],
+    tiles: [
+      {
+        seed: "fundtogether-campaign",
+        big: "Campaigns people can actually verify.",
+        cap: "FUNDTOGETHER / CAMPAIGN.TXT",
+      },
+      {
+        seed: "fundtogether-payments",
+        big: "Fiat in, without the friction.",
+        cap: "FUNDTOGETHER / PAYMENTS.TXT",
+      },
+      {
+        seed: "fundtogether-chain",
+        big: "Funding events anchored on-chain.",
+        cap: "FUNDTOGETHER / CHAIN.TXT",
+      },
+      {
+        seed: "fundtogether-trust",
+        big: "Trust designed into every pledge.",
+        cap: "FUNDTOGETHER / TRUST.TXT",
+      },
+    ],
+  },
+  {
+    id: "proj-csirt",
+    idx: "/ 04",
+    audience: "dev",
+    title: "CSIRT Bank Sulteng",
+    year: "Security · 2025",
+    ariaLabel: "CSIRT Bank Sulteng details",
+    description:
+      "<strong>Security work is mostly evidence.</strong> At Bank Sulteng the focus was auditability: tamper-evident logging for asset transactions, anchored to an <em>Ethereum testnet</em> so changes leave a trail that is hard to quietly rewrite. The emphasis is accountability - who changed what, when, and whether the record still matches.",
+    meta: [
+      { label: "Role", value: "Security · Audit" },
+      { label: "Stack", value: "Ethereum Testnet · Hardhat · Audit Logs" },
+      { label: "Org", value: "PT Bank Sulteng" },
+    ],
+    tiles: [
+      {
+        seed: "csirt-audit-trail",
+        big: "Every change leaves evidence.",
+        cap: "BANK SULTENG / AUDIT.TXT",
+      },
+      {
+        seed: "csirt-testnet",
+        big: "Logs anchored beyond the database.",
+        cap: "BANK SULTENG / TESTNET.TXT",
+      },
+      {
+        seed: "csirt-integrity",
+        big: "Tampering should be obvious.",
+        cap: "BANK SULTENG / INTEGRITY.TXT",
+      },
+      {
+        seed: "csirt-accountability",
+        big: "Who changed what, and when.",
+        cap: "BANK SULTENG / LEDGER.TXT",
+      },
+    ],
+  },
+  {
+    id: "proj-pt-admin",
+    idx: "/ 05",
+    audience: "design",
+    title: "Tadulako Admin Dashboard",
+    year: "UI/UX · 2025",
+    ariaLabel: "Tadulako Admin Dashboard details",
+    description:
+      "<strong>An admin interface designed before it was built.</strong> I mapped Programming Tadulako\u2019s operational workflow in <em>Figma</em> first - navigation, dense data views, repeat actions - then translated the layouts into reusable React and Tailwind components. Community operations, treated like a product: consistent, scannable, ready to extend.",
+    meta: [
+      { label: "Role", value: "UI/UX · Front-end" },
+      { label: "Stack", value: "Figma · React · Tailwind" },
+      { label: "Org", value: "Programming Tadulako" },
+    ],
+    tiles: [
+      {
+        seed: "pt-admin-system",
+        big: "Operations, organized like a product.",
+        cap: "ADMIN / SYSTEM.TXT",
+      },
+      {
+        seed: "pt-admin-figma",
+        big: "Every screen resolved in Figma first.",
+        cap: "ADMIN / FIGMA.TXT",
+      },
+      {
+        seed: "pt-admin-components",
+        big: "Layouts became reusable components.",
+        cap: "ADMIN / COMPONENTS.TXT",
+      },
+      {
+        seed: "pt-admin-usability",
+        big: "Dense data, made scannable.",
+        cap: "ADMIN / USABILITY.TXT",
+      },
+    ],
+  },
+  {
+    id: "proj-hmti",
+    idx: "/ 06",
+    audience: "design",
     title: "HMTI Website",
-    year: "Ongoing · 2024 – Present",
+    year: "UI/UX · Jul – Sep 2024",
     ariaLabel: "HMTI website details",
     description:
-      "<strong>Website for HMTI UNTAD</strong>, the informatics student association. I handle the front-end: structure, styling, and ongoing updates for announcements, events, and organizational profiles.",
+      "<strong>Website for HMTI UNTAD</strong>, the informatics student association. I handle the front-end: structure, styling, and updates for announcements, events, and organizational profiles.",
     meta: [
       { label: "Role", value: "Front-end developer" },
       { label: "Stack", value: "React · Tailwind" },
@@ -130,38 +258,76 @@ export const projects: Project[] = [
     ],
   },
   {
-    id: "proj-mentor",
-    idx: "/ 04",
-    title: "Web Mentorship",
-    year: "Ongoing · 2025 – Present",
-    ariaLabel: "Mentorship details",
+    id: "proj-mangande",
+    idx: "/ 07",
+    audience: "design",
+    title: "Mangande App",
+    year: "UI/UX · Dec 2024",
+    ariaLabel: "Mangande App details",
     description:
-      "<strong>Weekly web development mentoring</strong> for two Palu communities: Programming Tadulako and HammerCode. Sessions run from HTML/CSS/JS fundamentals up to building and shipping real projects.",
+      "<strong>Restaurant service, redesigned for the phone.</strong> My final Mobile Development project: a restaurant app covering <em>dine-in, takeaway, and delivery</em> — interactive table menus, quick pick-up ordering, live delivery tracking, plus reservations and digital payment. Intuitive navigation, clear workflows, no learning curve.",
     meta: [
-      { label: "Role", value: "Mentor" },
-      { label: "Communities", value: "Programming Tadulako · HammerCode" },
-      { label: "Since", value: "Jan 2025" },
+      { label: "Role", value: "UI/UX Design" },
+      { label: "Stack", value: "Figma" },
+      { label: "Org", value: "Tadulako University" },
     ],
     tiles: [
       {
-        seed: "mentor-format",
-        big: "Teaching the web, weekly.",
-        cap: "MENTOR / FORMAT.TXT",
+        seed: "mangande-flows",
+        big: "Dine-in, takeaway, delivery — one app.",
+        cap: "MANGANDE / FLOWS.TXT",
       },
       {
-        seed: "mentor-reach",
-        big: "Programming Tadulako · HammerCode.",
-        cap: "MENTOR / REACH.TXT",
+        seed: "mangande-orders",
+        big: "Order from the table, track it live.",
+        cap: "MANGANDE / ORDERS.TXT",
       },
       {
-        seed: "mentor-topics",
-        big: "HTML · CSS · JavaScript · React",
-        cap: "MENTOR / TOPICS.TXT",
+        seed: "mangande-booking",
+        big: "Reservations without the phone call.",
+        cap: "MANGANDE / BOOKING.TXT",
       },
       {
-        seed: "mentor-method",
-        big: "Fundamentals → real projects.",
-        cap: "MENTOR / METHOD.TXT",
+        seed: "mangande-ux",
+        big: "Clear workflows, no learning curve.",
+        cap: "MANGANDE / UX.TXT",
+      },
+    ],
+  },
+  {
+    id: "proj-evar",
+    idx: "/ 08",
+    audience: "design",
+    title: "EVAR",
+    year: "UI/UX · Nov 2024",
+    ariaLabel: "EVAR details",
+    description:
+      "<strong>Evacuation, designed for the worst day.</strong> An Artificial Intelligence course project: an intelligent evacuation app for earthquakes — <em>AI-optimized routes</em> to the nearest safe zone, live shelter status, SOS alerts, first-aid locations, real-time quake info, and a preparedness education center. Clarity and accessibility first, because in a disaster there is no time to figure out an interface.",
+    meta: [
+      { label: "Role", value: "UI/UX Design" },
+      { label: "Focus", value: "AI Evacuation · Safety" },
+      { label: "Org", value: "Tadulako University" },
+    ],
+    tiles: [
+      {
+        seed: "evar-routes",
+        big: "AI routes to the nearest safe zone.",
+        cap: "EVAR / ROUTES.TXT",
+      },
+      {
+        seed: "evar-map",
+        big: "Live shelter status on one map.",
+        cap: "EVAR / MAP.TXT",
+      },
+      {
+        seed: "evar-sos",
+        big: "SOS and first aid, one tap away.",
+        cap: "EVAR / SOS.TXT",
+      },
+      {
+        seed: "evar-access",
+        big: "Built for clarity under pressure.",
+        cap: "EVAR / ACCESS.TXT",
       },
     ],
   },

@@ -8,7 +8,7 @@ gsap.registerPlugin(ScrollTrigger);
 interface Row {
   label: string;
   href: string;
-  cls: "pink" | "orange" | "blue" | "purple";
+  cls: "pink" | "orange" | "blue" | "purple" | "green";
   external: boolean;
 }
 
@@ -17,6 +17,7 @@ const ROWS: Row[] = [
   { label: "GitHub", href: "https://github.com/juanKuganda", cls: "orange", external: true },
   { label: "LinkedIn", href: "https://www.linkedin.com/in/juann04", cls: "blue", external: true },
   { label: "Instagram", href: "https://www.instagram.com/juann04", cls: "purple", external: true },
+  { label: "Dribbble", href: "https://dribbble.com/jjuuaannnnnn", cls: "green", external: true },
 ];
 
 /**
@@ -38,11 +39,8 @@ export default function Footer() {
     if (reduced) return;
     const root = rootRef.current;
     if (!root) return;
-    // Entrance via IntersectionObserver (not gsap.from + once): IO fires
-    // reliably even on mid-page reload, where ScrollTrigger once-triggers
-    // can leave elements stuck invisible.
     const rows = root.querySelectorAll<HTMLElement>(".foot-row");
-    gsap.set(rows, { y: 48, opacity: 0 });
+    gsap.set(rows, { y: 24, opacity: 0 });
     const io = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -50,14 +48,14 @@ export default function Footer() {
           gsap.to(rows, {
             y: 0,
             opacity: 1,
-            duration: 0.65,
-            ease: "power3.out",
-            stagger: 0.08,
+            duration: 0.52,
+            ease: "punch",
+            stagger: 0.05,
             clearProps: "transform,opacity",
           });
         }
       },
-      { threshold: 0.08 }
+      { threshold: 0, rootMargin: "0px 0px -40px 0px" }
     );
     io.observe(root);
     return () => io.disconnect();

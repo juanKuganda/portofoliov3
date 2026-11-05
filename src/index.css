@@ -10,11 +10,10 @@
   --faint: #b5b5b5;
   --line: #e9e9e9;
   --zebra: #f6f6f6;
-  --signal: #ff922b;
-  /* Playful full-color accents — black & white stay the neutrals. */
+  --signal: #fF9F45;
   --pop-pink: #ff4d6d;
   --pop-blue: #4dabf7;
-  --pop-orange: #ff922b;
+  --pop-orange: #fF9F45;
   --pop-green: #51cf66;
   --pop-purple: #9775fa;
   --warm-1: #fff4e3;
@@ -39,7 +38,7 @@ body {
   overflow-x: clip;
 }
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 body {
   background: var(--paper);
@@ -170,27 +169,51 @@ a {
   padding: 18px var(--pad);
   color: #fff;
   background: transparent;
+  /* difference lives HERE, on the nav itself: white text inverts to
+     black over the white hero and stays white over dark sections.
+     It must NOT move to a child wrapper — the nav is a stacking
+     context (sticky + z-index), so a blend inside it is isolated
+     from the page backdrop and the text stays white everywhere. */
   mix-blend-mode: difference;
+}
+/* The brand mark: a separate FIXED sibling of the nav (see
+   Navbar.tsx) — never inside the difference blend, or its colors
+   invert per backdrop. Same top/left as the nav's padding. */
+.nav-brand {
+  position: fixed;
+  top: 18px;
+  left: var(--pad);
+  z-index: 61;
+  display: flex;
+  align-items: center;
+  line-height: 0;
+  text-decoration: none;
+  transition: opacity 0.3s var(--ease);
+}
+.nav-brand img {
+  width: auto;
+  height: 30px;
+  transition: transform 0.3s var(--ease);
+}
+.nav-brand:hover {
+  opacity: 0.6;
+}
+.nav-brand:hover img {
+  transform: rotate(-6deg) scale(1.06);
+}
+.nav-brand:focus-visible {
+  outline: 2px solid #0d99ff;
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+@media (max-width: 768px) {
+  .nav-brand img {
+    height: 26px;
+  }
 }
 /* Keyboard focus stays visible under difference (white inverts too). */
 .nav :focus-visible {
   outline-color: #fff;
-}
-.nav-name {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 16px;
-  letter-spacing: -0.02em;
-  color: inherit;
-  text-decoration: none;
-  transition: opacity 0.3s var(--ease);
-}
-.nav-name:hover {
-  opacity: 0.6;
-}
-.nav-name sup {
-  font-size: 0.6em;
-  font-weight: 600;
 }
 .nav-clock {
   font-family: var(--font-mono);
@@ -198,6 +221,9 @@ a {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.75;
+  /* Centered: the brand now lives outside the nav, so the clock
+     takes the middle of the bar. */
+  margin-inline: auto;
 }
 .nav-links {
   display: flex;
@@ -255,6 +281,7 @@ a {
   color: inherit;
   cursor: pointer;
   transition: opacity 0.25s var(--ease);
+  margin-left: auto; /* right-aligned inside .nav-inner on mobile */
 }
 .nav-menu-btn:hover {
   opacity: 0.6;
@@ -297,6 +324,10 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+.mnav-logo {
+  height: 26px;
+  width: auto;
 }
 .mnav-clock {
   font-family: var(--font-mono);
@@ -427,17 +458,6 @@ a {
   }
 }
 
-/* ============================================================
-   HERO — THE REEL v5 (clean & personal)
-   Scene 1: faint static grid on paper; "Hai, I'm Juan" mask
-   reveal; 3:4 portrait card dropped from above; five glossy 3D
-   doodle icons + one status pill floating around the card.
-   Interaction: magnetic parallax (rAF + quickSetter, lerped) on
-   dedicated wrappers (.par-hi, .par-card, .sticker-par) — never
-   fights the entrance or scroll-explode timelines.
-   Scroll: NO PIN — card/headline drift out, stickers EXPLODE
-   outward + upward and fade (scrub, ends "bottom 70%").
-   ============================================================ */
 .hero-reel {
   position: relative;
   height: 100svh;
@@ -478,48 +498,18 @@ a {
 }
 
 /* Top row: kicker left, role ticker right — ink on paper. */
-.reel-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 22px var(--pad) 0;
-  color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  position: relative;
-  z-index: 3;
-}
-.reel-kicker {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.reel-kicker .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--signal);
-  flex: none;
-  animation: pulse 2.4s ease-in-out infinite;
-}
-.reel-kicker .sep {
-  opacity: 0.5;
-}
-/* Role ticker: [ Engineer ] → [ Design ] → [ People ] */
+/* Role ticker: [ Engineer ] → [ Design ] → [ People ], lives in the
+   top-right corner. */
 .role-ticker {
-  margin: 0;
+  margin: 0 0 6px;
   display: flex;
   align-items: center;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   color: var(--ink);
+  justify-content: flex-end;
 }
 .tick-bracket {
   font-weight: 700;
@@ -539,56 +529,131 @@ a {
 }
 
 /* Center stage: greeting, portrait card, caption row. */
+/* v9 — the centered portrait: the card is the star, centered on the
+   canvas; the four corners hold the text like fixed UI chrome.
+   .reel-center is a positioning context. */
 .reel-center {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(12px, 2.2vh, 24px);
-  padding: clamp(10px, 2vh, 20px) var(--pad);
-  /* keep the caption row clear of the viewport bottom in normal flow,
-     where the hero starts below the sticky nav */
-  padding-bottom: calc(clamp(10px, 2vh, 20px) + var(--nav-h, 60px));
   position: relative;
   z-index: 2;
+}
+/* Corner text blocks: pinned to the four corners, like Figma UI
+   chrome around the canvas. */
+.corner {
+  position: absolute;
+  z-index: 3;
+  max-width: 320px;
+}
+.corner-tl {
+  top: clamp(40px, 5.5vh, 56px);
+  left: var(--pad);
+  text-align: left;
+  max-width: min(460px, 92vw);
+}
+.corner-tr {
+  top: clamp(28px, 4vh, 42px);
+  right: var(--pad);
+  text-align: right;
+}
+.corner-bl {
+  bottom: calc(clamp(8px, 2.5vh, 24px) + 64px); /* clear the enlarged ruler */
+  left: var(--pad);
+  text-align: left;
+}
+.corner-br {
+  bottom: calc(clamp(8px, 2.5vh, 24px) + 64px); /* clear the enlarged ruler */
+  right: var(--pad);
+  text-align: right;
+}
+.corner-line {
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.corner-tr .corner-line {
+  justify-content: flex-end;
+}
+.corner-line.dim {
+  opacity: 0.55;
+}
+.corner-line .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--signal);
+  display: inline-block;
+  animation: dot-pulse 2.2s ease-in-out infinite;
 }
 .reel-hi-mask {
   overflow: hidden;
   /* breathing room so the magnetic parallax never clips the text,
-     and the figma-select box (inset -10px -18px, handles +5px out)
-     stays fully visible: 20px bottom clears the 15px the box needs */
-  padding: 14px 24px 20px;
-  margin: -14px -24px -20px;
-  /* paint above the card so the selection box's bottom edge + handles
-     draw over the card top like a real Figma selection */
+     and the figma-select box stays fully visible */
+  padding: 12px 20px 16px;
+  margin: -12px -20px -16px;
   position: relative;
   z-index: 3;
-  /* jangan sampai menyusut saat kolom flex overflow di mobile —
-     mask yang terjepit memotong headline (hanya sliver terlihat) */
-  flex-shrink: 0;
+  text-align: left;
 }
+/* v12: the greeting — witty & personal */
 .reel-hi {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  font-size: clamp(40px, 6.4vw, 96px);
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  font-size: clamp(30px, 3.3vw, 48px);
   color: var(--ink);
-  text-align: center;
+  text-align: left;
   white-space: nowrap;
 }
-/* Parallax wrappers: the ONLY elements the magnetic loop touches
-   (via gsap.quickSetter), so it never fights the entrance or
-   scroll timelines. No permanent will-change — the loop writes
-   transforms directly only while the pointer moves. */
-.par-card {
-  position: relative;
+.reel-hi-line {
+  display: block;
 }
-/* Hover glow crossfades via opacity (compositor-only) instead of
-   animating box-shadow, which would repaint every frame. */
+.reel-hi-sub {
+  display: block;
+  font-family: var(--font-body);
+  font-size: clamp(12px, 1.1vw, 14px);
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: 8px;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+/* Kinetic headline: each letter is an inline-block the pointer-repel
+   loop can push around (transform-only). */
+.hi-letter {
+  display: inline-block;
+}
+.reel-sub {
+  margin: 0 0 12px;
+  max-width: 30ch;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #333;
+  text-align: left;
+}
+/* v9: the portrait star — centered on the canvas via calc (no
+   transform), so the parallax (owns .par-card x/y) and
+   entrance/explode (own .reel-card) never fight it. */
+.par-card {
+  position: absolute;
+  left: calc(50% - min(340px, 62vw) / 2);
+  top: calc(50% - min(340px, 62vw) * 2 / 3);
+  width: min(340px, 62vw);
+  z-index: 2;
+}
+.reel-card {
+  transform: rotate(-2deg);
+}
+
 .par-card::after {
   content: "";
   position: absolute;
@@ -609,10 +674,11 @@ a {
   }
 }
 
-/* The card: 3:4 portrait, border + soft shadow. */
+/* The card: 3:4 portrait, border + soft shadow. Width comes from the
+   .par-card wrapper (absolute on desktop, flow on mobile). */
 .reel-card {
   position: relative;
-  width: min(350px, 74vw);
+  width: 100%;
   aspect-ratio: 3 / 4;
   margin: 0;
   overflow: hidden;
@@ -635,21 +701,14 @@ a {
   filter: grayscale(1) contrast(1.03);
 }
 
-.reel-bottom-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  width: min(350px, 74vw);
-  color: var(--ink);
+.reel-cap {
+  margin: 0;
+  opacity: 0.6;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-.reel-cap {
-  margin: 0;
-  opacity: 0.6;
+  color: var(--ink);
 }
 .reel-scroll {
   display: inline-flex;
@@ -679,20 +738,43 @@ a {
   }
 }
 
-/* ---- Figma-select: the headline wrapped in a Figma-style selection.
-   The blue box + 8 handles stay as a designer signature after the
-   one-time cursor sweep. Lives inside .par-hi so it follows the
-   magnetic parallax and the scroll explode with the text. ---- */
 .hi-select {
   position: relative;
   display: inline-block;
+  padding: 16px 22px 18px 18px;
+}
+.figma-tag {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2.5px 8px;
+  background: #0d99ff;
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 3px 3px 0 0;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(13, 153, 255, 0.35);
+  white-space: nowrap;
+  z-index: 4;
+}
+.figma-tag-icon {
+  display: inline-block;
+  flex: none;
 }
 .hi-box {
   position: absolute;
-  inset: -10px -18px;
+  inset: 0;
   border: 1.5px solid #0d99ff;
   border-radius: 3px;
   pointer-events: none;
+  z-index: 2;
 }
 .hi-handle {
   position: absolute;
@@ -702,27 +784,49 @@ a {
   border: 1.5px solid #0d99ff;
   border-radius: 1.5px;
 }
-.hi-handle.h-nw { top: -5px; left: -5px; }
-.hi-handle.h-n  { top: -5px; left: calc(50% - 4px); }
-.hi-handle.h-ne { top: -5px; right: -5px; }
-.hi-handle.h-w  { top: calc(50% - 4px); left: -5px; }
-.hi-handle.h-e  { top: calc(50% - 4px); right: -5px; }
-.hi-handle.h-sw { bottom: -5px; left: -5px; }
-.hi-handle.h-s  { bottom: -5px; left: calc(50% - 4px); }
-.hi-handle.h-se { bottom: -5px; right: -5px; }
+.hi-handle.h-nw { top: -4px; left: -4px; }
+.hi-handle.h-n  { top: -4px; left: calc(50% - 4px); }
+.hi-handle.h-ne { top: -4px; right: -4px; }
+.hi-handle.h-w  { top: calc(50% - 4px); left: -4px; }
+.hi-handle.h-e  { top: calc(50% - 4px); right: -4px; }
+.hi-handle.h-sw { bottom: -4px; left: -4px; }
+.hi-handle.h-s  { bottom: -4px; left: calc(50% - 4px); }
+.hi-handle.h-se { bottom: -4px; right: -4px; }
+
+.hi-dimension {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #0d99ff;
+  background: rgba(13, 153, 255, 0.09);
+  padding: 1px 5px;
+  border-radius: 2px;
+  border: 1px solid rgba(13, 153, 255, 0.25);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 4;
+}
 .hi-cursor {
   position: absolute;
   left: -6px;
-  top: 52%;
+  top: 50%;
   pointer-events: none;
   filter: drop-shadow(0 2px 4px rgba(10, 10, 10, 0.25));
+  z-index: 5;
 }
 /* ---- Sticker field: five precision doodles + one status pill, floating around
    the card (anchored to .reel-center, the card's own stage) ---- */
 .reel-stickers {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  /* Behind the card (z 2) and corners (z 3): the wave tucks behind
+     the portrait = depth. Mobile re-raises it onto the photo. */
+  z-index: 1;
   pointer-events: none;
 }
 .sticker {
@@ -730,13 +834,32 @@ a {
   display: block;
 }
 /* Transform layers: outer `.sticker` = entrance pop + scroll explode;
-   inner `.sticker-par` = magnetic parallax. Hover only lifts stacking
-   order (no shadow animation — would repaint). */
+   inner `.sticker-par` = magnetic parallax; inner `.sticker-wave-inner` = continuous
+   staggered wave floating motion. Hover only lifts stacking order. */
 .sticker:hover {
   z-index: 10;
 }
 .sticker-par {
   display: block;
+}
+.sticker-wave-inner {
+  display: block;
+  animation: sticker-wave-float 3.6s ease-in-out infinite;
+  animation-delay: var(--wave-delay, 0s);
+  will-change: transform;
+}
+@keyframes sticker-wave-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-13px) rotate(1.5deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sticker-wave-inner {
+    animation: none;
+  }
 }
 /* Doodle: centered on the `at` point. */
 .doodle {
@@ -746,8 +869,44 @@ a {
   gap: 8px;
   transform: translate(-50%, -50%);
 }
-/* Apple-precision vector doodles: geometric, crisp, subtle depth via
-   internal gradients. Height-driven so the icons stay balanced. */
+/* Sticker playfulness: on hover-capable desktop, stickers wiggle when
+   touched by the cursor. Keyframes preserve the -50% centering
+   translate. Applied to .doodle/.doodle-pill — no JS writes there,
+   so this never fights the parallax or explode timelines. */
+@media (hover: hover) and (min-width: 769px) {
+  .sticker {
+    pointer-events: auto;
+  }
+  .sticker:hover .doodle,
+  .sticker:hover .doodle-pill {
+    animation: sticker-wiggle 0.55s ease;
+  }
+}
+@keyframes sticker-wiggle {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  30% {
+    transform: translate(-50%, -50%) rotate(-10deg) scale(1.1);
+  }
+  65% {
+    transform: translate(-50%, -50%) rotate(7deg) scale(1.06);
+  }
+}
+/* Sticker links: real navigation shortcuts. Pointer cursor +
+   visible keyboard focus; color inherits the playful doodle. */
+a.sticker {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+a.sticker:focus-visible .doodle,
+a.sticker:focus-visible .doodle-pill {
+  outline: 2px solid #0d99ff;
+  outline-offset: 6px;
+  border-radius: 12px;
+}
 .doodle-svg {
   height: 76px;
   width: auto;
@@ -873,50 +1032,6 @@ a {
     opacity: 0.55;
   }
 }
-/* ---- Edge furniture: vertical labels + corner crop-marks fill the
-   far canvas (desktop only). translate/rotate are CSS properties so
-   the GSAP explode can own `transform` freely. ---- */
-.reel-edge {
-  position: absolute;
-  top: 50%;
-  translate: 0 -50%;
-  writing-mode: vertical-rl;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: var(--muted);
-  z-index: 1;
-  pointer-events: none;
-  white-space: nowrap;
-}
-.reel-edge-l {
-  left: 26px;
-  rotate: 180deg;
-}
-.reel-edge-r {
-  right: 26px;
-}
-.reel-corner {
-  position: absolute;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--muted);
-  z-index: 1;
-  pointer-events: none;
-  line-height: 1;
-}
-.rc-tl { top: 78px; left: 22px; }
-.rc-tr { top: 78px; right: 22px; }
-.rc-bl { bottom: 44px; left: 22px; }
-.rc-br { bottom: 44px; right: 22px; }
-@media (max-width: 768px) {
-  .reel-edge,
-  .reel-corner {
-    display: none;
-  }
-}
 /* ---- Figma-like ruler pinned to the hero bottom. The track slides
    (scrub) as you scroll — like the canvas moving under the ruler — */
 .reel-ruler {
@@ -924,26 +1039,28 @@ a {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 46px;
+  height: 64px;
   z-index: 4;
   overflow: hidden;
   background: var(--paper);
-  border-top: 1px solid var(--line);
+  border-top: 1.5px solid var(--line);
   pointer-events: none;
 }
 .ruler-track {
   display: flex;
   width: max-content;
   height: 100%;
-  /* minor ticks every 10px, major ticks every 100px (with the numbers),
-     drawn at the bottom so they travel WITH the numbers */
+  /* 3-tier precision drafting ticks: 10px minor, 50px medium, 100px major */
   background-image:
     repeating-linear-gradient(90deg, var(--faint) 0 1px, transparent 1px 10px),
-    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 100px);
+    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 50px),
+    repeating-linear-gradient(90deg, var(--ink) 0 1.5px, transparent 1.5px 100px);
   background-size:
     100% 16px,
-    100% 28px;
+    100% 26px,
+    100% 42px;
   background-position:
+    left bottom,
     left bottom,
     left bottom;
   background-repeat: repeat-x;
@@ -955,13 +1072,169 @@ a {
 .rnum {
   flex: none;
   width: 100px;
-  padding: 6px 0 0 6px;
+  padding: 8px 0 0 8px;
   font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   color: var(--muted);
   user-select: none;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
 }
+.rnum-unit {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted);
+  opacity: 0.6;
+  letter-spacing: 0.12em;
+}
+
+/* Precision Blueprint/CAD Blue Meter Indicator Block */
+.ruler-meter-block {
+  position: absolute;
+  left: clamp(120px, 20vw, 380px);
+  top: 8px;
+  bottom: 8px;
+  width: 240px;
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  align-items: stretch;
+  border-radius: 4px;
+  background: rgba(0, 102, 255, 0.08);
+  border-top: 1px solid rgba(0, 102, 255, 0.35);
+  border-bottom: 1px solid rgba(0, 102, 255, 0.35);
+  box-shadow:
+    0 0 16px rgba(0, 102, 255, 0.22),
+    inset 0 0 10px rgba(0, 102, 255, 0.08);
+  will-change: transform, width;
+}
+.meter-caliper {
+  position: relative;
+  width: 2px;
+  background: #0066ff;
+  flex: none;
+}
+.caliper-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  width: 8px;
+  pointer-events: none;
+}
+.caliper-tick::before,
+.caliper-tick::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 2px;
+  background: #0066ff;
+  border-radius: 1px;
+}
+.caliper-tick::before { top: 0; }
+.caliper-tick::after { bottom: 0; }
+
+.meter-body {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 8px;
+  overflow: hidden;
+}
+.meter-hatch {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(0, 102, 255, 0.05) 0,
+    rgba(0, 102, 255, 0.05) 2px,
+    transparent 2px,
+    transparent 8px
+  );
+  opacity: 0.9;
+}
+.meter-badge {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #0066ff;
+  color: #ffffff;
+  padding: 3px 9px;
+  border-radius: 999px;
+  box-shadow: 0 2px 10px rgba(0, 102, 255, 0.45);
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+.meter-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #93c5fd;
+  box-shadow: 0 0 6px #ffffff;
+  animation: meter-pulse 1.6s infinite ease-in-out;
+}
+@keyframes meter-pulse {
+  0%, 100% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; }
+}
+.meter-label-text {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+.meter-unit {
+  font-size: 9px;
+  font-weight: 600;
+  opacity: 0.85;
+  text-transform: uppercase;
+}
+.meter-cad-tag {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.22);
+}
+.meter-dimension-line {
+  position: absolute;
+  bottom: 2px;
+  left: 6px;
+  right: 6px;
+  height: 1px;
+  display: flex;
+  align-items: center;
+  opacity: 0.6;
+}
+.dim-line {
+  flex: 1;
+  height: 1px;
+  background: #0066ff;
+}
+.dim-arrow {
+  width: 0;
+  height: 0;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+}
+.dim-arrow-left {
+  border-right: 4px solid #0066ff;
+}
+.dim-arrow-right {
+  border-left: 4px solid #0066ff;
+}
+
 /* Reduced motion: one static frame — color card, greeting, stickers,
    selection box shown, ruler static, no cursor sweep. */
 @media (prefers-reduced-motion: reduce) {
@@ -971,51 +1244,80 @@ a {
   .tick-word,
   .reel-kicker .dot,
   .doodle-pill .sdot,
-  .reel-scroll .arrow {
+  .reel-scroll .arrow,
+  .meter-pulse-dot {
     animation: none;
   }
   .hi-cursor {
     display: none;
   }
-  .ruler-track {
+  .ruler-track,
+  .ruler-meter-block {
     will-change: auto;
   }
 }
 
 @media (max-width: 768px) {
-  .reel-top {
-    padding: 18px var(--pad) 0;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
   /* Mobile hero flows naturally instead of forcing 100svh: the stacked
-     kicker + headline + card + doodles exceed small viewports, and
+     corners + card + doodles exceed small viewports, and
      overflow:hidden would clip them. min-height keeps the full-screen
      feel on tall screens. */
   .hero-reel {
     height: auto;
     min-height: 100svh;
   }
-  /* Clear the role ticker from the select box: give the headline
-     breathing room above instead of the -14px pull-up. */
+  /* v9 mobile: corners stack in flow around the card — name on top,
+     card, description, then ticker + scroll side by side. */
+  .reel-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: calc(var(--nav-h, 60px) + 12px) var(--pad) 24px;
+    gap: 18px;
+  }
+  .corner {
+    position: static;
+    max-width: 100%;
+    text-align: center;
+  }
+  .corner-tl { order: 1; }
+  .par-card { order: 2; }
+  .corner-bl { order: 3; }
+  .corner-tr { order: 4; }
+  .corner-br { order: 5; }
   .reel-hi-mask {
     margin: 6px -24px -20px;
+    max-width: 100%;
   }
-  /* Unstack the center column: more air between headline, card,
-     caption row and doodles. */
-  .reel-center {
-    gap: clamp(20px, 3.4vh, 34px);
+  .reel-hi,
+  .reel-sub {
+    text-align: center;
   }
-  .reel-kicker .sep,
-  .reel-kicker span:nth-child(n + 4) {
-    display: none;
+  .reel-sub {
+    margin: 0 auto;
+  }
+  .par-hi {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .role-ticker,
+  .corner-tr .corner-line {
+    justify-content: center;
+  }
+  .par-card {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: min(300px, 72vw);
+    margin: 0 auto;
+    z-index: 2;
+  }
+  .reel-card {
+    transform: none;
   }
   .reel-hi {
-    font-size: clamp(36px, 10.5vw, 60px);
-  }
-  .reel-bottom-row {
-    width: min(350px, 74vw);
+    font-size: clamp(44px, 14vw, 72px);
   }
   .hero-reel::before {
     background-size: 52px 52px;
@@ -1051,46 +1353,77 @@ a {
     padding: 8px 14px;
   }
   /* Sticker positions tuned for the mobile card (hero-relative).
-     All six sit on the portrait like stickers on a photo. */
-  .reel-stickers .sticker:nth-child(1) { top: 30% !important; left: 14% !important; } /* folder */
-  .reel-stickers .sticker:nth-child(2) { top: 62% !important; left: 12% !important; } /* pencil */
-  .reel-stickers .sticker:nth-child(3) { top: 29% !important; left: 60% !important; } /* cap */
-  .reel-stickers .sticker:nth-child(4) { top: 31% !important; left: 87% !important; } /* pin */
-  .reel-stickers .sticker:nth-child(5) { top: 58% !important; left: 88% !important; } /* code */
-  .reel-stickers .sticker:nth-child(6) { top: 74% !important; left: 50% !important; } /* pill */
-  /* Ruler stays, slimmer, above the caption row. */
+     Order follows the wave array: folder, pencil, cap, squiggle,
+     spark, pin, code, pill. All eight sit on the portrait like
+     stickers on a photo. */
+  .reel-stickers .sticker:nth-child(1) { top: 44% !important; left: 14% !important; } /* folder */
+  .reel-stickers .sticker:nth-child(2) { top: 72% !important; left: 12% !important; } /* pencil */
+  .reel-stickers .sticker:nth-child(3) { top: 43% !important; left: 62% !important; } /* cap */
+  .reel-stickers .sticker:nth-child(4) { top: 60% !important; left: 26% !important; } /* squiggle */
+  .reel-stickers .sticker:nth-child(5) { top: 48% !important; left: 64% !important; } /* spark */
+  .reel-stickers .sticker:nth-child(6) { top: 45% !important; left: 87% !important; } /* pin */
+  .reel-stickers .sticker:nth-child(7) { top: 68% !important; left: 88% !important; } /* code */
+  .reel-stickers .sticker:nth-child(8) { top: 84% !important; left: 50% !important; } /* pill */
+  /* Ruler stays, responsive, above the caption row. */
   .reel-ruler {
-    height: 34px;
+    height: 48px;
   }
   .rnum {
-    font-size: 10px;
-    padding-top: 4px;
+    font-size: 11px;
+    padding-top: 5px;
   }
   .ruler-track {
     background-size:
-      100% 11px,
-      100% 19px;
+      100% 12px,
+      100% 20px,
+      100% 32px;
   }
-  /* Figma-select box hugs the smaller headline automatically
-     (inset-relative), cursor scales with it. */
+  .ruler-meter-block {
+    left: 20px;
+    width: 170px;
+  }
+  .corner-bl,
+  .corner-br {
+    bottom: calc(clamp(8px, 2.5vh, 24px) + 48px);
+  }
+  /* Figma-select box hugs headline cleanly on mobile */
+  .hi-select {
+    padding: 12px 16px 14px 14px;
+  }
   .hi-box {
-    inset: -7px -12px;
+    inset: 0;
   }
   .hi-cursor {
     width: 18px;
     height: 18px;
   }
+  .figma-tag {
+    font-size: 8.5px;
+    padding: 2px 5px;
+  }
+  .reel-hi-sub {
+    font-size: 11.5px;
+    white-space: normal;
+  }
 }
 
 /* ================= STATEMENT ================= */
-/* "what i do" — Benjamin-style giant statement + skill blocks.
-   Identity colors only (ink / amber / paper). transform/opacity only. */
+/* "what i do" — Benjamin-style centered statement + interactive skill popouts.
+   Centered composition, word-by-word reveal masks, and rich hover pop-out panels. */
 .statement {
   background: var(--paper);
   color: var(--ink);
-  padding: clamp(72px, 12vh, 140px) var(--pad);
-  overflow: clip;
+  min-height: 100vh;
+  height: 100vh;
+  padding: 0 var(--pad);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 /* Cinematic transition bridge from hero: gradient veil at top */
 .statement::before {
@@ -1109,8 +1442,20 @@ a {
   pointer-events: none;
   z-index: 2;
 }
+.statement-inner {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 3;
+}
 .st-label {
-  margin: 0 0 clamp(20px, 3vh, 36px);
+  margin: 0 auto clamp(20px, 3vh, 36px);
+  text-align: center;
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.22em;
@@ -1120,42 +1465,69 @@ a {
   z-index: 3;
 }
 .st-headline {
-  margin: 0;
+  margin: 0 auto;
+  text-align: center;
   font-family: var(--font-display);
   font-weight: 750;
   letter-spacing: -0.035em;
-  line-height: 1.04;
-  font-size: clamp(40px, 6.4vw, 104px);
-  max-width: 20ch;
+  line-height: 1.08;
+  font-size: clamp(38px, 6vw, 98px);
+  max-width: 24ch;
   position: relative;
   z-index: 3;
 }
 .st-line {
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 0.25em;
+  row-gap: 0.08em;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.st-word-wrap {
+  display: inline-flex;
   overflow: hidden;
-  padding-bottom: 0.1em;
-  margin-bottom: -0.1em;
+  vertical-align: baseline;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
 }
-.st-line-inner {
-  display: block;
-  /* no permanent will-change — GSAP sets it during the reveal tween
-     and clears it onComplete */
+.st-word {
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: baseline;
 }
-/* inline photo chips inside the headline — hover grows them.
-   transform-only; no infinite float (kept calm & meaningful). */
+.st-char {
+  display: inline-block;
+  will-change: color, opacity;
+  color: rgba(17, 19, 24, 0.12);
+  opacity: 0.22;
+  transition: color 0.05s ease, opacity 0.05s ease;
+}
+.st-chip-wrap {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 0.06em;
+  will-change: transform, opacity;
+}
 .st-chip {
   display: inline-block;
-  height: 0.68em;
+  height: 0.72em;
   aspect-ratio: 16 / 10;
   object-fit: cover;
   border-radius: 999px;
-  vertical-align: -0.06em;
-  margin: 0 0.08em;
-  transition: transform 0.4s var(--ease);
+  filter: grayscale(100%) opacity(0.35);
+  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease), filter 0.3s ease;
   cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  will-change: filter, transform;
 }
 .st-chip:hover {
-  transform: scale(1.2) rotate(3deg);
+  transform: scale(1.22) rotate(3deg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.26);
+  filter: grayscale(0%) opacity(1) !important;
 }
 .st-line:nth-child(1) .st-chip {
   object-position: 50% 16%;
@@ -1163,68 +1535,104 @@ a {
 .st-line:nth-child(3) .st-chip {
   object-position: 50% 88%;
 }
-.st-pills {
-  margin-top: clamp(28px, 5vh, 56px);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: stretch;
-  position: relative;
-  z-index: 3;
-}
-.st-pill {
-  display: inline-flex;
-  align-items: center;
-  font-family: var(--font-display);
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  font-size: clamp(20px, 2.6vw, 34px);
-  padding: 0.55em 1em;
-  border-radius: 4px;
-  line-height: 1.1;
-  /* transform-only hover lift — no shadow/color animation */
-  transition: transform 0.35s var(--ease);
-  cursor: pointer;
-  position: relative;
+
+/* ============================================================
+   4 CONVERGING SNAKING LINES & CENTER SPLASH NEXUS
+   ============================================================ */
+.st-vector-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
   overflow: hidden;
 }
-/* Pill hover: lift only (transform, compositor-cheap) */
-.st-pill:hover {
-  transform: translateY(-3px) scale(1.03);
+
+.st-spline-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
-.st-pill.tone-pink {
-  background: var(--pop-pink);
-  color: #fff;
+
+/* 4 Distinct Harmonious Rollercoaster Lines — Clean, Crisp, Zero Glow */
+.st-line-pink {
+  stroke: var(--pop-pink);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  opacity: 0.9;
+  will-change: stroke-dashoffset;
 }
-.st-pill.tone-blue {
-  background: var(--pop-blue);
-  color: #fff;
+
+.st-line-blue {
+  stroke: var(--pop-blue);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  opacity: 0.9;
+  will-change: stroke-dashoffset;
 }
-.st-pill.tone-green {
-  background: var(--pop-green);
-  color: var(--ink);
+
+.st-line-green {
+  stroke: var(--pop-green);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  opacity: 0.9;
+  will-change: stroke-dashoffset;
 }
-.st-pill.tone-purple {
-  background: var(--pop-purple);
-  color: #fff;
+
+.st-line-purple {
+  stroke: var(--pop-purple);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  opacity: 0.9;
+  will-change: stroke-dashoffset;
 }
-.st-pill.tone-ink {
-  background: var(--ink);
-  color: var(--paper);
+
+/* Directional Arrowheads — Crisp Vector, Zero Glow */
+.st-spline-arrow {
+  pointer-events: none;
+  will-change: transform, opacity;
+  transform-origin: 0 0;
 }
-.st-pill.tone-amber {
-  background: var(--signal);
-  color: var(--ink);
+.st-spline-arrow path {
+  transform-origin: 0 0;
+  filter: none;
 }
-@media (max-width: 768px) {
+
+@media (max-width: 600px) {
   .st-headline {
-    font-size: clamp(34px, 10.5vw, 56px);
+    font-size: clamp(30px, 9.5vw, 50px);
+    line-height: 1.12;
   }
-  .st-pill {
-    font-size: clamp(18px, 5.4vw, 26px);
+  .st-line-pink,
+  .st-line-blue,
+  .st-line-green,
+  .st-line-purple {
+    stroke-width: 4.5;
   }
-  .statement::before {
-    height: 80px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .st-char {
+    color: #111318 !important;
+    opacity: 1 !important;
+  }
+  .st-chip {
+    filter: none !important;
+  }
+  .st-line-pink,
+  .st-line-blue,
+  .st-line-green,
+  .st-line-purple {
+    stroke-dashoffset: 0 !important;
   }
 }
 /* =============== END STATEMENT =============== */
@@ -1407,6 +1815,16 @@ section.block {
   border-color: var(--pop-green);
   color: var(--ink);
 }
+.proj-meta-link {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+.proj-meta-link:hover {
+  opacity: 0.85;
+}
 .proj-meta-pill.mp-3 {
   background: var(--pop-purple);
   border-color: var(--pop-purple);
@@ -1535,9 +1953,86 @@ section.block {
   color: rgba(255, 255, 255, 0.65);
 }
 
-/* ============================================================
-   ABOUT : INVERTED
-   ============================================================ */
+/* ---- Work toolbar: audience filter + GitHub link ---- */
+.work-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: clamp(18px, 3vh, 28px) 0 clamp(20px, 3.5vh, 32px);
+}
+.work-filter {
+  display: inline-flex;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.wf-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+.wf-btn + .wf-btn {
+  border-left: 1px solid var(--ink);
+}
+.wf-btn:hover {
+  background: rgba(10, 10, 10, 0.06);
+}
+.wf-btn.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+.wf-count {
+  font-size: 10px;
+  opacity: 0.55;
+}
+.work-gh {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  padding: 10px 4px;
+}
+.work-gh:hover {
+  text-decoration-thickness: 2px;
+}
+@media (max-width: 640px) {
+  .work-tools {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .work-filter {
+    display: flex;
+  }
+  .wf-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 8px;
+  }
+  .work-gh {
+    justify-content: center;
+  }
+}
+
 .theme-dark {
   background: var(--ink);
   color: var(--paper);
@@ -1586,7 +2081,7 @@ section.block {
   font-weight: 500;
 }
 .about-stack-wrap {
-  margin-top: 24px;
+  margin-top: 32px;
 }
 .stack-heading {
   display: block;
@@ -1595,49 +2090,60 @@ section.block {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #888;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
+
+.about-tech-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 520px;
+}
+.tech-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 13px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #e2e8f0;
+  letter-spacing: 0.02em;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: default;
+  user-select: none;
+}
+.tech-badge:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.26);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+
+/* Fallback pills */
 .stack-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 .stack-pill {
   display: inline-block;
   font-family: var(--font-mono);
-  font-size: 12px;
-  padding: 6px 14px;
+  font-size: 11px;
+  padding: 5px 12px;
   background: #1a1a1a;
   color: #e5e5e5;
   border: 1px solid #333;
   border-radius: 99px;
-  transition: background-color 0.25s var(--ease), color 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.25s var(--ease);
   cursor: pointer;
-}
-.stack-pill:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-/* Stack pills cycle playful colors (dark section: vivid fills). */
-.stack-pill.sp-0 {
-  background: var(--pop-pink);
-  border-color: var(--pop-pink);
-  color: #fff;
-}
-.stack-pill.sp-1 {
-  background: var(--pop-blue);
-  border-color: var(--pop-blue);
-  color: #fff;
-}
-.stack-pill.sp-2 {
-  background: var(--pop-green);
-  border-color: var(--pop-green);
-  color: #06130a;
-}
-.stack-pill.sp-3 {
-  background: var(--pop-purple);
-  border-color: var(--pop-purple);
-  color: #fff;
 }
 .status-strip {
   display: flex;
@@ -1726,24 +2232,46 @@ section.block {
   white-space: nowrap;
 }
 
-/* ============================================================
-   SERVICES : INDEX + STAGE
-   Editorial index rows on the left; ONE sticky visual stage on the
-   right. Only the active visual is alive — this is what kills the
-   old sticky-stack jank structurally.
-   ============================================================ */
+#work {
+  padding-bottom: clamp(36px, 5vh, 72px);
+}
+#about {
+  padding-top: clamp(48px, 7vh, 88px);
+  padding-bottom: clamp(40px, 6vh, 80px);
+}
+#bento {
+  padding-top: clamp(48px, 7vh, 88px);
+}
+.contact {
+  padding-bottom: clamp(48px, 8vh, 96px);
+}
+.pixel-transition-container {
+  width: 100%;
+  height: clamp(320px, 46vh, 480px);
+  position: relative;
+  overflow: hidden;
+  background: var(--ink); /* #0a0a0a */
+  display: block;
+  user-select: none;
+  cursor: crosshair;
+}
+.pixel-transition-container.is-white-to-black {
+  background: var(--paper); /* #f6f6f6 */
+}
+.pixel-transition-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 .svc-index-grid {
   margin-top: clamp(28px, 5vh, 54px);
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
   gap: clamp(32px, 5vw, 88px);
-  /* stretch (not start): the stage column must be as tall as the
-     timeline so the sticky frame can travel its full length */
   align-items: stretch;
 }
-/* ---- Services TIMELINE: vertical rail + node dots, generous
-   spacing between points. The amber progress fill grows (scrub) as
-   you travel. ---- */
+
 .svc-index-list {
   position: relative;
   display: flex;
@@ -1914,9 +2442,7 @@ section.block {
   background: #0f0f0f;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
 }
-/* Panels are stacked; visibility is instant via the .active class
-   (correct end-state + reduced-motion fallback). The Figma-style
-   zoom-through motion is owned by GSAP, never CSS transitions. */
+
 .svc-stage-panel {
   position: absolute;
   inset: 0;
@@ -1948,9 +2474,6 @@ section.block {
   }
 }
 
-
-/* Bespoke Service Visual UI Mockups */
-/* ---- Community: mentorship signal-relay network ---- */
 .cm-body {
   position: relative;
   flex: 1;
@@ -2293,97 +2816,136 @@ section.block {
   opacity: 0;
 }
 
-/* ---- Card 3: request pipeline ---- */
-.pl-body {
+/* ---- Card 3: AI agent session ---- */
+.ag-wrap {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
+  gap: 18px;
   padding: 18px;
-}
-.pl-track {
-  position: relative;
   width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 26px 8px 10px;
 }
-.pl-line {
-  position: absolute;
-  left: 24px;
-  right: 24px;
-  top: 38px;
-  height: 2px;
-  background: #2e2e2e;
-  border-radius: 2px;
-}
-.pl-gate {
-  position: relative;
+.ag-left {
+  flex: 1.15;
   display: flex;
   flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.ag-prompt {
+  background: #161616;
+  border: 1px solid #242424;
+  border-radius: 10px;
+  padding: 11px 13px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #e6e6e6;
+  min-height: 44px;
+}
+.ag-prompt-arrow {
+  color: var(--pop-green);
+  font-weight: 700;
+}
+.ag-caret {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  margin-left: 3px;
+  vertical-align: -2px;
+  background: var(--pop-green);
+  animation: ag-blink 1s steps(1) infinite;
+}
+@keyframes ag-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0; }
+}
+.ag-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.ag-step {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  z-index: 1;
-  transition: transform 0.3s var(--ease);
-}
-.pl-gate.lit {
-  transform: translateY(-4px);
-}
-.pl-gate-dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #2a2a2a;
-  border: 2px solid #4a4a4a;
-  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
-}
-.pl-gate.lit .pl-gate-dot {
-  background: var(--signal);
-  border-color: var(--signal);
-  box-shadow: 0 0 14px 3px rgba(255, 146, 43, 0.65);
-}
-.pl-gate-label {
-  font-family: var(--font-mono);
+  gap: 10px;
   font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #6f6f6f;
+  transition: color 0.3s var(--ease);
+}
+.ag-step.done {
+  color: #e6e6e6;
+}
+.ag-step-ico {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  border-radius: 50%;
+  border: 1.5px solid #333;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: transparent;
+  transition: background 0.3s var(--ease), border-color 0.3s var(--ease),
+    color 0.3s var(--ease);
+}
+.ag-step.done .ag-step-ico {
+  background: var(--pop-green);
+  border-color: var(--pop-green);
+  color: #0a0a0a;
+}
+.ag-step-time {
+  margin-left: auto;
+  font-size: 10px;
+  color: #555;
+}
+.ag-stat {
+  margin: auto 0 0;
+  font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #cfcfcf;
+  color: #8a8a8a;
 }
-.pl-gate-sub {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.04em;
-  color: #6a6a6a;
+.ag-right {
+  flex: 1;
+  position: relative;
+  min-width: 0;
 }
-.pl-packet {
+.ag-preview {
+  height: 100%;
+  border: 1px solid #242424;
+  border-radius: 10px;
+  background: #121212;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ag-block {
+  display: block;
+  border-radius: 5px;
+  background: #232323;
+  transform-origin: top center;
+}
+.ag-block-nav { height: 12px; width: 55%; }
+.ag-block-hero { height: 42px; background: #2b2b2b; }
+.ag-block-line { height: 9px; }
+.ag-block-line.short { width: 65%; }
+.ag-block-btn { height: 20px; width: 84px; background: var(--pop-green); }
+.ag-shipped {
   position: absolute;
-  left: 0;
-  top: 38px;
-  width: 12px;
-  height: 12px;
-  margin: -6px 0 0 -6px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 12px 3px rgba(255, 255, 255, 0.7);
-  opacity: 0;
-  z-index: 2;
-  pointer-events: none;
-}
-.pl-ok {
-  position: absolute;
-  left: 8px;
-  top: 0;
-  font-family: var(--font-mono);
+  right: 12px;
+  bottom: 12px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  background: #51cf66;
+  background: var(--pop-green);
   color: #0a0a0a;
   padding: 5px 12px;
   border-radius: 999px;
-  opacity: 0;
   white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .ag-wrap { flex-direction: column; padding: 14px; }
+  .ag-right { display: none; }
 }
 
 /* ---- Card 4: community stats ---- */
@@ -2800,6 +3362,7 @@ footer.site {
 .foot-row.orange::before { background: var(--pop-orange); }
 .foot-row.blue::before { background: var(--pop-blue); }
 .foot-row.purple::before { background: var(--pop-purple); }
+.foot-row.green::before { background: var(--pop-green); }
 .foot-row:hover::before,
 .foot-row:focus-visible::before {
   transform: scaleY(1);
@@ -2853,8 +3416,6 @@ footer.site {
   justify-content: space-between;
   padding: 22px var(--pad) 0;
   margin: 54px var(--pad) 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.22);
-  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
   color: rgba(255, 255, 255, 0.45);
@@ -2922,15 +3483,18 @@ footer.site {
    ============================================================ */
 .rv {
   opacity: 0;
-  transform: translateY(30px);
+  transform: translateY(22px);
+  will-change: opacity, transform;
 }
 .rv.rv-left {
   opacity: 0;
-  transform: translateX(-40px);
+  transform: translateX(-24px);
+  will-change: opacity, transform;
 }
 .rv.rv-right {
   opacity: 0;
-  transform: translateX(40px);
+  transform: translateX(24px);
+  will-change: opacity, transform;
 }
 
 /* ============================================================
@@ -3844,4 +4408,140 @@ footer.site {
     gap: 10px;
     white-space: nowrap;
   }
+}
+
+/* ============================================================
+   PAGE LOADER
+   Ink background canvas, centered counter with dynamic role ticker,
+   transparent pixel dissolve directly revealing paper Hero.
+   Same design tokens (--ink, --paper, --signal, --font-display, --font-mono) as Hero.
+   ============================================================ */
+.page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  overflow: hidden;
+  contain: layout paint size;
+}
+
+.loader-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Logo stage: its own absolutely-positioned wrap, independent from
+   the corners and hairline (dual absolute stages) — fading the
+   chrome can never shift or slice it. */
+.loader-logo-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  will-change: transform, opacity;
+}
+
+/* The logo is the main animation: big, center stage.
+   Width compensates the padded viewBox (-40 -40 597 581): the art
+   is 517/597 of the box, so 231px CSS shows the art at ~200px. */
+.loader-logo {
+  position: relative;
+  z-index: 2;
+  width: clamp(185px, 25vw, 253px);
+  height: auto;
+  /* Second clipping safety net (the first is the padded viewBox):
+     let paths paint outside the SVG viewport during assembly. */
+  overflow: visible;
+  /* GSAP assembles each <path> (scale + small rise, see STEP 0). */
+}
+/* Rotation/scale origin per path: without fill-box the origin is
+   the viewBox's top-left corner and shapes ORBIT the canvas instead
+   of spinning in place — that orbit is what swung them out of frame. */
+.loader-logo path {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+/* Bottom corners: ticker left, counter right — small mono. */
+.loader-corner {
+  position: absolute;
+  bottom: 24px;
+  z-index: 3;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  will-change: transform, opacity;
+}
+.loader-corner-bl {
+  left: clamp(20px, 4vw, 56px);
+}
+.loader-corner-br {
+  right: clamp(20px, 4vw, 56px);
+}
+
+.loader-counter {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: clamp(13px, 1.2vw, 15px);
+  letter-spacing: 0.12em;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+
+.loader-pct {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: clamp(13px, 1.2vw, 15px);
+  letter-spacing: 0.12em;
+  color: var(--paper);
+}
+
+/* Progress hairline along the bottom edge (scaleX, transform-only). */
+.loader-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  z-index: 3;
+  will-change: transform, opacity;
+}
+.loader-progress-fill {
+  height: 100%;
+  background-color: #ff4d6d;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.loader-role-ticker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: clamp(12px, 1.4vw, 15px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--paper);
+  opacity: 0.9;
+}
+
+.loader-role-ticker .tick-bracket {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.loader-role {
+  display: inline-block;
+  font-weight: 600;
+  min-width: 90px;
+  text-align: center;
+  letter-spacing: 0.08em;
 }

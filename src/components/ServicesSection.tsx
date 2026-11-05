@@ -4,7 +4,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import WebDevVisual from "./WebDevVisual";
 import DesignVisual from "./DesignVisual";
-import BackendVisual from "./BackendVisual";
+import AgentVisual from "./AgentVisual";
 import CommunityVisual from "./CommunityVisual";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -28,15 +28,15 @@ const services: ServiceData[] = [
     num: "02",
     name: "UI / UX Design",
     description:
-      "Layouts and user flows people understand at a glance. From wireframes to design systems.",
-    tags: "Figma · Design Systems · Micro-interactions",
+      "Layouts, flows, and visuals people understand at a glance - from wireframes to design systems and graphics.",
+    tags: "Figma · Design Systems · Graphic Design · Micro-interactions",
   },
   {
     num: "03",
-    name: "Backend Architecture",
+    name: "AI Agent Workflows",
     description:
-      "RESTful APIs, authentication systems, and database structures built to scale reliably.",
-    tags: "Node.js · Laravel · PostgreSQL · REST APIs",
+      "Prompt-driven development with AI agents. Prototypes in hours, not days - planned, coded, and tested with a human directing every step.",
+    tags: "AI Agents · Prompt Engineering · Rapid Prototyping · Automation",
   },
   {
     num: "04",
@@ -199,7 +199,7 @@ export default function ServicesSection() {
     // reliably even on mid-page reload, where ScrollTrigger once-triggers
     // can leave elements stuck invisible.
     const rows = list.querySelectorAll<HTMLElement>(".svc-index-row");
-    gsap.set(rows, { y: 36, opacity: 0 });
+    gsap.set(rows, { y: 20, opacity: 0 });
     const io = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -207,15 +207,15 @@ export default function ServicesSection() {
           gsap.to(rows, {
             y: 0,
             opacity: 1,
-            duration: 0.7,
-            stagger: 0.08,
-            ease: "power3.out",
+            duration: 0.5,
+            stagger: 0.05,
+            ease: "punch",
             onComplete: () =>
               gsap.set(rows, { clearProps: "transform,opacity" }),
           });
         }
       },
-      { threshold: 0.08 }
+      { threshold: 0, rootMargin: "0px 0px -40px 0px" }
     );
     io.observe(list);
     return () => {
@@ -232,7 +232,7 @@ export default function ServicesSection() {
       case 1:
         return <DesignVisual active={playing && active === 1} />;
       case 2:
-        return <BackendVisual active={playing && active === 2} />;
+        return <AgentVisual active={playing && active === 2} />;
       default:
         return <CommunityVisual active={playing && active === 3} />;
     }

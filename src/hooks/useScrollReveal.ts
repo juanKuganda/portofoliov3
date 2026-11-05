@@ -1,8 +1,14 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { CustomEase } from "gsap/CustomEase";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, CustomEase);
+try {
+  CustomEase.create("punch", "0.16, 1, 0.3, 1");
+} catch {
+  // already created
+}
 
 /**
  * Observes all `.rv` elements and animates them in on scroll.
@@ -29,17 +35,17 @@ export function useScrollReveal() {
 
         els.forEach((el) => {
           let delay = 0;
-          if (el.classList.contains("rv-d1")) delay = 0.08;
-          if (el.classList.contains("rv-d2")) delay = 0.16;
+          if (el.classList.contains("rv-d1")) delay = 0.05;
+          if (el.classList.contains("rv-d2")) delay = 0.1;
 
-          // Determine direction
+          // Determine direction - punchy tight offsets
           let xFrom = 0;
-          let yFrom = 30;
+          let yFrom = 22;
           if (el.classList.contains("rv-left")) {
-            xFrom = -40;
+            xFrom = -24;
             yFrom = 0;
           } else if (el.classList.contains("rv-right")) {
-            xFrom = 40;
+            xFrom = 24;
             yFrom = 0;
           }
 
@@ -50,12 +56,12 @@ export function useScrollReveal() {
               opacity: 1,
               y: 0,
               x: 0,
-              duration: 0.5,
+              duration: 0.52,
               delay,
-              ease: "power3.out",
+              ease: "punch",
               scrollTrigger: {
                 trigger: el,
-                start: "top 94%",
+                start: "top 92%",
                 once: true,
               },
             }
@@ -86,7 +92,7 @@ export function useScrollReveal() {
           );
         });
 
-        // Status strip — slide in from left
+        // Status strip — slide in from left with punchy easing
         const statusStrip =
           document.querySelector<HTMLElement>(".status-strip");
         if (statusStrip) {
@@ -95,31 +101,31 @@ export function useScrollReveal() {
             { scaleX: 0, transformOrigin: "left center" },
             {
               scaleX: 1,
-              duration: 1,
-              ease: "power3.out",
+              duration: 0.65,
+              ease: "punch",
               scrollTrigger: {
                 trigger: statusStrip,
-                start: "top 90%",
+                start: "top 92%",
                 once: true,
               },
             }
           );
         }
 
-        // Resume rows — stagger in
+        // Resume rows — stagger in with punchy snap
         const resumeRows =
           document.querySelectorAll<HTMLElement>(".resume-row");
         if (resumeRows.length) {
-          gsap.set(resumeRows, { opacity: 0, x: -20 });
+          gsap.set(resumeRows, { opacity: 0, x: -16 });
           gsap.to(resumeRows, {
             opacity: 1,
             x: 0,
-            duration: 0.6,
-            stagger: 0.1,
-            ease: "power3.out",
+            duration: 0.48,
+            stagger: 0.05,
+            ease: "punch",
             scrollTrigger: {
               trigger: resumeRows[0],
-              start: "top 90%",
+              start: "top 92%",
               once: true,
             },
           });

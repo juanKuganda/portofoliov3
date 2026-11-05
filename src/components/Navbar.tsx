@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
 import { useClock } from "../hooks/useClock";
 
 const NAV_ITEMS = [
@@ -8,18 +9,80 @@ const NAV_ITEMS = [
   { id: "contact", label: "Contact" },
 ];
 
+interface NavbarProps {
+  isReady?: boolean;
+  /** True when the loader logo has landed on the brand — the brand
+      then fades in under it (the handoff). */
+  isBrandReady?: boolean;
+}
+
 /**
  * NAV — flat & transparent, difference-blend.
  * White text + mix-blend-mode: difference = automatic contrast over
  * light AND dark sections, no background fill, no blur, no border.
  * Mobile gets a full-screen paper overlay menu (not blended).
  */
-export default function Navbar() {
+export default function Navbar({
+  isReady = true,
+  isBrandReady = false,
+}: NavbarProps) {
   const time = useClock();
   const [active, setActive] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const brandRef = useRef<HTMLAnchorElement>(null);
+  const hasAnimatedRef = useRef(false);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Nav bar (clock/links/menu): slides in at isHeroReady (dissolve).
+  const brandAnimatedRef = useRef(false);
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    if (!isReady && !hasAnimatedRef.current) {
+      gsap.set(el, { y: -24, opacity: 0 });
+      return;
+    }
+
+    if (hasAnimatedRef.current) return;
+    hasAnimatedRef.current = true;
+
+    gsap.to(el, {
+      y: 0,
+      opacity: 1,
+      duration: 0.8,
+      ease: "power3.out",
+      delay: 0.12,
+    });
+  }, [isReady]);
+
+  // Brand mark: fades in ONLY when the loader logo lands on it.
+  // Opacity-only park (no y shift) — the loader's flight measures
+  // this element's rect, so the rect must be its final rect.
+  useEffect(() => {
+    const brand = brandRef.current;
+    if (!brand) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    if (!isBrandReady && !brandAnimatedRef.current) {
+      gsap.set(brand, { opacity: 0 });
+      return;
+    }
+
+    if (brandAnimatedRef.current) return;
+    brandAnimatedRef.current = true;
+
+    gsap.to(brand, {
+      opacity: 1,
+      duration: 0.2,
+      ease: "power2.out",
+    });
+  }, [isBrandReady]);
 
   const clockLabel = time ? `Palu · ${time} WITA` : "Palu · WITA";
 
@@ -69,17 +132,25 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="nav" aria-label="Primary">
-        <a
-          className="nav-name"
-          href="#top"
-          onClick={(e) => {
-            e.preventDefault();
-            goTop();
-          }}
-        >
-          JUAN KUGANDA<sup>©</sup>
-        </a>
+      {/* Brand mark: a separate FIXED sibling of <nav>, NOT a child.
+          The nav blends with the page via mix-blend-mode: difference,
+          and difference applies to the whole nav subtree — a logo
+          inside it would have its colors inverted per backdrop.
+          Fixed at the same top/left as the nav's padding so the two
+          read as one bar. */}
+      <a
+        ref={brandRef}
+        className="nav-brand"
+        href="#top"
+        aria-label="Juan Kuganda — back to top"
+        onClick={(e) => {
+          e.preventDefault();
+          goTop();
+        }}
+      >
+        <img src="/favicon.svg" alt="" width="31" height="30" />
+      </a>
+      <nav ref={navRef} className="nav" aria-label="Primary">
         <span className="nav-clock desktop-only" aria-hidden="true">
           {clockLabel}
         </span>
@@ -122,6 +193,13 @@ export default function Navbar() {
         inert={!menuOpen}
       >
         <div className="mnav-top">
+          <img
+            className="mnav-logo"
+            src="/favicon.svg"
+            alt=""
+            width="27"
+            height="26"
+          />
           <span className="mnav-clock">{clockLabel}</span>
           <button
             ref={closeBtnRef}

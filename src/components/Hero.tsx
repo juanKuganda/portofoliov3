@@ -5,10 +5,13 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 const ROLES = ["Engineer", "Design", "People"];
+const SCRAMBLE_CHARS = "!<>-_\\/[]{}=+*^?#";
 
-/** Kicker role ticker: [ Engineer ] → [ Design ] → [ People ], every 2.5s. */
+/** Kicker role ticker: [ Engineer ] → [ Design ] → [ People ], with a
+    text-scramble transition on every change. */
 function RoleTicker() {
   const [idx, setIdx] = useState(0);
+  const [text, setText] = useState(ROLES[0]);
   const reduced = useMemo(
     () =>
       typeof window !== "undefined" &&
@@ -17,19 +20,41 @@ function RoleTicker() {
   );
 
   useEffect(() => {
-    if (reduced) return;
     const id = window.setInterval(
       () => setIdx((i) => (i + 1) % ROLES.length),
-      2500
+      2800
     );
     return () => window.clearInterval(id);
-  }, [reduced]);
+  }, []);
+
+  useEffect(() => {
+    const target = ROLES[idx];
+    if (reduced) {
+      setText(target);
+      return;
+    }
+    let frame = 0;
+    const total = 16;
+    const id = window.setInterval(() => {
+      frame += 1;
+      const reveal = Math.floor((frame / total) * target.length);
+      let out = target.slice(0, reveal);
+      for (let i = reveal; i < target.length; i++)
+        out += SCRAMBLE_CHARS[(Math.random() * SCRAMBLE_CHARS.length) | 0];
+      setText(out);
+      if (frame >= total) {
+        window.clearInterval(id);
+        setText(target);
+      }
+    }, 28);
+    return () => window.clearInterval(id);
+  }, [idx, reduced]);
 
   return (
     <p className="role-ticker" aria-hidden="true">
       <span className="tick-bracket" aria-hidden="true">[</span>
       <span className="tick-word" key={idx}>
-        {ROLES[idx]}
+        {text}
       </span>
       <span className="tick-bracket" aria-hidden="true">]</span>
     </p>
@@ -85,7 +110,41 @@ function DoodleDefs() {
 
 /* Apple-precision vector doodles: geometric, crisp, subtle depth via
    gradients + one soft highlight each. Ink + amber only. */
-function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "cap" }) {
+function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "cap" | "spark" | "squiggle" }) {
+  if (kind === "spark")
+    return (
+      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
+        <path
+          d="M32 4 C34.5 22 38 28 60 32 C38 36 34.5 42 32 60 C29.5 42 26 36 4 32 C26 28 29.5 22 32 4 Z"
+          fill="url(#dz-amber)"
+        />
+        <path
+          d="M32 13 C33.4 24 35.5 28.5 47 32 C35.5 35.5 33.4 40 32 51 C30.6 40 28.5 35.5 17 32 C28.5 28.5 30.6 24 32 13 Z"
+          fill="#ffffff"
+          opacity="0.35"
+        />
+      </svg>
+    );
+  if (kind === "squiggle")
+    return (
+      <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
+        <path
+          d="M10 52 C22 50 30 42 34 30 C37 20 44 13 55 13"
+          stroke="url(#dz-pink)"
+          strokeWidth="5"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d="M45 8 L57 13 L49 23"
+          stroke="url(#dz-pink)"
+          strokeWidth="5"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
   if (kind === "folder")
     return (
       <svg viewBox="0 0 64 64" className="doodle-svg" aria-hidden="true">
@@ -139,76 +198,68 @@ function DoodleIcon({ kind }: { kind: "folder" | "pencil" | "code" | "pin" | "ca
   );
 }
 
-/**
- * Doodle stickers: five Apple-precision vector icons + one status
- * pill. `at` — desktop absolute position, percent of the full hero
- * canvas, art-directed scatter (not flanking the card); `rot` —
- * resting tilt in degrees; `side` — scroll-explode direction.
- * Transform layers: outer `.sticker` = entrance pop + scroll explode;
- * inner `.sticker-par` = magnetic parallax. They never fight.
- */
 type StickerSpec = {
-  kind: "folder" | "pencil" | "code" | "pin" | "cap" | "pill";
+  kind: "folder" | "pencil" | "code" | "pin" | "cap" | "spark" | "squiggle" | "pill";
   label: string;
   at: React.CSSProperties;
   rot: number;
   side: "l" | "r";
+  /** When set, the sticker is a real navigation link — stickers are
+      meaningful shortcuts, not just decoration. */
+  href?: string;
+  aria?: string;
 };
 
 const STICKERS: StickerSpec[] = [
-  { kind: "folder", label: "projects", at: { top: "30%", left: "7%" }, rot: -8, side: "l" },
-  { kind: "pencil", label: "design", at: { top: "63%", left: "13%" }, rot: 7, side: "l" },
-  { kind: "cap", label: "untad ’27", at: { top: "79%", left: "30%" }, rot: -5, side: "l" },
-  { kind: "pin", label: "palu, id", at: { top: "22%", left: "86%" }, rot: 8, side: "r" },
-  { kind: "code", label: "code", at: { top: "57%", left: "80%" }, rot: -7, side: "r" },
-  { kind: "pill", label: "open to work", at: { top: "81%", left: "67%" }, rot: 5, side: "r" },
+  { kind: "folder", label: "projects", at: { top: "68%", left: "5%" }, rot: -8, side: "l", href: "#work", aria: "Go to selected work" },
+  { kind: "pencil", label: "design", at: { top: "50%", left: "14%" }, rot: 8, side: "l", href: "#services", aria: "Go to services" },
+  { kind: "cap", label: "untad ’27", at: { top: "65%", left: "23%" }, rot: -6, side: "l", href: "#about", aria: "Go to about" },
+  { kind: "squiggle", label: "this way", at: { top: "44%", left: "33%" }, rot: -10, side: "l" },
+  { kind: "spark", label: "ship it", at: { top: "44%", left: "67%" }, rot: 10, side: "r" },
+  { kind: "pin", label: "palu, id", at: { top: "65%", left: "77%" }, rot: -6, side: "r", href: "#contact", aria: "Go to contact" },
+  { kind: "code", label: "code", at: { top: "50%", left: "86%" }, rot: 7, side: "r", href: "https://github.com/juanKuganda", aria: "Open GitHub profile" },
+  { kind: "pill", label: "let's talk ↗", at: { top: "68%", left: "93%" }, rot: -5, side: "r", href: "#contact", aria: "Go to contact" },
 ];
 
-/* Floating cursors, reference-style: a colored arrow cursor + a
-   rotated sticker pill (black outline, like the reference) + an
-   optional mini "YOU" bubble. Decorative (aria-hidden).
-   Outer .cursor-float = entrance + explode; .cursor-par =
-   magnetic parallax; .cursor-inner = idle bob. */
 const CURSORS = [
   {
-    at: { top: "36%", left: "15%" }, rot: -6, side: "l",
-    color: "var(--pop-pink)", pill: "PALU, ID", pillRot: -8, mini: "YOU",
+    at: { top: "28%", left: "20%" }, rot: -6, side: "l",
+    color: "var(--pop-pink)", pill: "YOU (VISITOR)", pillRot: -7, mini: "YOU",
   },
   {
-    at: { top: "32%", left: "72%" }, rot: 8, side: "r",
-    color: "var(--pop-blue)", pill: "OPEN TO WORK", pillRot: 7, mini: null,
+    at: { top: "14%", left: "62%" }, rot: 8, side: "r",
+    color: "var(--pop-blue)", pill: "JUAN · CREATOR", pillRot: 6, mini: null,
   },
 ];
 
-/* Ruler numbers: 0–1400 in steps of 100, tripled for a seamless loop. */
+
 const RULER_NUMS: number[] = Array.from({ length: 15 }, (_, i) => i * 100);
 
-/**
- * THE REEL v5 — clean & personal.
- *
- * Scene 1: faint static grid on paper; "Hai, I'm Juan" mask reveal +
- * a one-time Figma-style selection choreography (cursor sweeps, blue
- * selection box + handles stay as a design element); a 3:4 portrait
- * card DROPPED FROM ABOVE; five Apple-precision vector doodles +
- * one status pill floating around the card at a medium distance.
- * Bottom: a Figma-like ruler that shifts as you scroll.
- * Interaction: magnetic parallax — one rAF loop, quickSetter per
- * element, lerped, writing to inner wrappers. Paused on
- * reduced-motion, mobile, or off-viewport.
- * Scroll: NO PIN — the card JOINS the stickers in the explode
- * (card flies up + shrinks + fades, headline drifts, stickers burst
- * outward + upward), scrubbed, finished at "bottom 70%".
- * Mobile: no parallax, mini explode (small vectors). Reduced motion: one
- * static frame (selection box shown, ruler static).
- */
-export default function Hero() {
-  const rootRef = useRef<HTMLElement>(null);
-  // The scroll-scrub timeline stays disabled until the entrance completes,
-  // so the two never fight over the stickers/card (which left elements
-  // stuck invisible when users scrolled mid-entrance).
-  const scrollSTRef = useRef<{ enable(): void } | null>(null);
+interface HeroProps {
+  isReady?: boolean;
+}
 
-  // Measure the sticky nav so scene-1 content can pad clear of it.
+export default function Hero({ isReady = true }: HeroProps) {
+  const rootRef = useRef<HTMLElement>(null);
+  const hasAnimatedRef = useRef(false);
+  /** Scroll-explode ScrollTrigger, gated: disabled on mount, enabled
+      only when the staged entrance finishes — a scroll mid-entrance
+      must not fight the pop-in. */
+  const explodeSTRef = useRef<ScrollTrigger | null>(null);
+
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 768 : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile((prev) => (prev !== mobile ? mobile : prev));
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -216,26 +267,16 @@ export default function Hero() {
       const nav = document.querySelector(".nav");
       const navH = nav ? Math.round(nav.getBoundingClientRect().height) : 60;
       root.style.setProperty("--nav-h", `${navH}px`);
-      ScrollTrigger.refresh();
     };
     setH();
     window.addEventListener("resize", setH);
     return () => window.removeEventListener("resize", setH);
   }, []);
 
-  // Magnetic parallax: ONE rAF loop, gsap.quickSetter per element,
-  // lerped toward the pointer. Transform-only. The loop runs only
-  // while the pointer moves (stops when settled), only on desktop,
-  // never with reduced motion, and pauses when the hero leaves the
-  // viewport. Parallax writes to dedicated wrappers (`.par-hi`,
-  // `.par-card`, `.sticker-par`) so it never fights the entrance
-  // or the scroll-explode timeline, which own the outer elements.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const desktopMq = window.matchMedia("(min-width: 769px)");
-    if (!desktopMq.matches) return;
+    if (isMobile) return;
 
     const parHi = root.querySelector<HTMLElement>(".par-hi");
     const parCard = root.querySelector<HTMLElement>(".par-card");
@@ -286,7 +327,7 @@ export default function Hero() {
 
     const loop = () => {
       raf = 0;
-      if (disposed || !inView || !desktopMq.matches) return;
+      if (disposed || !inView) return;
       cx += (tx - cx) * 0.08;
       cy += (ty - cy) * 0.08;
       if (Math.abs(tx - cx) < 0.005 && Math.abs(ty - cy) < 0.005) {
@@ -299,7 +340,7 @@ export default function Hero() {
       raf = requestAnimationFrame(loop);
     };
     const kick = () => {
-      if (!raf && !disposed && inView && desktopMq.matches) {
+      if (!raf && !disposed && inView) {
         raf = requestAnimationFrame(loop);
       }
     };
@@ -326,34 +367,137 @@ export default function Hero() {
       },
       { threshold: 0 }
     );
-    const onMq = () => {
-      if (!desktopMq.matches && raf) {
-        cancelAnimationFrame(raf);
-        raf = 0;
-      }
-    };
 
     io.observe(root);
-    desktopMq.addEventListener("change", onMq);
+    root.addEventListener("pointermove", onMove);
+    root.addEventListener("pointerleave", onLeave);
+
+    return () => {
+      disposed = true;
+      io.disconnect();      root.removeEventListener("pointermove", onMove);
+      root.removeEventListener("pointerleave", onLeave);
+      if (raf) cancelAnimationFrame(raf);
+      gsap.set([parHi, parCard, ...stickerEls], { clearProps: "transform" });
+    };
+  }, [isMobile]);
+
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    if (isMobile) return;
+
+    const letters = Array.from(
+      root.querySelectorAll<HTMLElement>(".hi-letter")
+    );
+    const hi = root.querySelector<HTMLElement>(".reel-hi");
+    if (letters.length === 0 || !hi) return;
+
+    const L = letters.map((el) => ({
+      box: () => el.getBoundingClientRect(),
+      sx: gsap.quickSetter(el, "x", "px"),
+      sy: gsap.quickSetter(el, "y", "px"),
+      cx: 0,
+      cy: 0,
+    }));
+    const setSkew = gsap.quickSetter(hi, "skewX", "deg");
+
+    const RADIUS = 160;
+    const PUSH = 30;
+    let px = -9999;
+    let py = -9999;
+    let skewTarget = 0;
+    let skewCur = 0;
+    let raf = 0;
+    let inView = true;
+    let disposed = false;
+
+    const tick = () => {
+      raf = 0;
+      if (disposed || !inView) return;
+      let active = false;
+      for (const s of L) {
+        const b = s.box();
+        const dx = b.left + b.width / 2 - px;
+        const dy = b.top + b.height / 2 - py;
+        const d = Math.hypot(dx, dy);
+        let tx = 0;
+        let ty = 0;
+        if (d < RADIUS && d > 1) {
+          const f = 1 - d / RADIUS;
+          tx = (dx / d) * PUSH * f * f;
+          ty = (dy / d) * PUSH * f * f;
+        }
+        s.cx += (tx - s.cx) * 0.14;
+        s.cy += (ty - s.cy) * 0.14;
+        if (Math.abs(s.cx) > 0.05 || Math.abs(s.cy) > 0.05) active = true;
+        s.sx(s.cx);
+        s.sy(s.cy);
+      }
+      skewCur += (skewTarget - skewCur) * 0.12;
+      skewTarget *= 0.92;
+      if (Math.abs(skewCur) < 0.03 && Math.abs(skewTarget) < 0.03) {
+        skewCur = 0;
+        skewTarget = 0;
+      } else {
+        active = true;
+      }
+      setSkew(skewCur);
+      if (active) raf = requestAnimationFrame(tick);
+    };
+    const kick = () => {
+      if (!raf && !disposed && inView)
+        raf = requestAnimationFrame(tick);
+    };
+
+    const onMove = (e: PointerEvent) => {
+      px = e.clientX;
+      py = e.clientY;
+      kick();
+    };
+    const onLeave = () => {
+      px = -9999;
+      py = -9999;
+      kick();
+    };
+    const velST = ScrollTrigger.create({
+      trigger: root,
+      start: "top bottom",
+      end: "bottom top",
+      onUpdate: (self) => {
+        const v = self.getVelocity();
+        skewTarget = Math.max(-7, Math.min(7, v / -350));
+        kick();
+      },
+    });
+    const io = new IntersectionObserver(
+      (entries) => {
+        inView = entries[0]?.isIntersecting ?? true;
+        if (!inView && raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        } else if (inView) {
+          kick();
+        }
+      },
+      { threshold: 0 }
+    );
+
+    io.observe(root);
     root.addEventListener("pointermove", onMove);
     root.addEventListener("pointerleave", onLeave);
 
     return () => {
       disposed = true;
       io.disconnect();
-      desktopMq.removeEventListener("change", onMq);
+      velST.kill();
       root.removeEventListener("pointermove", onMove);
       root.removeEventListener("pointerleave", onLeave);
       if (raf) cancelAnimationFrame(raf);
-      gsap.set([parHi, parCard, ...stickerEls], { clearProps: "transform" });
+      gsap.set([...letters, hi], { clearProps: "transform" });
     };
-  }, []);
+  }, [isMobile]);
 
-  // Entrance (<1.2s): card drops from above, headline reveals, stickers
-  // pop in with stagger, then THE BLOOM (grayscale → color, once).
-  // transform/opacity only. After ~1.6s: the Figma-select choreography
-  // — a cursor sweeps across the headline, drawing the blue selection
-  // box + handles, which stay as a design element.
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -362,138 +506,172 @@ export default function Hero() {
     ).matches;
     if (reduced) return;
 
+    const stickers = gsap.utils.toArray<HTMLElement>(
+      ".reel-stickers .sticker"
+    );
+    const floaters = gsap.utils.toArray<HTMLElement>(
+      ".reel-floaters .cursor-float"
+    );
+    stickers.forEach((el) =>
+      gsap.set(el, { rotation: parseFloat(el.dataset.rot || "0") })
+    );
+    floaters.forEach((el) =>
+      gsap.set(el, { rotation: parseFloat(el.dataset.rot || "0") })
+    );
+
+    const box = root.querySelector<HTMLElement>(".hi-box");
+    const cursor = root.querySelector<HTMLElement>(".hi-cursor");
+    const handles = gsap.utils.toArray<HTMLElement>(".hi-handle");
+    const tag = root.querySelector<HTMLElement>(".figma-tag");
+    const dim = root.querySelector<HTMLElement>(".hi-dimension");
+
+    // When not yet ready, park elements in initial hidden state without running entrance animation
+    if (!isReady && !hasAnimatedRef.current) {
+      gsap.set(".reel-card", { y: -45, opacity: 0, scale: 0.985 });
+      gsap.set(".reel-hi-line", { yPercent: 100 });
+      gsap.set(".reel-hi-sub", { y: 10, opacity: 0 });
+      gsap.set(".reel-sub", { y: 10, opacity: 0 });
+      gsap.set(".corner-tl", { x: -16, y: -12, opacity: 0 });
+      gsap.set(".corner-tr", { x: 16, y: -12, opacity: 0 });
+      gsap.set(".corner-bl", { x: -16, y: 12, opacity: 0 });
+      gsap.set(".corner-br", { x: 16, y: 12, opacity: 0 });
+      gsap.set(stickers, { scale: 0.8, opacity: 0 });
+      gsap.set(floaters, { scale: 0.8, opacity: 0 });
+      if (box) gsap.set(box, { scaleX: 0, opacity: 0, transformOrigin: "left center" });
+      if (cursor) gsap.set(cursor, { opacity: 0, x: 0 });
+      if (handles.length) gsap.set(handles, { scale: 0, transformOrigin: "center" });
+      if (tag) gsap.set(tag, { scale: 0, opacity: 0, transformOrigin: "bottom left" });
+      if (dim) gsap.set(dim, { scale: 0, opacity: 0, transformOrigin: "top right" });
+      return;
+    }
+
+    if (hasAnimatedRef.current) return;
+    hasAnimatedRef.current = true;
+
     const ctx = gsap.context(() => {
-      const stickers = gsap.utils.toArray<HTMLElement>(
-        ".reel-stickers .sticker"
-      );
-      const floaters = gsap.utils.toArray<HTMLElement>(
-        ".reel-floaters .cursor-float"
-      );
-      // Resting tilt per sticker (data-rot), so scale pops keep it.
-      stickers.forEach((el) =>
-        gsap.set(el, { rotation: parseFloat(el.dataset.rot || "0") })
-      );
-      floaters.forEach((el) =>
-        gsap.set(el, { rotation: parseFloat(el.dataset.rot || "0") })
-      );
-
-      gsap.set(".reel-card", { y: -170, opacity: 0, scale: 0.98 });
-      gsap.set(".reel-hi", { yPercent: 112 });
-      gsap.set(".reel-top > *", { y: 12, opacity: 0 });
-      gsap.set(stickers, { scale: 0, opacity: 0 });
-      gsap.set(floaters, { scale: 0, opacity: 0 });
-
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      // Staged pop-out entrance (v14): the hero starts EMPTY — the
+      // loader's dissolve already revealed a blank canvas — and each
+      // element pops in one by one: card → headline → corners →
+      // stickers along the wave → cursors → BLOOM. A 0.35 s empty
+      // beat first so the blank hero actually reads.
+      const tl = gsap.timeline({
+        defaults: { ease: "power3.out" },
+        onComplete: () => explodeSTRef.current?.enable(),
+      });
       tl.to(
         ".reel-card",
-        { y: 0, opacity: 1, scale: 1, duration: 1.0, ease: "expo.out" },
-        0.05
+        { y: 0, opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.2)" },
+        0.35
       )
-        .to(".reel-hi", { yPercent: 0, duration: 0.7, ease: "power4.out" }, 0.35)
+        .to(
+          ".reel-hi-line",
+          { yPercent: 0, duration: 0.7, ease: "power3.out" },
+          0.85
+        )
+        .to(
+          ".reel-hi-sub",
+          { y: 0, opacity: 1, duration: 0.55, ease: "power2.out" },
+          1.0
+        )
+        .to(
+          ".corner-tl, .corner-tr, .corner-bl, .corner-br",
+          { x: 0, y: 0, opacity: 1, duration: 0.5, stagger: 0.12, ease: "back.out(1.7)" },
+          1.15
+        )
+        .to(
+          ".reel-sub",
+          { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" },
+          1.35
+        )
         .to(
           stickers,
-          { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.8)", stagger: 0.055 },
-          0.5
+          { scale: 1, opacity: 1, duration: 0.55, ease: "back.out(2)", stagger: 0.06 },
+          1.5
         )
         .to(
           floaters,
-          { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.8)", stagger: 0.09 },
-          0.85
+          { scale: 1, opacity: 1, duration: 0.55, ease: "back.out(1.7)", stagger: 0.08 },
+          1.95
         )
-        .to(".reel-top > *", { y: 0, opacity: 1, duration: 0.45, stagger: 0.07 }, 0.6)
-        // THE BLOOM: the grayscale layer fades once — the blazer turns
-        // blue as the single color moment. opacity-only, compositor-cheap.
         .to(
           ".reel-card .photo-gray",
-          { opacity: 0, duration: 1.2, ease: "power2.inOut" },
-          1.5
+          { opacity: 0, duration: 0.9, ease: "power2.inOut" },
+          2.1
         );
 
-      // FIGMA-SELECT: cursor sweeps left→right across the headline,
-      // drawing the blue selection box; handles pop in; cursor leaves.
-      // The box + handles stay — a personal designer signature.
       const box = root.querySelector<HTMLElement>(".hi-box");
       const cursor = root.querySelector<HTMLElement>(".hi-cursor");
       const handles = gsap.utils.toArray<HTMLElement>(".hi-handle");
+      const tag = root.querySelector<HTMLElement>(".figma-tag");
+      const dim = root.querySelector<HTMLElement>(".hi-dimension");
       if (box && cursor && handles.length > 0) {
         gsap.set(box, { scaleX: 0, opacity: 0, transformOrigin: "left center" });
         gsap.set(cursor, { opacity: 0, x: 0 });
         gsap.set(handles, { scale: 0, transformOrigin: "center" });
+        if (tag) gsap.set(tag, { scale: 0, opacity: 0, transformOrigin: "bottom left" });
+        if (dim) gsap.set(dim, { scale: 0, opacity: 0, transformOrigin: "top right" });
 
-        const sel = gsap.timeline({ delay: 1.6 });
+        const sel = gsap.timeline({ delay: 1.0 });
         sel
-          .to(cursor, { opacity: 1, duration: 0.22 }, 0)
+          .to(cursor, { opacity: 1, duration: 0.2 }, 0)
           .to(
             cursor,
             {
               x: () => box.offsetWidth + 6,
-              duration: 0.9,
+              duration: 0.65,
               ease: "power2.inOut",
             },
-            0.22
+            0.1
           )
           .to(
             box,
-            { opacity: 1, scaleX: 1, duration: 0.9, ease: "power2.inOut" },
-            0.22
+            { opacity: 1, scaleX: 1, duration: 0.65, ease: "power2.inOut" },
+            0.1
           )
           .to(
             handles,
-            { scale: 1, duration: 0.28, ease: "back.out(2.2)", stagger: 0.04 },
-            0.95
+            { scale: 1, duration: 0.25, ease: "back.out(1.8)", stagger: 0.02 },
+            0.6
           )
-          .to(cursor, { opacity: 0, duration: 0.3 }, 1.3);
+          .to(
+            [tag, dim].filter(Boolean),
+            { scale: 1, opacity: 1, duration: 0.25, ease: "back.out(1.8)", stagger: 0.04 },
+            0.68
+          )
+          .to(cursor, { opacity: 0, duration: 0.25 }, 0.95);
       }
-
-      tl.eventCallback("onComplete", () => {
-        gsap.set(".reel-top > *", { clearProps: "all" });
-        gsap.set(".reel-hi", { clearProps: "transform" });
-        gsap.set(".reel-card", { clearProps: "transform,opacity" });
-        gsap.set(stickers, { clearProps: "transform,opacity" });
-        gsap.set(floaters, { clearProps: "transform,opacity" });
-        // Entrance done: hand control to the scroll scrub. It was kept
-        // disabled until now so a mid-entrance scroll can't leave the
-        // stickers/card stuck invisible.
-        scrollSTRef.current?.enable();
-      });
     }, root);
     return () => {
       ctx.revert();
     };
-  }, []);
+  }, [isReady]);
 
-  // Scroll explode: NO PIN. The CARD joins the stickers — it flies up,
-  // shrinks slightly and fades; the headline (+ its selection box)
-  // drifts up; stickers BURST outward + upward and fade. Finished
-  // before the statement fully arrives (end "bottom 70%").
-  // Deterministic per-index vectors (no random per render).
-  // transform/opacity only, ease none, scrubbed. fromTo +
-  // immediateRender:false keeps the resting state exact no matter
-  // when the entrance finished. Desktop only for the burst;
-  // reduced-motion skips everything.
+
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
-        // No overwrite here: the scroll scrub is disabled until this
-        // entrance completes (see below), so the two never fight over
-        // the stickers/card and nothing gets stuck invisible.
         defaults: { ease: "none" },
         scrollTrigger: {
           trigger: root,
           start: "top top",
           end: "bottom 70%",
-          scrub: true,
+          scrub: 0.6,
         },
       });
 
+      // Gated: stays disabled until the staged entrance finishes, so
+      // a scroll mid-entrance can't fight the pop-in. (If the effect
+      // re-runs after the entrance — e.g. a resize crossing the
+      // mobile breakpoint — the new trigger stays enabled.)
+      explodeSTRef.current = tl.scrollTrigger ?? null;
+      if (!hasAnimatedRef.current) tl.scrollTrigger?.disable();
+
       if (isMobile) {
-        // Mini explode on mobile: everything joins the burst, but with
-        // smaller vectors than desktop — no pin, no parallax here.
+
         tl.fromTo(
           ".reel-card",
           { y: 0, scale: 1, autoAlpha: 1 },
@@ -505,15 +683,18 @@ export default function Hero() {
             immediateRender: false,
           },
           0
-        ).to(".reel-hi-mask", { y: -60, autoAlpha: 0, duration: 1 }, 0);
+        ).to(".corner-tl", { y: -60, autoAlpha: 0, duration: 1 }, 0);
+        const mCorners = gsap.utils.toArray<HTMLElement>(
+          ".corner-tr, .corner-bl, .corner-br"
+        );
+        mCorners.forEach((el, i) => {
+          tl.to(el, { y: -44, autoAlpha: 0, duration: 1 }, 0.05 + i * 0.04);
+        });
         const mStickers = gsap.utils.toArray<HTMLElement>(
           ".reel-stickers .sticker"
         );
         mStickers.forEach((el, i) => {
-          // Vertical scatter (no horizontal push): the wrapped row is
-          // tight, so sideways vectors would collide mid-flight.
-          // From-state is complete (scale/rotation) so a mid-entrance
-          // scroll normalizes instead of freezing the pop-in mid-way.
+
           const dir = i % 2 === 0 ? -1 : 1;
           tl.fromTo(
             el,
@@ -535,26 +716,44 @@ export default function Hero() {
             0.05 + i * 0.04
           );
         });
-        tl.to(".reel-cap", { y: -24, autoAlpha: 0, duration: 0.8 }, 0.1).to(
-          ".reel-scroll",
-          { y: -24, autoAlpha: 0, duration: 0.8 },
-          0.12
-        );
       } else {
-        // Card joins the explosion: up, shrink, tilt, fade.
+        // Card joins the explosion: up, shrink, tilt, fade. Resting
+        // tilt is -2deg (stylesheet); the burst adds to it.
         tl.fromTo(
           ".reel-card",
-          { y: 0, scale: 1, rotation: 0, autoAlpha: 1 },
+          { y: 0, scale: 1, rotation: -2, autoAlpha: 1 },
           {
             y: -130,
             scale: 0.92,
-            rotation: -2,
+            rotation: -8,
             autoAlpha: 0,
             duration: 1,
             immediateRender: false,
           },
           0
-        ).to(".reel-hi-mask", { y: -90, duration: 1 }, 0);
+        );
+
+        // Corners burst outward + upward, fading.
+        const cornerBurst: Array<[string, number, number]> = [
+          [".corner-tl", -90, -70],
+          [".corner-tr", 90, -70],
+          [".corner-bl", -90, -30],
+          [".corner-br", 90, -30],
+        ];
+        cornerBurst.forEach(([sel, x, y], i) => {
+          tl.fromTo(
+            sel,
+            { x: 0, y: 0, autoAlpha: 1 },
+            {
+              x,
+              y,
+              autoAlpha: 0,
+              duration: 1,
+              immediateRender: false,
+            },
+            0.05 + i * 0.05
+          );
+        });
 
         const stickers = gsap.utils.toArray<HTMLElement>(
           ".reel-stickers .sticker"
@@ -573,7 +772,6 @@ export default function Hero() {
             {
               x: dir * (90 + (i % 3) * 30), // ±90..150, outward
               y: -(70 + (i % 4) * 24), // -70..-142, upward
-              rotation: dir * (15 + (i % 3) * 10), // ±15..35
               autoAlpha: 0,
               duration: 1,
               immediateRender: false,
@@ -581,34 +779,6 @@ export default function Hero() {
             0.05 + i * 0.03
           );
         });
-
-        // Bottom row joins the burst too: caption flies left, scroll cue
-        // flies right, both upward + fade.
-        tl.fromTo(
-          ".reel-cap",
-          { x: 0, y: 0, rotation: 0, autoAlpha: 1 },
-          {
-            x: -70,
-            y: -50,
-            rotation: -8,
-            autoAlpha: 0,
-            duration: 1,
-            immediateRender: false,
-          },
-          0.1
-        ).fromTo(
-          ".reel-scroll",
-          { x: 0, y: 0, rotation: 0, autoAlpha: 1 },
-          {
-            x: 70,
-            y: -50,
-            rotation: 8,
-            autoAlpha: 0,
-            duration: 1,
-            immediateRender: false,
-          },
-          0.12
-        );
 
         // Floating cursors burst too — wider vectors, they live at
         // the canvas edges.
@@ -637,46 +807,16 @@ export default function Hero() {
             0.12 + i * 0.05
           );
         });
-
-        // Edge furniture joins too: verticals drift further outward,
-        // corner marks shrink away.
-        tl.fromTo(
-          ".reel-edge-l",
-          { x: 0, autoAlpha: 1 },
-          { x: -110, autoAlpha: 0, duration: 1, immediateRender: false },
-          0.08
-        )
-          .fromTo(
-            ".reel-edge-r",
-            { x: 0, autoAlpha: 1 },
-            { x: 110, autoAlpha: 0, duration: 1, immediateRender: false },
-            0.1
-          )
-          .to(".reel-corner", {
-            autoAlpha: 0,
-            scale: 0.5,
-            duration: 0.8,
-            immediateRender: false,
-          }, 0.15);
       }
 
-      // The ruler stays visible through the explode — it only leaves
-      // naturally as the hero scrolls away. (No opacity fade.)
-
-      // Keep the scrub disabled until the entrance completes (the
-      // entrance timeline enables it via scrollSTRef). Prevents a
-      // mid-entrance scroll from leaving stickers/card stuck invisible.
-      if (tl.scrollTrigger) {
-        tl.scrollTrigger.disable();
-        scrollSTRef.current = tl.scrollTrigger;
-      }
     }, root);
 
-    // Ruler shift: the canvas slides under the ruler as you scroll.
-    // Transform-only scrub; static under reduced motion.
+    // Ruler shift & blue meter caliper animation:
+    // Pure x transform scrub — silky 120 FPS, zero layout reflow or delay.
     const rulerCtx = gsap.context(() => {
+      // 1. Ruler track scrub
       gsap.to(".ruler-track", {
-        x: -260,
+        x: -360,
         ease: "none",
         scrollTrigger: {
           trigger: root,
@@ -685,37 +825,81 @@ export default function Hero() {
           scrub: true,
         },
       });
+
+      // 2. Animated blue meter block (pure GPU transform, zero layout thrashing)
+      const meterBlock = root.querySelector(".ruler-meter-block");
+      const meterVal = root.querySelector(".meter-value");
+
+      if (meterBlock && meterVal) {
+        gsap.to(meterBlock, {
+          x: 260,
+          ease: "none",
+          scrollTrigger: {
+            trigger: root,
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+            onUpdate: (self) => {
+              const meters = (0.48 + self.progress * 0.96).toFixed(2);
+              meterVal.textContent = meters;
+            },
+          },
+        });
+
+        // Subtle autonomous breathing pulse for CAD precision feel
+        gsap.to(meterBlock, {
+          boxShadow: "0 0 24px rgba(0, 102, 255, 0.45), inset 0 0 14px rgba(0, 102, 255, 0.16)",
+          repeat: -1,
+          yoyo: true,
+          duration: 1.8,
+          ease: "sine.inOut",
+        });
+      }
     }, root);
 
     return () => {
       ctx.revert();
       rulerCtx.revert();
     };
-  }, []);
+  }, [isMobile]);
 
   return (
     <header className="hero-reel" id="top" ref={rootRef}>
       <DoodleDefs />
-      <div className="reel-top">
-        <p className="reel-kicker">
-          <span className="dot" aria-hidden="true" />
-          <span>Open to work</span>
-          <span className="sep" aria-hidden="true">·</span>
-          <span>Folio ©2026</span>
-          <span className="sep" aria-hidden="true">·</span>
-          <span>Palu, ID</span>
-        </p>
-        <RoleTicker />
-      </div>
 
       <div className="reel-center">
-        <div className="reel-hi-mask">
+        {/* TOP-LEFT: the greeting, Figma-selected like a designer
+            signature. Kinetic letters repel the pointer. */}
+        <div className="corner corner-tl">
           <div className="par-hi">
-            {/* Figma-select: the headline lives inside a selection
-                wrapper — the blue box + handles stay as a designer
-                signature after the one-time cursor sweep. */}
             <span className="hi-select">
-              <h1 className="reel-hi">Hai, I&rsquo;m Juan</h1>
+              <span className="figma-tag" aria-hidden="true">
+                <svg
+                  className="figma-tag-icon"
+                  viewBox="0 0 16 16"
+                  width="11"
+                  height="11"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M8 1L2 7L8 13L14 7L8 1Z" />
+                </svg>
+                <span>❖ Juan · 100% Human</span>
+              </span>
+
+              <h1 className="reel-hi" aria-label="Hi, I'm Juan — making pixels behave & code do tricks">
+                <span className="reel-hi-line" aria-hidden="true">
+                  {"Hi, I'm Juan".split("").map((ch, i) => (
+                    <span className="hi-letter" key={i}>
+                      {ch === " " ? " " : ch}
+                    </span>
+                  ))}
+                </span>
+                <span className="reel-hi-sub" aria-hidden="true">
+                  making pixels behave &amp; code do tricks
+                </span>
+              </h1>
+
               <span className="hi-box" aria-hidden="true">
                 <span className="hi-handle h-nw" />
                 <span className="hi-handle h-n" />
@@ -726,6 +910,11 @@ export default function Hero() {
                 <span className="hi-handle h-s" />
                 <span className="hi-handle h-se" />
               </span>
+
+              <span className="hi-dimension" aria-hidden="true">
+                388 × 92
+              </span>
+
               <svg
                 className="hi-cursor"
                 viewBox="0 0 24 24"
@@ -745,6 +934,35 @@ export default function Hero() {
           </div>
         </div>
 
+        {/* TOP-RIGHT: role ticker + availability. */}
+        <div className="corner corner-tr">
+          <RoleTicker />
+          <p className="corner-line">
+            <span className="dot" aria-hidden="true" />
+            <span>Open to work</span>
+          </p>
+          <p className="corner-line dim">Folio ©2026</p>
+        </div>
+
+        {/* BOTTOM-LEFT: description + figure caption. */}
+        <div className="corner corner-bl">
+          <p className="reel-sub">
+            Software developer &amp; designer — interfaces people
+            understand at a glance.
+          </p>
+          <p className="reel-cap">FIG.01 — JUAN, PALU · 2026</p>
+        </div>
+
+        {/* BOTTOM-RIGHT: scroll cue + coordinates. */}
+        <div className="corner corner-br">
+          <a className="reel-scroll" href="#work">
+            <span>Scroll</span>
+            <span className="arrow" aria-hidden="true">↓</span>
+          </a>
+          <p className="corner-line dim">0.90°S — 119.86°E</p>
+        </div>
+
+        {/* CENTER: the portrait star, washi-taped like a pinned photo. */}
         <div className="par-card">
           <figure className="reel-card">
             <img
@@ -765,33 +983,16 @@ export default function Hero() {
             />
           </figure>
         </div>
-
-        <div className="reel-bottom-row">
-          <p className="reel-cap">FIG.01 — JUAN, PALU · 2026</p>
-          <a className="reel-scroll" href="#work">
-            <span>Scroll</span>
-            <span className="arrow" aria-hidden="true">↓</span>
-          </a>
-        </div>
-
       </div>
 
-      {/* Sticker field: five Apple-precision vector doodles + one
-          status pill, scattered across the full hero canvas (percent
-          positions, art-directed — not flanking the card). Anchored to
-          the hero so they can roam the edges. Outer .sticker = entrance
-          pop + scroll explode; inner .sticker-par = magnetic parallax.
-          Desktop absolute, mobile wrapped row. */}
-      <div className="reel-stickers" aria-hidden="true">
-          {STICKERS.map((s) => (
-            <span
-              key={s.label}
-              className="sticker"
-              style={s.at}
-              data-rot={s.rot}
-              data-side={s.side}
-            >
-              <span className="sticker-par">
+      <div className="reel-stickers">
+        {STICKERS.map((s, index) => {
+          const inner = (
+            <span className="sticker-par">
+              <span
+                className="sticker-wave-inner"
+                style={{ "--wave-delay": `${index * 0.35}s` } as React.CSSProperties}
+              >
                 {s.kind === "pill" ? (
                   <span className="doodle-pill">
                     <span className="sdot" />
@@ -805,85 +1006,118 @@ export default function Hero() {
                 )}
               </span>
             </span>
-          ))}
-        </div>
-
-        {/* Floating cursors, reference-style: colored arrow + rotated
-            sticker pill + mini bubble. Layers: outer .cursor-float =
-            entrance pop + scroll explode; .cursor-par = magnetic
-            parallax; .cursor-inner = idle bob. Decorative. */}
-        <div className="reel-floaters" aria-hidden="true">
-          {CURSORS.map((c) => (
-            <span
-              key={c.pill}
-              className="cursor-float"
-              style={c.at}
-              data-rot={c.rot}
-              data-side={c.side}
+          );
+          return s.href ? (
+            <a
+              key={s.label}
+              className="sticker sticker-link"
+              style={s.at}
+              data-rot={s.rot}
+              data-side={s.side}
+              href={s.href}
+              aria-label={s.aria || s.label}
             >
-              <span className="cursor-par">
-                <span className="cursor-inner">
-                  {c.mini && <span className="cursor-mini">{c.mini}</span>}
-                  <svg
-                    className="cursor-arrow"
-                    viewBox="0 0 24 24"
-                    width="30"
-                    height="30"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M17.5 3.5 L4.5 12.5 L11.7 13.8 L14.8 21.5 Z"
-                      fill={c.color}
-                      stroke="var(--ink)"
-                      strokeWidth="1.8"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span
-                    className="cursor-pill-tag"
-                    style={
-                      {
-                        background: c.color,
-                        "--pill-rot": `${c.pillRot}deg`,
-                      } as React.CSSProperties
-                    }
-                  >
-                    {c.pill}
-                  </span>
+              {inner}
+            </a>
+          ) : (
+            <span
+              key={s.label}
+              className="sticker"
+              style={s.at}
+              data-rot={s.rot}
+              data-side={s.side}
+              aria-hidden="true"
+            >
+              {inner}
+            </span>
+          );
+        })}
+      </div>
+
+      <div className="reel-floaters" aria-hidden="true">
+        {CURSORS.map((c) => (
+          <span
+            key={c.pill}
+            className="cursor-float"
+            style={c.at}
+            data-rot={c.rot}
+            data-side={c.side}
+          >
+            <span className="cursor-par">
+              <span className="cursor-inner">
+                {c.mini && <span className="cursor-mini">{c.mini}</span>}
+                <svg
+                  className="cursor-arrow"
+                  viewBox="0 0 24 24"
+                  width="30"
+                  height="30"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M17.5 3.5 L4.5 12.5 L11.7 13.8 L14.8 21.5 Z"
+                    fill={c.color}
+                    stroke="var(--ink)"
+                    strokeWidth="1.8"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span
+                  className="cursor-pill-tag"
+                  style={
+                    {
+                      background: c.color,
+                      "--pill-rot": `${c.pillRot}deg`,
+                    } as React.CSSProperties
+                  }
+                >
+                  {c.pill}
                 </span>
               </span>
             </span>
-          ))}
-        </div>
-
-      {/* Edge furniture: fills the far left/right canvas like the
-          reference — coordinates (personal) left, roles right, plus
-          crop-marks at the corners. Desktop only, joins the explode. */}
-      <span className="reel-edge reel-edge-l" aria-hidden="true">
-        0.90°S — 119.86°E · PALU
-      </span>
-      <span className="reel-edge reel-edge-r" aria-hidden="true">
-        ENGINEER · DESIGN · PEOPLE
-      </span>
-      {["tl", "tr", "bl", "br"].map((c) => (
-        <span key={c} className={`reel-corner rc-${c}`} aria-hidden="true">
-          +
-        </span>
-      ))}
+          </span>
+        ))}
+      </div>
 
       {/* Figma-like ruler pinned to the hero bottom: the canvas slides
-          under it as you scroll. Stays visible through the explode. */}
-      <div className="reel-ruler" aria-hidden="true">
+          under it as the hero scrolls away. Larger height + CAD blue meter indicator. */}
+      <div className="reel-ruler" aria-label="Interactive dimension ruler" role="region">
         <div className="ruler-track">
           {[0, 1, 2].map((copy) => (
             <span className="ruler-copy" key={copy}>
               {RULER_NUMS.map((n) => (
                 <span className="rnum" key={`${copy}-${n}`}>
-                  {n}
+                  <span className="rnum-val">{n}</span>
+                  {n === 0 && <span className="rnum-unit">PX</span>}
                 </span>
               ))}
             </span>
           ))}
+        </div>
+
+        {/* Blueprint / Figma Blue Meter Caliper Block */}
+        <div className="ruler-meter-block" aria-hidden="true">
+          <div className="meter-caliper meter-caliper-left">
+            <span className="caliper-tick" />
+          </div>
+          <div className="meter-body">
+            <div className="meter-hatch" />
+            <div className="meter-badge">
+              <span className="meter-pulse-dot" />
+              <span className="meter-label-text">
+                <span className="meter-value">0.48</span>
+                <span className="meter-unit">m</span>
+              </span>
+              <span className="meter-cad-tag">DIM</span>
+            </div>
+            <div className="meter-dimension-line">
+              <span className="dim-arrow dim-arrow-left" />
+              <span className="dim-line" />
+              <span className="dim-arrow dim-arrow-right" />
+            </div>
+          </div>
+          <div className="meter-caliper meter-caliper-right">
+            <span className="caliper-tick" />
+          </div>
         </div>
       </div>
     </header>
