@@ -4428,24 +4428,37 @@ footer.site {
   z-index: 1;
 }
 
-.loader-content {
-  position: relative;
+/* Logo stage: its own absolutely-positioned wrap, independent from
+   the corners and hairline (dual absolute stages) — fading the
+   chrome can never shift or slice it. */
+.loader-logo-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
   will-change: transform, opacity;
 }
 
-/* The logo is the main animation: big, center stage. */
+/* The logo is the main animation: big, center stage.
+   Width compensates the padded viewBox (-40 -40 597 581): the art
+   is 517/597 of the box, so 231px CSS shows the art at ~200px. */
 .loader-logo {
   position: relative;
   z-index: 2;
-  width: clamp(160px, 22vw, 220px);
+  width: clamp(185px, 25vw, 253px);
   height: auto;
-  /* GSAP assembles each <path> (scale + spin + rise, see STEP 0). */
+  /* Second clipping safety net (the first is the padded viewBox):
+     let paths paint outside the SVG viewport during assembly. */
+  overflow: visible;
+  /* GSAP assembles each <path> (scale + small rise, see STEP 0). */
+}
+/* Rotation/scale origin per path: without fill-box the origin is
+   the viewBox's top-left corner and shapes ORBIT the canvas instead
+   of spinning in place — that orbit is what swung them out of frame. */
+.loader-logo path {
+  transform-box: fill-box;
+  transform-origin: center;
 }
 /* Soft band-colored glow behind the logo — color lives here, never
    in the field, so the logo's own colors stay legible. */
