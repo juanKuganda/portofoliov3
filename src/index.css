@@ -164,32 +164,51 @@ a {
   z-index: 60;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   padding: 18px var(--pad);
-  color: #fff;
   background: transparent;
+  /* No blend on the outer shell: the colorful brand logo must stay
+     true (difference would invert its colors per backdrop). The
+     blend lives on .nav-inner (clock + links + menu button) instead. */
+}
+/* The brand mark: colorful logo, no text. 30px desktop / 26px mobile. */
+.nav-brand {
+  display: flex;
+  align-items: center;
+  line-height: 0;
+  text-decoration: none;
+  transition: opacity 0.3s var(--ease);
+}
+.nav-brand img {
+  width: auto;
+  height: 30px;
+  transition: transform 0.3s var(--ease);
+}
+.nav-brand:hover {
+  opacity: 0.6;
+}
+.nav-brand:hover img {
+  transform: rotate(-6deg) scale(1.06);
+}
+@media (max-width: 768px) {
+  .nav-brand img {
+    height: 26px;
+  }
+}
+/* Inner bar: white text + difference blend = automatic contrast over
+   light AND dark sections. */
+.nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+  color: #fff;
   mix-blend-mode: difference;
 }
 /* Keyboard focus stays visible under difference (white inverts too). */
 .nav :focus-visible {
   outline-color: #fff;
-}
-.nav-name {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 16px;
-  letter-spacing: -0.02em;
-  color: inherit;
-  text-decoration: none;
-  transition: opacity 0.3s var(--ease);
-}
-.nav-name:hover {
-  opacity: 0.6;
-}
-.nav-name sup {
-  font-size: 0.6em;
-  font-weight: 600;
 }
 .nav-clock {
   font-family: var(--font-mono);
@@ -197,6 +216,7 @@ a {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.75;
+  margin-inline: auto;
 }
 .nav-links {
   display: flex;
@@ -254,6 +274,7 @@ a {
   color: inherit;
   cursor: pointer;
   transition: opacity 0.25s var(--ease);
+  margin-left: auto; /* right-aligned inside .nav-inner on mobile */
 }
 .nav-menu-btn:hover {
   opacity: 0.6;
@@ -296,6 +317,10 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+.mnav-logo {
+  height: 26px;
+  width: auto;
 }
 .mnav-clock {
   font-family: var(--font-mono);
@@ -4407,6 +4432,13 @@ footer.site {
   will-change: transform, opacity;
 }
 
+.loader-logo {
+  width: clamp(96px, 14vw, 128px);
+  height: auto;
+  margin-bottom: 4px;
+  /* GSAP pops each <path> from scale 0 (transformOrigin 50% 50%). */
+}
+
 .loader-counter-wrap {
   display: flex;
   align-items: baseline;
@@ -4428,7 +4460,9 @@ footer.site {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: clamp(1.8rem, 5vw, 3.6rem);
-  color: var(--signal);
+  /* Paper white, not signal amber — the field cycles through five
+     brand colors and amber would vanish on the orange band. */
+  color: var(--paper);
   line-height: 1;
 }
 
