@@ -164,15 +164,26 @@ a {
   z-index: 60;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
   padding: 18px var(--pad);
+  color: #fff;
   background: transparent;
-  /* No blend on the outer shell: the colorful brand logo must stay
-     true (difference would invert its colors per backdrop). The
-     blend lives on .nav-inner (clock + links + menu button) instead. */
+  /* difference lives HERE, on the nav itself: white text inverts to
+     black over the white hero and stays white over dark sections.
+     It must NOT move to a child wrapper — the nav is a stacking
+     context (sticky + z-index), so a blend inside it is isolated
+     from the page backdrop and the text stays white everywhere. */
+  mix-blend-mode: difference;
 }
-/* The brand mark: colorful logo, no text. 30px desktop / 26px mobile. */
+/* The brand mark: a separate FIXED sibling of the nav (see
+   Navbar.tsx) — never inside the difference blend, or its colors
+   invert per backdrop. Same top/left as the nav's padding. */
 .nav-brand {
+  position: fixed;
+  top: 18px;
+  left: var(--pad);
+  z-index: 61;
   display: flex;
   align-items: center;
   line-height: 0;
@@ -190,21 +201,15 @@ a {
 .nav-brand:hover img {
   transform: rotate(-6deg) scale(1.06);
 }
+.nav-brand:focus-visible {
+  outline: 2px solid #0d99ff;
+  outline-offset: 4px;
+  border-radius: 6px;
+}
 @media (max-width: 768px) {
   .nav-brand img {
     height: 26px;
   }
-}
-/* Inner bar: white text + difference blend = automatic contrast over
-   light AND dark sections. */
-.nav-inner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex: 1;
-  min-width: 0;
-  color: #fff;
-  mix-blend-mode: difference;
 }
 /* Keyboard focus stays visible under difference (white inverts too). */
 .nav :focus-visible {
@@ -216,6 +221,8 @@ a {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.75;
+  /* Centered: the brand now lives outside the nav, so the clock
+     takes the middle of the bar. */
   margin-inline: auto;
 }
 .nav-links {
@@ -4432,38 +4439,80 @@ footer.site {
   will-change: transform, opacity;
 }
 
+/* The logo is the main animation: big, center stage. */
 .loader-logo {
-  width: clamp(96px, 14vw, 128px);
+  position: relative;
+  z-index: 2;
+  width: clamp(160px, 22vw, 220px);
   height: auto;
-  margin-bottom: 4px;
-  /* GSAP pops each <path> from scale 0 (transformOrigin 50% 50%). */
+  /* GSAP assembles each <path> (scale + spin + rise, see STEP 0). */
+}
+/* Soft band-colored glow behind the logo — color lives here, never
+   in the field, so the logo's own colors stay legible. */
+.loader-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background-color: #ff4d6d;
+  filter: blur(80px);
+  opacity: 0.35;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1;
 }
 
-.loader-counter-wrap {
+/* Bottom corners: ticker left, counter right — small mono. */
+.loader-corner {
+  position: absolute;
+  bottom: 24px;
+  z-index: 3;
   display: flex;
   align-items: baseline;
-  justify-content: center;
   gap: 4px;
+  will-change: transform, opacity;
+}
+.loader-corner-bl {
+  left: clamp(20px, 4vw, 56px);
+}
+.loader-corner-br {
+  right: clamp(20px, 4vw, 56px);
 }
 
 .loader-counter {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(4.5rem, 15vw, 11rem);
-  line-height: 1;
-  letter-spacing: -0.04em;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: clamp(13px, 1.2vw, 15px);
+  letter-spacing: 0.12em;
   color: var(--paper);
   font-variant-numeric: tabular-nums;
 }
 
 .loader-pct {
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-weight: 600;
-  font-size: clamp(1.8rem, 5vw, 3.6rem);
-  /* Paper white, not signal amber — the field cycles through five
-     brand colors and amber would vanish on the orange band. */
+  font-size: clamp(13px, 1.2vw, 15px);
+  letter-spacing: 0.12em;
   color: var(--paper);
-  line-height: 1;
+}
+
+/* Progress hairline along the bottom edge (scaleX, transform-only). */
+.loader-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  z-index: 3;
+  will-change: transform, opacity;
+}
+.loader-progress-fill {
+  height: 100%;
+  background-color: #ff4d6d;
+  transform: scaleX(0);
+  transform-origin: left center;
 }
 
 .loader-role-ticker {
