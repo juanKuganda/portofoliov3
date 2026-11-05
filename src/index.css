@@ -4460,23 +4460,6 @@ footer.site {
   transform-box: fill-box;
   transform-origin: center;
 }
-/* Soft band-colored glow behind the logo — color lives here, never
-   in the field, so the logo's own colors stay legible. */
-.loader-glow {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 520px;
-  height: 520px;
-  border-radius: 50%;
-  background-color: #ff4d6d;
-  filter: blur(80px);
-  opacity: 0.35;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 1;
-}
-
 /* Bottom corners: ticker left, counter right — small mono. */
 .loader-corner {
   position: absolute;

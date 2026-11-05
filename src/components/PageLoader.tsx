@@ -24,15 +24,18 @@ const BAYER_8X8 = [
 const ROLES = ["Engineer", "Design", "People"];
 const SCRAMBLE_CHARS = "!<>-_\\/[]{}=+*^?#";
 
-/** Accent colors for the loader chrome (glow, progress hairline,
+/** Accent colors for the loader chrome (progress hairline,
     ticker brackets) — one brand color per ~20% of the counter.
     The FIELD stays ink: these 5 colors are the logo's own colors,
     so a full-field cycle would swallow 1–2 logo shapes per band. */
 const COLOR_BANDS = ["#ff4d6d", "#4dabf7", "#ff922b", "#51cf66", "#9775fa"];
 
-/** Assembly spin per logo shape (stagger order: orange dot → purple
-    stem → blue K upper → blue K lower → green pill → pink base). */
-const LOGO_SPINS = [-10, 8, -6, 6, -8, 10];
+// Whoosh entry, per shape (order: orange dot → purple stem → blue K
+// upper → blue K lower → green pill → pink base). Each shape flies
+// in from the side nearest its final spot and settles with a spin,
+// like fabric floating home. px offsets are computed in the effect
+// (viewport size ÷ svg unit scale) — these are just directions.
+const WHOOSH_SPIN = [-30, 25, -20, 20, -25, 30];
 
 /** The 6 logo shapes, copied verbatim from public/favicon.svg.
     Staggered pop order: orange dot → purple stem → blue K (upper,
@@ -58,7 +61,7 @@ export default function PageLoader({
 
   const heroReadyFiredRef = useRef(false);
   const masterTlRef = useRef<gsap.core.Timeline | null>(null);
-  const glowRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<SVGSVGElement>(null);
   const fillRef = useRef<HTMLDivElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
   const breatheRef = useRef<gsap.core.Tween | null>(null);
@@ -202,12 +205,12 @@ export default function PageLoader({
     let scrambleTimer: number | null = null;
 
     /** Paint the live band color onto the loader ACCENTS only — the
-        soft glow behind the logo, the bottom progress hairline, and
-        the ticker brackets. The field stays ink so the colorful logo
-        never dissolves into its own background. */
+        bottom progress hairline and the ticker brackets. The field
+        stays ink so the colorful logo never dissolves into its own
+        background. (No glow behind the logo anymore: its color
+        cycling read as flicker.) */
     const paintAccents = () => {
       const c = colorProxy.c;
-      if (glowRef.current) glowRef.current.style.backgroundColor = c;
       if (fillRef.current) fillRef.current.style.backgroundColor = c;
       tickerRef.current
         ?.querySelectorAll(".tick-bracket")
@@ -266,34 +269,44 @@ export default function PageLoader({
     });
     masterTlRef.current = masterTl;
 
-    // ── STEP 0: Logo ASSEMBLY — the main animation (0s – ~1.3s) ──
-    // Choreography rule (from research): big motion lives ONLY on
-    // the wrapper; each path just pops IN PLACE (scale, y ≤ 16,
-    // rotation ≤ 10°) so no shape can swing out of the SVG frame
-    // and get sliced — the v15 "ter-cut". The padded viewBox
-    // (-40 -40 597 581) + overflow visible are the safety nets.
-    masterTl.from(
-      ".loader-logo-wrap",
-      {
-        y: 24,
-        opacity: 0,
-        duration: 0.9,
-        ease: "power3.out",
-      },
-      0
-    );
+    // ── STEP 0: Logo WHOOSH — the main animation (0s – ~1.45s) ──
+    // Each of the 6 shapes flies in from OUTSIDE the viewport, from
+    // the side nearest its final spot, fast expo.out entry with a
+    // settling spin — like fabric floating home. Offsets are px from
+    // the (centered) logo, converted to SVG user units via the svg's
+    // on-screen scale. The padded viewBox (-40 -40 597 581) +
+    // overflow visible let the shapes travel outside the SVG frame.
+    const logoEl = logoRef.current;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const unit = logoEl
+      ? logoEl.getBoundingClientRect().width / 597
+      : 0.42;
+    const offX = vw / 2 + 200; // px beyond the left/right edge
+    const offY = vh / 2 + 200; // px beyond the top/bottom edge
+    // [x, y] in px, per shape: dot/top, stem/left, K-upper/top-right,
+    // K-lower/bottom-right, pill/right, base/bottom-left.
+    const WHOOSH_PX: [number, number][] = [
+      [0, -offY],
+      [-offX, 0],
+      [offX * 0.7, -offY * 0.7],
+      [offX * 0.7, offY * 0.7],
+      [offX, 0],
+      [-offX * 0.7, offY * 0.7],
+    ];
     masterTl.from(
       ".loader-logo path",
       {
-        scale: 0,
-        y: 16,
-        rotation: (i: number) => LOGO_SPINS[i % LOGO_SPINS.length],
+        x: (i: number) => WHOOSH_PX[i % WHOOSH_PX.length][0] / unit,
+        y: (i: number) => WHOOSH_PX[i % WHOOSH_PX.length][1] / unit,
+        rotation: (i: number) => WHOOSH_SPIN[i % WHOOSH_SPIN.length],
+        scale: 0.7,
         transformOrigin: "50% 50%",
-        duration: 0.6,
-        ease: "back.out(1.7)",
-        stagger: 0.11,
+        duration: 1.0,
+        ease: "expo.out",
+        stagger: 0.09,
       },
-      0.1
+      0
     );
     masterTl.call(
       () => {
@@ -306,7 +319,7 @@ export default function PageLoader({
         });
       },
       undefined,
-      1.3
+      1.5
     );
 
     // ── STEP 1: Counter 000 → 100 in four lived beats (0s – 2.4s) ──
@@ -375,9 +388,9 @@ export default function PageLoader({
     // flies to the navbar brand and lands on it.
     masterTl.addLabel("dissolve", 2.65);
 
-    // Small chrome leaves first (corners, hairline, glow) — the LOGO
+    // Small chrome leaves first (corners, hairline) — the LOGO
     // stays: it is the last thing to leave, and it leaves by flying.
-    masterTl.to(".loader-corner, .loader-progress, .loader-glow", {
+    masterTl.to(".loader-corner, .loader-progress", {
       opacity: 0,
       duration: 0.3,
       ease: "power2.in",
@@ -486,18 +499,18 @@ export default function PageLoader({
       {/* The logo is the main animation: big, center stage, in its own
           absolutely-positioned wrap — independent from the corners and
           hairline (dual absolute stages, per felich.dev), so fading
-          the chrome can never shift or slice it. A soft band-colored
-          glow sits behind it — color lives in the glow, never in the
-          field, so the logo's own colors stay legible. */}
+          the chrome can never shift or slice it. No glow behind it
+          anymore — its color cycling read as flicker. */}
       <div ref={logoWrapRef} className="loader-logo-wrap">
-        <div ref={glowRef} className="loader-glow" aria-hidden="true" />
-        {/* Logo mark: the 6 shapes assemble one by one (see STEP 0).
-            Inline SVG (paths from favicon.svg) so each shape can
-            animate on its own — a raster could only pop as one block.
-            Padded viewBox (-40 -40 597 581): the art is 517×501, the
-            extra 40 units per side are the safety margin so assembly
-            swings can never reach the SVG's clipping edge. */}
+        {/* Logo mark: the 6 shapes whoosh in one by one from outside
+            the viewport (see STEP 0). Inline SVG (paths from
+            favicon.svg) so each shape can animate on its own — a
+            raster could only fly as one block. Padded viewBox
+            (-40 -40 597 581): the art is 517×501, the extra 40 units
+            per side are the safety margin so the flight can travel
+            outside the SVG frame without clipping. */}
         <svg
+          ref={logoRef}
           className="loader-logo"
           viewBox="-40 -40 597 581"
           width="231"
