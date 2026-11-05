@@ -21,11 +21,15 @@ const BAYER_8X8 = [
 const ROLES = ["Engineer", "Design", "People"];
 const SCRAMBLE_CHARS = "!<>-_\\/[]{}=+*^?#";
 
-/** Colorful loader bands — one brand color per ~20% of the counter,
-    GSAP-tweened (never a hard cut): pink → blue → orange → green →
-    purple. The dither canvas repaints with the live band color, so
-    the dissolve punches holes in a purple field. */
+/** Accent colors for the loader chrome (glow, progress hairline,
+    ticker brackets) — one brand color per ~20% of the counter.
+    The FIELD stays ink: these 5 colors are the logo's own colors,
+    so a full-field cycle would swallow 1–2 logo shapes per band. */
 const COLOR_BANDS = ["#ff4d6d", "#4dabf7", "#ff922b", "#51cf66", "#9775fa"];
+
+/** Assembly spin per logo shape (stagger order: orange dot → purple
+    stem → blue K upper → blue K lower → green pill → pink base). */
+const LOGO_SPINS = [-24, 18, -12, 12, -18, 24];
 
 /** The 6 logo shapes, copied verbatim from public/favicon.svg.
     Staggered pop order: orange dot → purple stem → blue K (upper,
@@ -47,9 +51,10 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
 
   const heroReadyFiredRef = useRef(false);
   const masterTlRef = useRef<gsap.core.Timeline | null>(null);
-  /** Live dither-field color — starts pink (band 1), tweened through
-      COLOR_BANDS by the master timeline. */
-  const bgColorRef = useRef<string>(COLOR_BANDS[0]);
+  const glowRef = useRef<HTMLDivElement>(null);
+  const fillRef = useRef<HTMLDivElement>(null);
+  const tickerRef = useRef<HTMLDivElement>(null);
+  const breatheRef = useRef<gsap.core.Tween | null>(null);
 
   const canvasDataRef = useRef<{
     ctx: CanvasRenderingContext2D;
@@ -81,8 +86,8 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
       return;
     }
 
-    // Reset background to the live color band
-    ctx.fillStyle = bgColorRef.current;
+    // Reset ink background
+    ctx.fillStyle = "#0a0a0a";
     ctx.fillRect(0, 0, width, height);
 
     if (p <= 0.001) return;
@@ -181,17 +186,29 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
     let currentRoleIdx = 0;
     let scrambleTimer: number | null = null;
 
-    /** Repaint the dither field with the live band color. During Act 1
-        (dissolve progress 0) this is a full-field repaint. */
-    const paintBand = () => {
-      bgColorRef.current = colorProxy.c;
-      renderDither(pixelProgress.val);
+    /** Paint the live band color onto the loader ACCENTS only — the
+        soft glow behind the logo, the bottom progress hairline, and
+        the ticker brackets. The field stays ink so the colorful logo
+        never dissolves into its own background. */
+    const paintAccents = () => {
+      const c = colorProxy.c;
+      if (glowRef.current) glowRef.current.style.backgroundColor = c;
+      if (fillRef.current) fillRef.current.style.backgroundColor = c;
+      tickerRef.current
+        ?.querySelectorAll(".tick-bracket")
+        .forEach((el) => {
+          (el as HTMLElement).style.color = c;
+        });
     };
 
     const updateCounter = () => {
       const v = Math.round(progressProxy.val);
       if (counterRef.current) {
         counterRef.current.textContent = String(v).padStart(3, "0");
+      }
+      // Bottom progress hairline: transform-only, no layout thrash.
+      if (fillRef.current) {
+        fillRef.current.style.transform = `scaleX(${v / 100})`;
       }
 
       // Cycle through [ Engineer ] → [ Design ] → [ People ] with text scramble
@@ -225,6 +242,7 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
     const masterTl = gsap.timeline({
       paused: true,
       onComplete: () => {
+        breatheRef.current?.kill();
         if (overlay) overlay.style.display = "none";
         document.documentElement.style.overflow = prevHtmlOverflow;
         document.body.style.overflow = prevBodyOverflow;
@@ -233,17 +251,35 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
     });
     masterTlRef.current = masterTl;
 
-    // ── STEP 0: Logo shapes pop in one by one (0s – ~1.0s) ──
+    // ── STEP 0: Logo ASSEMBLY — the main animation (0s – ~1.3s) ──
+    // The six shapes fly up from below, each with its own spin, and
+    // pop into place one by one. Then a gentle breathing float keeps
+    // the mark alive while the counter runs.
     masterTl.from(
       ".loader-logo path",
       {
         scale: 0,
+        rotation: (i: number) => LOGO_SPINS[i % LOGO_SPINS.length],
+        y: 60,
         transformOrigin: "50% 50%",
-        duration: 0.55,
-        ease: "back.out(2.2)",
-        stagger: 0.09,
+        duration: 0.7,
+        ease: "back.out(1.8)",
+        stagger: 0.11,
       },
       0
+    );
+    masterTl.call(
+      () => {
+        breatheRef.current = gsap.to(".loader-logo", {
+          scale: 1.03,
+          duration: 1.0,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+        });
+      },
+      undefined,
+      1.3
     );
 
     // ── STEP 1: Counter 000 → 100 in four lived beats (0s – 2.4s) ──
@@ -283,32 +319,32 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
         c: COLOR_BANDS[1],
         duration: 0.48,
         ease: "power2.inOut",
-        onUpdate: paintBand,
+        onUpdate: paintAccents,
       }, 0.48)
       .to(colorProxy, {
         c: COLOR_BANDS[2],
         duration: 0.48,
         ease: "power2.inOut",
-        onUpdate: paintBand,
+        onUpdate: paintAccents,
       }, 0.96)
       .to(colorProxy, {
         c: COLOR_BANDS[3],
         duration: 0.48,
         ease: "power2.inOut",
-        onUpdate: paintBand,
+        onUpdate: paintAccents,
       }, 1.44)
       .to(colorProxy, {
         c: COLOR_BANDS[4],
         duration: 0.48,
         ease: "power2.inOut",
-        onUpdate: paintBand,
+        onUpdate: paintAccents,
       }, 1.92);
 
     // ── STEP 2: Seamless Pixel Dissolve directly into Hero (2.4s – 3.3s) ──
     masterTl.addLabel("dissolve", 2.4);
 
-    // Fade counter + role gently
-    masterTl.to(".loader-content", {
+    // Fade all loader chrome gently (logo, corners, hairline)
+    masterTl.to(".loader-content, .loader-corner, .loader-progress", {
       opacity: 0,
       y: -20,
       duration: 0.3,
@@ -354,6 +390,7 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
 
     return () => {
       window.clearTimeout(failsafeId);
+      breatheRef.current?.kill();
       if (scrambleTimer) clearInterval(scrambleTimer);
       masterTl.kill();
       removeResize?.();
@@ -374,31 +411,46 @@ export default function PageLoader({ onHeroReady, onComplete }: PageLoaderProps)
       {/* Full-screen Bayer dither canvas punching holes to reveal Hero */}
       <canvas ref={canvasRef} className="loader-canvas" aria-hidden="true" />
 
-      {/* Central logo, counter & dynamic role ticker */}
+      {/* The logo is the main animation: big, center stage, assembling
+          shape by shape (see STEP 0). A soft band-colored glow sits
+          behind it — color lives in the glow, never in the field, so
+          the logo's own colors stay legible. */}
       <div className="loader-content">
-        {/* Logo mark: the 6 shapes pop in one by one (see STEP 0).
+        <div ref={glowRef} className="loader-glow" aria-hidden="true" />
+        {/* Logo mark: the 6 shapes assemble one by one (see STEP 0).
             Inline SVG (paths from favicon.svg) so each shape can
             animate on its own — a raster could only pop as one block. */}
         <svg
           className="loader-logo"
           viewBox="0 0 517 501"
-          width="120"
-          height="116"
+          width="200"
+          height="194"
           aria-hidden="true"
         >
           {LOGO_PATHS.map((p) => (
             <path key={p.fill + p.d.slice(0, 12)} d={p.d} fill={p.fill} />
           ))}
         </svg>
-        <div className="loader-counter-wrap">
-          <span ref={counterRef} className="loader-counter">000</span>
-          <span className="loader-pct">%</span>
-        </div>
-        <div className="loader-role-ticker" aria-hidden="true">
+      </div>
+
+      {/* Role ticker — small, bottom-left corner. */}
+      <div className="loader-corner loader-corner-bl">
+        <div ref={tickerRef} className="loader-role-ticker" aria-hidden="true">
           <span className="tick-bracket">[</span>
           <span ref={roleRef} className="loader-role">{ROLES[0]}</span>
           <span className="tick-bracket">]</span>
         </div>
+      </div>
+
+      {/* Counter — small, bottom-right corner. */}
+      <div className="loader-corner loader-corner-br">
+        <span ref={counterRef} className="loader-counter">000</span>
+        <span className="loader-pct">%</span>
+      </div>
+
+      {/* Progress hairline along the bottom edge (scaleX, transform-only). */}
+      <div className="loader-progress" aria-hidden="true">
+        <div ref={fillRef} className="loader-progress-fill" />
       </div>
     </div>
   );

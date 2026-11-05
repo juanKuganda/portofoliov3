@@ -24,25 +24,28 @@ export default function Navbar({ isReady = true }: NavbarProps) {
   const [active, setActive] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const brandRef = useRef<HTMLAnchorElement>(null);
   const hasAnimatedRef = useRef(false);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const el = navRef.current;
+    const brand = brandRef.current;
     if (!el) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) return;
 
+    const targets = [el, brand].filter(Boolean) as HTMLElement[];
     if (!isReady && !hasAnimatedRef.current) {
-      gsap.set(el, { y: -24, opacity: 0 });
+      gsap.set(targets, { y: -24, opacity: 0 });
       return;
     }
 
     if (hasAnimatedRef.current) return;
     hasAnimatedRef.current = true;
 
-    gsap.to(el, {
+    gsap.to(targets, {
       y: 0,
       opacity: 1,
       duration: 0.8,
@@ -99,50 +102,55 @@ export default function Navbar({ isReady = true }: NavbarProps) {
 
   return (
     <>
+      {/* Brand mark: a separate FIXED sibling of <nav>, NOT a child.
+          The nav blends with the page via mix-blend-mode: difference,
+          and difference applies to the whole nav subtree — a logo
+          inside it would have its colors inverted per backdrop.
+          Fixed at the same top/left as the nav's padding so the two
+          read as one bar. */}
+      <a
+        ref={brandRef}
+        className="nav-brand"
+        href="#top"
+        aria-label="Juan Kuganda — back to top"
+        onClick={(e) => {
+          e.preventDefault();
+          goTop();
+        }}
+      >
+        <img src="/favicon.svg" alt="" width="31" height="30" />
+      </a>
       <nav ref={navRef} className="nav" aria-label="Primary">
-        <a
-          className="nav-brand"
-          href="#top"
-          aria-label="Juan Kuganda — back to top"
-          onClick={(e) => {
-            e.preventDefault();
-            goTop();
-          }}
-        >
-          <img src="/favicon.svg" alt="" width="31" height="30" />
-        </a>
-        <div className="nav-inner">
-          <span className="nav-clock desktop-only" aria-hidden="true">
-            {clockLabel}
-          </span>
-          <div className="nav-links desktop-only">
-            {NAV_ITEMS.map(({ id, label }) => (
-              <a
-                key={id}
-                href={`#${id}`}
-                data-nav={id}
-                className={active === id ? "active" : ""}
-                aria-current={active === id ? "true" : undefined}
-                onClick={(e) => {
-                  e.preventDefault();
-                  goTo(id);
-                }}
-              >
-                {label}
-              </a>
-            ))}
-          </div>
-          <button
-            ref={menuBtnRef}
-            type="button"
-            className="nav-menu-btn mobile-only"
-            aria-expanded={menuOpen}
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            onClick={() => setMenuOpen((v) => !v)}
-          >
-            Menu
-          </button>
+        <span className="nav-clock desktop-only" aria-hidden="true">
+          {clockLabel}
+        </span>
+        <div className="nav-links desktop-only">
+          {NAV_ITEMS.map(({ id, label }) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              data-nav={id}
+              className={active === id ? "active" : ""}
+              aria-current={active === id ? "true" : undefined}
+              onClick={(e) => {
+                e.preventDefault();
+                goTo(id);
+              }}
+            >
+              {label}
+            </a>
+          ))}
         </div>
+        <button
+          ref={menuBtnRef}
+          type="button"
+          className="nav-menu-btn mobile-only"
+          aria-expanded={menuOpen}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          Menu
+        </button>
       </nav>
 
       {/* Mobile full-screen menu */}
